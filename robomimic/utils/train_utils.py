@@ -27,6 +27,10 @@ from robomimic.envs.env_base import EnvBase
 from robomimic.envs.wrappers import EnvWrapper
 from robomimic.algo import RolloutPolicy
 from tianshou.env import SubprocVectorEnv
+from robomimic.utils.exp_utils import find_all_zero_subtensor, find_false_value, get_images_matches_distance, show_batch_images
+from robomimic.utils.exp_utils import StateManager
+from PIL import Image
+import cv2
 
 
 def get_exp_dir(config, auto_remove_exp_dir=False):
@@ -53,18 +57,18 @@ def get_exp_dir(config, auto_remove_exp_dir=False):
 
     # create directory for where to dump model parameters, tensorboard logs, and videos
     base_output_dir = os.path.expanduser(config.train.output_dir)
-    if not os.path.isabs(base_output_dir):
+    #if not os.path.isabs(base_output_dir):
         # relative paths are specified relative to robomimic module location
-        base_output_dir = os.path.join(robomimic.__path__[0], base_output_dir)
-    base_output_dir = os.path.join(base_output_dir, config.experiment.name)
-    if os.path.exists(base_output_dir):
-        if not auto_remove_exp_dir:
-            ans = input("WARNING: model directory ({}) already exists! \noverwrite? (y/n)\n".format(base_output_dir))
-        else:
-            ans = "y"
-        if ans == "y":
-            print("REMOVING")
-            shutil.rmtree(base_output_dir)
+    #    base_output_dir = os.path.join(robomimic.__path__[0], base_output_dir)
+    #base_output_dir = os.path.join(base_output_dir, config.experiment.name)
+    #if os.path.exists(base_output_dir):
+    #    if not auto_remove_exp_dir:
+    #        ans = input("WARNING: model directory ({}) already exists! \noverwrite? (y/n)\n".format(base_output_dir))
+    #    else:
+    #        ans = "y"
+    #    if ans == "y":
+    #        print("REMOVING")
+    #        shutil.rmtree(base_output_dir)
 
     # only make model directory if model saving is enabled
     output_dir = None
@@ -256,7 +260,6 @@ def batchify_obs(obs_list):
     
     return obs
 
-
 def run_rollout(
         policy, 
         env, 
@@ -266,6 +269,7 @@ def run_rollout(
         video_writer=None,
         video_skip=5,
         terminate_on_success=False,
+        frame_save_dir=None,
     ):
     """
     Runs a rollout in an environment with the current network parameters.
@@ -299,6 +303,13 @@ def run_rollout(
     ob_dict = env.reset()
     policy.start_episode(lang=env._ep_lang_str)
 
+    environment_states = []
+    # save deepcopy version of environments. If we want to set backtrack, we can just reset the env's index
+
+    state_manager = StateManager(env)
+
+    frame_count = 0
+
     goal_dict = None
     if use_goals:
         # retrieve goal from the environment
@@ -321,6 +332,8 @@ def run_rollout(
         video_frames = []
     
     for step_i in range(horizon): #LogUtils.tqdm(range(horizon)):
+        if step_i == 1:
+            print('1')
         # get action from policy
         if batched:
             policy_ob = batchify_obs(ob_dict)
@@ -331,6 +344,12 @@ def run_rollout(
 
         # play action
         ob_dict, r, done, info = env.step(ac)
+
+        # state_manager.append(env)
+
+        # if step_i > 20:
+        #     state_manager.reverse_play_envs()
+        #     print('test done!')
 
         # render to screen
         if render:
@@ -399,6 +418,21 @@ def run_rollout(
                     #     cam_imgs.append(im)
 
                     # frame = np.concatenate(cam_imgs, axis=0)
+                    image_left = ob_dict['robot0_agentview_left_image']
+                    image_hand = ob_dict['robot0_eye_in_hand_image']
+                    image_right = ob_dict['robot0_agentview_right_image']
+
+                    for left, hand, right in zip(image_left, image_hand, image_right):
+                        left = left.transpose((1, 2, 0))
+                        right = right.transpose((1, 2, 0))
+                        hand = hand.transpose((1, 2, 0))
+
+                        whole_image = np.concatenate((left, hand, right), axis=1) * 255
+                        whole_image = whole_image.astype(np.uint8)
+                        whole_image = cv2.cvtColor(whole_image, cv2.COLOR_BGR2RGB)
+                        frame_count += 1
+                        save_path = os.path.join(frame_save_dir, str(frame_count) + '.png')
+                        cv2.imwrite(save_path, whole_image)
                     video_frames.append(frame)
 
             video_count += 1
@@ -555,8 +589,16 @@ def rollout_with_stats(
             iterator = LogUtils.custom_tqdm(iterator, total=num_episodes)
 
         num_success = 0
+
+        save_frames_dir_base = 'roll_out_saved_frames'
+
         for ep_i in iterator:
             rollout_timestamp = time.time()
+
+            save_frames_dir = save_frames_dir_base + '-' + str(ep_i)
+            if not os.path.exists(save_frames_dir):
+                os.makedirs(save_frames_dir)
+
             try:
                 rollout_info = run_rollout(
                     policy=policy,
@@ -567,6 +609,7 @@ def rollout_with_stats(
                     video_writer=env_video_writer,
                     video_skip=video_skip,
                     terminate_on_success=terminate_on_success,
+                    frame_save_dir=save_frames_dir,
                 )
             except Exception as e:
                 print("Rollout exception at episode number {}!".format(ep_i))
@@ -789,7 +832,11 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
             data_loader_iter = iter(data_loader)
             t = time.time()
             batch = next(data_loader_iter)
-        timing_stats["Data_Loading"].append(time.time() - t)
+
+        # Check if there is any False value in the tensor
+
+        hand_eye_images = batch['obs']['robot0_eye_in_hand_image']
+        difference_array = np.zeros((hand_eye_images.shape[0], hand_eye_images.shape[1]))
 
         # process batch for training
         t = time.time()
