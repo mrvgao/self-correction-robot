@@ -135,6 +135,7 @@ class BC(PolicyAlgo):
         with TorchUtils.maybe_no_grad(no_grad=validate):
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
             predictions = self._forward_training(batch)
+            # calculate accumulated difference, if this value is greater than some threshold, re-train this model.
             losses = self._compute_losses(predictions, batch)
 
             info["predictions"] = TensorUtils.detach(predictions)
