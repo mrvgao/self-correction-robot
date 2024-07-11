@@ -18,6 +18,23 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Using device: {device}")
 
 
+class ProgressVitModelwithObjectDetection(nn.Module):
+    def __init__(self, pretrained_model_name='facebook/detr-resnet-50'):
+        super(CustomDetrModel, self).__init__()
+        self.detr = DetrModel.from_pretrained(pretrained_model_name)
+        self.fc = nn.Linear(self.detr.config.hidden_size * 2, 1)  # concatenate features from two images and map to a single value
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, image1, image2):
+        outputs1 = self.detr(image1).last_hidden_state[:, 0, :]  # Using [CLS] token representation
+        outputs2 = self.detr(image2).last_hidden_state[:, 0, :]
+        concatenated = torch.cat((outputs1, outputs2), dim=1)
+        x = self.fc(concatenated)
+        x = self.sigmoid(x)
+        return x
+
+
+
 class ProgressViTModel(nn.Module):
     def __init__(self, pretrained_model_name='google/vit-base-patch16-224'):
         super(ProgressViTModel, self).__init__()
@@ -83,19 +100,19 @@ def main():
     root_dir = '/home/minquangao/robocasa/playground/counterToCab-robot-merged-image/'
     dataset = CustomImageDataset(root_dir, feature_extractor)
 
-    train_size = int(0.8 * len(dataset))
+    train_size = int(0.9 * len(dataset))
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=8, shuffle=False)
 
     # Create the dataloader
     # Example training loop
     num_epochs = 100
     model = ProgressViTModel().to(device)
     criterion = nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-6)
 
     for epoch in range(num_epochs):
         model.train()
