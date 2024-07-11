@@ -13,7 +13,7 @@ from transformers import DetrModel
 import argparse
 
 # Argument Parsing
-parser = argparse.ArgumentParser(description='Train a Progress Predication Model Via Vision Transformer model.')
+parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
 parser.add_argument('--name', type=str, required=True, help='Name for the training task.')
 parser.add_argument('--model', type=str, required=True, choices=['detr', 'vit'], help='Name for the selection model')
 parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
@@ -23,47 +23,12 @@ args = parser.parse_args()
 
 # set wandb monitor
 run_name = f"{args.name}_model_{args.model}_lr{args.lr}_bs{args.batch_size}_epochs{args.num_epochs}"
-wandb.init(project="progress-model-via-vision-transformer-finetuning", entity="minchiuan", name=run_name, config={
+wandb.init(project="value-model-via-vision-transformer-finetuning", entity="minchiuan", name=run_name, config={
     "system_metrics": True  # Enable system metrics logging
 })
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Using device: {device}")
-
-
-class ProgressVitModelwithObjectDetection(nn.Module):
-    def __init__(self, pretrained_model_name='facebook/detr-resnet-50'):
-        super(ProgressVitModelwithObjectDetection, self).__init__()
-        self.detr = DetrModel.from_pretrained(pretrained_model_name)
-        self.fc = nn.Linear(self.detr.config.hidden_size * 2, 1)  # concatenate features from two images and map to a single value
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, image1, image2):
-        outputs1 = self.detr(image1).last_hidden_state[:, 0, :]  # Using [CLS] token representation
-        outputs2 = self.detr(image2).last_hidden_state[:, 0, :]
-        concatenated = torch.cat((outputs1, outputs2), dim=1)
-        x = self.fc(concatenated)
-        x = self.sigmoid(x)
-        return x
-
-
-
-class ProgressViTModel(nn.Module):
-    def __init__(self, pretrained_model_name='google/vit-base-patch16-224'):
-        super(ProgressViTModel, self).__init__()
-        self.vit = ViTModel.from_pretrained(pretrained_model_name)
-        self.fc = nn.Linear(self.vit.config.hidden_size * 2,
-                            1)  # concatenate features from two images and map to a single value
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, image1, image2):
-        outputs1 = self.vit(image1).pooler_output
-        outputs2 = self.vit(image2).pooler_output
-        concatenated = torch.cat((outputs1, outputs2), dim=1)
-        x = self.fc(concatenated)
-        x = self.sigmoid(x)
-        return x
-
 
 class CustomImageDataset(Dataset):
     def __init__(self, root_dir, feature_extractor):
@@ -76,17 +41,18 @@ class CustomImageDataset(Dataset):
             task_path = os.path.join(root_dir, task_dir)
             if os.path.isdir(task_path):
                 images = sorted([f for f in os.listdir(task_path) if f.endswith('.png')])
+                # Get the numeric parts of the filenames
                 image_numbers = sorted([int(os.path.splitext(f)[0]) for f in images])
                 M = image_numbers[0]
                 N = image_numbers[-1]
 
-                for i in range(0, len(images)):
+                for i in range(len(image_numbers)):
                     image1_path = os.path.join(task_path, f'{M}.png')
                     image2_path = os.path.join(task_path, f'{image_numbers[i]}.png')
-                    label = (image_numbers[i] - M) / (len(images) - 1)
-                    self.image_pairs.append((image1_path, image2_path, label))
 
-        print('finish initialized')
+                    # Calculate the label
+                    label = -1 * (N - image_numbers[i]) + 1
+                    self.image_pairs.append((image1_path, image2_path, label))
 
     def __len__(self):
         return len(self.image_pairs)
@@ -104,6 +70,34 @@ class CustomImageDataset(Dataset):
 
         return image1, image2, torch.tensor(label, dtype=torch.float32)
 
+
+class ValueDetrModel(nn.Module):
+    def __init__(self, pretrained_model_name='facebook/detr-resnet-50'):
+        super(ValueDetrModel, self).__init__()
+        self.detr = DetrModel.from_pretrained(pretrained_model_name)
+        self.fc = nn.Linear(self.detr.config.hidden_size * 2, 1)  # concatenate features from two images and map to a single value
+
+    def forward(self, image1, image2):
+        outputs1 = self.detr(image1).last_hidden_state[:, 0, :]  # Using [CLS] token representation
+        outputs2 = self.detr(image2).last_hidden_state[:, 0, :]
+        concatenated = torch.cat((outputs1, outputs2), dim=1)
+        x = self.fc(concatenated)
+        return x
+
+
+class ValueViTModel(nn.Module):
+    def __init__(self, pretrained_model_name='google/vit-base-patch16-224'):
+        super(ValueViTModel, self).__init__()
+        self.vit = ViTModel.from_pretrained(pretrained_model_name)
+        self.fc = nn.Linear(self.vit.config.hidden_size * 2,
+                            1)  # concatenate features from two images and map to a single value
+
+    def forward(self, image1, image2):
+        outputs1 = self.vit(image1).pooler_output
+        outputs2 = self.vit(image2).pooler_output
+        concatenated = torch.cat((outputs1, outputs2), dim=1)
+        x = self.fc(concatenated)
+        return x
 
 def main():
     # Initialize the feature extractor
@@ -123,21 +117,21 @@ def main():
     # Create the dataloader
     # Example training loop
     num_epochs = args.num_epochs
-
-    if args.model == 'vit':
-        model = ProgressViTModel().to(device)
-    elif args.model == 'detr':
-        model = ProgressVitModelwithObjectDetection().to(device)
+    # model = ProgressViTModel().to(device)
+    if args.model == 'detr':
+        model = ValueDetrModel().to(device)
+    elif args.model == 'vit':
+        model = ValueViTModel().to(device)
     else:
-        raise ValueError("unsupported model type: ", args.model)
+        raise ValueError("unsupported model name, ", args.model)
 
-    criterion = nn.BCELoss()
+    criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     task_name = wandb.run.name
     wandb.watch(model)
 
-    save_dir = f'models/{task_name}'
+    save_dir = f'value_models/{task_name}'
     os.makedirs(save_dir, exist_ok=True)
 
     for epoch in range(num_epochs):
@@ -163,7 +157,7 @@ def main():
         print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {loss.item():.4f}")
 
         # Save the model
-        torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch+1}.pth'))
+        torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch + 1}.pth'))
 
         if epoch % 5 == 0:
             model.eval()
@@ -185,5 +179,5 @@ def main():
     wandb.finish()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
