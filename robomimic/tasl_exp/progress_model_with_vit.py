@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data import DataLoader, random_split
 from transformers import ViTFeatureExtractor
+from transformers import DetrFeatureExtractor, DetrModel
 import wandb
 from tqdm import tqdm
 from transformers import DetrModel
