@@ -68,20 +68,54 @@ class ProgressViTModel(nn.Module):
 class ProgressResNetModel(nn.Module):
     def __init__(self, pretrained_model_name='resnet50'):
         super(ProgressResNetModel, self).__init__()
+        # Initialize the DETR model
+        self.detr_feature_extractor = DetrFeatureExtractor.from_pretrained('facebook/detr-resnet-50')
+        self.detr_model = DetrModel.from_pretrained('facebook/detr-resnet-50')
+
+        # Initialize the ResNet model
         self.resnet = models.resnet50(pretrained=True)
         self.resnet_fc_in_features = self.resnet.fc.in_features
         self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
-        self.fc = nn.Linear(self.resnet_fc_in_features * 2, 1)  # concatenate features from two images and map to a single value
+
+        # Define additional fully connected layers
+        self.fc1 = nn.Linear(self.resnet_fc_in_features * 2, 512)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(p=0.5)
+        self.fc2 = nn.Linear(512, 128)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(p=0.5)
+        self.fc3 = nn.Linear(128, 1)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, image1, image2):
-        outputs1 = self.resnet(image1)
-        outputs2 = self.resnet(image2)
-        concatenated = torch.cat((outputs1, outputs2), dim=1)
-        x = self.fc(concatenated)
-        x = self.sigmoid(x)
+        detr_features1 = self.extract_detr_features(image1)
+        detr_features2 = self.extract_detr_features(image2)
 
+        # Pass the DETR features through ResNet
+        resnet_features1 = self.resnet(detr_features1)
+        resnet_features2 = self.resnet(detr_features2)
+
+        # Concatenate the features
+        concatenated = torch.cat((resnet_features1, resnet_features2), dim=1)
+
+        # Pass through fully connected layers
+        x = self.fc1(concatenated)
+        x = self.relu1(x)
+        x = self.dropout1(x)
+        x = self.fc2(x)
+        x = self.relu2(x)
+        x = self.dropout2(x)
+        x = self.fc3(x)
+        x = self.sigmoid(x)
         return x
+
+    def extract_detr_features(self, image):
+        # Transform image to match the input requirements of DETR
+        encoding = self.detr_feature_extractor(images=image, return_tensors="pt")
+        pixel_values = encoding['pixel_values'].squeeze(0)  # Remove batch dimension
+        # Get the last hidden states (features) from DETR
+        outputs = self.detr_model(pixel_values=pixel_values)
+        return outputs.last_hidden_state
 
 
 class CustomImageDataset(Dataset):
