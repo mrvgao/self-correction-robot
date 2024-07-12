@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import ViTFeatureExtractor, ViTModel
+from torchvision import models, transforms
 import os
 from PIL import Image
 import torch
@@ -15,7 +16,7 @@ import argparse
 # Argument Parsing
 parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
 parser.add_argument('--name', type=str, required=True, help='Name for the training task.')
-parser.add_argument('--model', type=str, required=True, choices=['detr', 'vit'], help='Name for the selection model')
+parser.add_argument('--model', type=str, required=True, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
 parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
 parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
 parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
@@ -65,8 +66,13 @@ class CustomImageDataset(Dataset):
         image2 = Image.open(image2_path).convert('RGB')
 
         # Preprocess the images
-        image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
-        image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
+        if args.model != 'resnet':
+            image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
+            image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
+        else:
+            image1 = self.feature_extractor(image1)
+            image2 = self.feature_extractor(image2)
+
 
         return image1, image2, torch.tensor(label, dtype=torch.float32)
 
@@ -99,13 +105,36 @@ class ValueViTModel(nn.Module):
         x = self.fc(concatenated)
         return x
 
+
+class ValueResNetModel(nn.Module):
+    def __init__(self, pretrained_model_name='resnet50'):
+        super(ValueResNetModel, self).__init__()
+        self.resnet = models.resnet50(pretrained=True)
+        self.resnet_fc_in_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
+        self.fc = nn.Linear(self.resnet_fc_in_features * 2, 1)  # concatenate features from two images and map to a single value
+
+    def forward(self, image1, image2):
+        outputs1 = self.resnet(image1)
+        outputs2 = self.resnet(image2)
+        concatenated = torch.cat((outputs1, outputs2), dim=1)
+        x = self.fc(concatenated)
+        return x
+
 def main():
     # Initialize the feature extractor
+
+    resnet_transformer = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+
     feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')
 
     # Create the dataset
     root_dir = '/home/minquangao/robocasa/playground/counterToCab-robot-merged-image/'
-    dataset = CustomImageDataset(root_dir, feature_extractor)
+    dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
 
     train_size = int(0.9 * len(dataset))
     val_size = len(dataset) - train_size
@@ -122,6 +151,8 @@ def main():
         model = ValueDetrModel().to(device)
     elif args.model == 'vit':
         model = ValueViTModel().to(device)
+    elif args.model == 'resnet':
+        model = ValueResNetModel().to(device)
     else:
         raise ValueError("unsupported model name, ", args.model)
 
@@ -138,6 +169,8 @@ def main():
         model.train()
         running_loss = 0.0
         progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Training]", leave=True)
+        batch_loss = 0
+
         for i, (image1, image2, labels) in enumerate(progress_bar):
             image1, image2, labels = image1.to(device), image2.to(device), labels.to(device)
             optimizer.zero_grad()
@@ -147,6 +180,7 @@ def main():
             optimizer.step()
 
             running_loss += loss.item()
+            batch_loss += loss.item()
             if i % 10 == 9:  # Log every 10 batches
                 avg_loss = running_loss / 10
                 wandb.log({"epoch": epoch + 1, "batch": i + 1, "train_loss": avg_loss})
@@ -154,7 +188,7 @@ def main():
 
             progress_bar.set_postfix(loss=loss.item())
 
-        print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {loss.item():.4f}")
+        print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {batch_loss / len(train_dataloader):.4f}")
 
         # Save the model
         torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch + 1}.pth'))

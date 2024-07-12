@@ -19,6 +19,7 @@ parser.add_argument('--name', type=str, required=True, help='Name for the traini
 parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
 parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
 parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
+parser.add_argument("--model_path", type=str, default=None, help="Path to the pretrained model.")
 args = parser.parse_args()
 
 # set wandb monitor
@@ -108,6 +109,12 @@ def main():
     # Initialize the feature extractor
     # feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')
     processor = CLIPProcessor.from_pretrained('openai/clip-vit-large-patch14')
+    task_descprtion = """the input two images are observed from a robot in its initial state and its current state. 
+    For each image, the left one is the robot's left eye's observatation, the middle one is the robot's hand eye's observations, 
+    the right one is the robot's right eye's observations. This robot needs to complete its task as the following requiremnet: 1. 
+    One obejct from initial observation image should be put in the cabinet; 2. The object's background is different with the initial image's counter's background;
+    3. The robot's hands are higher than counter and higher than cabinet; 
+    """
     task_descrpition = "this robot has completed the task: pick up an object from counter and put it on the cabinet"
 
     # Create the dataset
@@ -128,6 +135,10 @@ def main():
 
     model = CLIPCombinedModel().to(device)
 
+    if args.model_path:
+        model.load_state_dict(torch.load(args.model_path))
+        print(f"Loaded pretrained model from {args.model_path}")
+
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
@@ -138,6 +149,8 @@ def main():
     os.makedirs(save_dir, exist_ok=True)
 
     for epoch in range(num_epochs):
+        epoch_loss = 0
+
         model.train()
         running_loss = 0.0
         progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Training]", leave=True)
@@ -152,6 +165,8 @@ def main():
             loss.backward()
             optimizer.step()
 
+            epoch_loss += loss.item()
+
             running_loss += loss.item()
             if i % 10 == 9:  # Log every 10 batches
                 avg_loss = running_loss / 10
@@ -160,7 +175,7 @@ def main():
 
             progress_bar.set_postfix(loss=loss.item())
 
-        print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {loss.item():.4f}")
+        print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {epoch_loss / len(train_dataloader):.4f}")
 
         # Save the model
         torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch+1}.pth'))

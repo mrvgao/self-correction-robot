@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import ViTFeatureExtractor, ViTModel
+from torchvision import transforms, models
 import os
 from PIL import Image
 import torch
@@ -15,7 +16,7 @@ import argparse
 # Argument Parsing
 parser = argparse.ArgumentParser(description='Train a Progress Predication Model Via Vision Transformer model.')
 parser.add_argument('--name', type=str, required=True, help='Name for the training task.')
-parser.add_argument('--model', type=str, required=True, choices=['detr', 'vit'], help='Name for the selection model')
+parser.add_argument('--model', type=str, required=True, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
 parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
 parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
 parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
@@ -64,6 +65,24 @@ class ProgressViTModel(nn.Module):
         x = self.sigmoid(x)
         return x
 
+class ProgressResNetModel(nn.Module):
+    def __init__(self, pretrained_model_name='resnet50'):
+        super(ProgressResNetModel, self).__init__()
+        self.resnet = models.resnet50(pretrained=True)
+        self.resnet_fc_in_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
+        self.fc = nn.Linear(self.resnet_fc_in_features * 2, 1)  # concatenate features from two images and map to a single value
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, image1, image2):
+        outputs1 = self.resnet(image1)
+        outputs2 = self.resnet(image2)
+        concatenated = torch.cat((outputs1, outputs2), dim=1)
+        x = self.fc(concatenated)
+        x = self.sigmoid(x)
+
+        return x
+
 
 class CustomImageDataset(Dataset):
     def __init__(self, root_dir, feature_extractor):
@@ -98,9 +117,12 @@ class CustomImageDataset(Dataset):
         image1 = Image.open(image1_path).convert('RGB')
         image2 = Image.open(image2_path).convert('RGB')
 
-        # Preprocess the images
-        image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
-        image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
+        if args.model != 'resnet':
+            image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
+            image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
+        else:
+            image1 = self.feature_extractor(image1)
+            image2 = self.feature_extractor(image2)
 
         return image1, image2, torch.tensor(label, dtype=torch.float32)
 
@@ -109,9 +131,15 @@ def main():
     # Initialize the feature extractor
     feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')
 
+    resnet_transformer = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+
     # Create the dataset
     root_dir = '/home/minquangao/robocasa/playground/counterToCab-robot-merged-image/'
-    dataset = CustomImageDataset(root_dir, feature_extractor)
+    dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
 
     train_size = int(0.9 * len(dataset))
     val_size = len(dataset) - train_size
@@ -128,6 +156,8 @@ def main():
         model = ProgressViTModel().to(device)
     elif args.model == 'detr':
         model = ProgressVitModelwithObjectDetection().to(device)
+    elif args.model == 'resnet':
+        model = ProgressResNetModel().to(device)
     else:
         raise ValueError("unsupported model type: ", args.model)
 
