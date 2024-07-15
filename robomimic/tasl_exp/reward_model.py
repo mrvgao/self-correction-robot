@@ -17,7 +17,6 @@ import argparse
 parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
 parser.add_argument('--name', type=str, required=True, help='Name for the training task.')
 parser.add_argument('--model', type=str, required=True, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
-parser.add_argument("--model_path", type=str, default=None, help="Path to the pretrained model.")
 parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
 parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
 parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
@@ -106,20 +105,35 @@ class ValueViTModel(nn.Module):
         x = self.fc(concatenated)
         return x
 
-
 class ValueResNetModel(nn.Module):
     def __init__(self, pretrained_model_name='resnet50'):
         super(ValueResNetModel, self).__init__()
         self.resnet = models.resnet50(pretrained=True)
         self.resnet_fc_in_features = self.resnet.fc.in_features
         self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
-        self.fc = nn.Linear(self.resnet_fc_in_features * 2, 1)  # concatenate features from two images and map to a single value
+
+        # Define additional fully connected layers with dropout
+        self.fc1 = nn.Linear(self.resnet_fc_in_features * 2, 512)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(p=0.5)
+        self.fc2 = nn.Linear(512, 128)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(p=0.5)
+        self.fc3 = nn.Linear(128, 1)
 
     def forward(self, image1, image2):
         outputs1 = self.resnet(image1)
         outputs2 = self.resnet(image2)
         concatenated = torch.cat((outputs1, outputs2), dim=1)
-        x = self.fc(concatenated)
+
+        # Pass through fully connected layers with dropout
+        x = self.fc1(concatenated)
+        x = self.relu1(x)
+        x = self.dropout1(x)
+        x = self.fc2(x)
+        x = self.relu2(x)
+        x = self.dropout2(x)
+        x = self.fc3(x)
         return x
 
 def main():
@@ -157,18 +171,20 @@ def main():
     else:
         raise ValueError("unsupported model name, ", args.model)
 
-    if args.model_path:
-        model.load_state_dict(torch.load(args.model_path))
-        print(f"Loaded pretrained model from {args.model_path}")
-
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
     task_name = wandb.run.name
     wandb.watch(model)
 
     save_dir = f'value_models/{task_name}'
     os.makedirs(save_dir, exist_ok=True)
+
+    early_stopping_patience = 3
+    best_val_loss = float('inf')
+    early_stopping_counter = 0
 
     for epoch in range(num_epochs):
         model.train()
@@ -211,9 +227,21 @@ def main():
                     loss = criterion(outputs, labels.unsqueeze(1))
                     val_loss += loss.item()
 
+
                 avg_val_loss = val_loss / len(val_dataloader)
+                scheduler.step(avg_val_loss)
                 wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss})
                 print(f"Epoch [{epoch + 1}/{num_epochs}], Validation Loss: {avg_val_loss:.4f}")
+
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                torch.save(model.state_dict(), os.path.join(save_dir, 'best_model.pth'))
+                early_stopping_counter = 0
+            else:
+                early_stopping_counter += 1
+                if early_stopping_counter >= early_stopping_patience:
+                    print("Early stopping triggered")
+                    break
 
     wandb.finish()
 
