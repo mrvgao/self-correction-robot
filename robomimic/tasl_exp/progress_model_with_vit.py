@@ -111,13 +111,19 @@ class ProgressResNetModel(nn.Module):
         return x
 
     def extract_detr_features(self, image):
+        # Ensure the image is in the range [0, 1]
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        image = image.clone()  # Avoid modifying the original tensor
+        image = (image - image.min()) / (image.max() - image.min())  # Normalize to [0, 1]
+
         # Transform image to match the input requirements of DETR
         encoding = self.detr_feature_extractor(images=image, return_tensors="pt")
         pixel_values = encoding['pixel_values'].squeeze(0)  # Remove batch dimension
+        pixel_values = pixel_values.to(device)
+
         # Get the last hidden states (features) from DETR
         outputs = self.detr_model(pixel_values=pixel_values)
         return outputs.last_hidden_state
-
 
 class CustomImageDataset(Dataset):
     def __init__(self, root_dir, feature_extractor):
@@ -140,6 +146,10 @@ class CustomImageDataset(Dataset):
                     label = (image_numbers[i] - M) / (len(images) - 1)
                     self.image_pairs.append((image1_path, image2_path, label))
 
+        self.transform = transforms.Compose([
+            transforms.ToTensor()
+        ])
+
         print('finish initialized')
 
     def __len__(self):
@@ -152,12 +162,15 @@ class CustomImageDataset(Dataset):
         image1 = Image.open(image1_path).convert('RGB')
         image2 = Image.open(image2_path).convert('RGB')
 
-        if args.model != 'resnet':
-            image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
-            image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
-        else:
-            image1 = self.feature_extractor(image1)
-            image2 = self.feature_extractor(image2)
+        # if args.model != 'resnet':
+        #     image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
+        #     image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
+        # else:
+        # image1 = self.feature_extractor(image1)
+        # image2 = self.feature_extractor(image2)
+
+        image1 = self.transform(image1)
+        image2 = self.transform(image2)
 
         return image1, image2, torch.tensor(label, dtype=torch.float32)
 
