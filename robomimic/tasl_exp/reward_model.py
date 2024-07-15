@@ -17,6 +17,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
 parser.add_argument('--name', type=str, required=True, help='Name for the training task.')
 parser.add_argument('--model', type=str, required=True, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
+parser.add_argument("--model_path", type=str, default=None, help="Path to the pretrained model.")
 parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
 parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
 parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
@@ -155,6 +156,10 @@ def main():
         model = ValueResNetModel().to(device)
     else:
         raise ValueError("unsupported model name, ", args.model)
+
+    if args.model_path:
+        model.load_state_dict(torch.load(args.model_path))
+        print(f"Loaded pretrained model from {args.model_path}")
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
