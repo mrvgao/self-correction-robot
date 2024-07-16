@@ -218,10 +218,17 @@ class BC(PolicyAlgo):
                 progress_action = self.get_action(tmp_batch['obs'], keep_whole=True)
                 self.nets.training = True
 
+                # print('the average value of expert demo action is: ', torch.mean(torch.abs(batch['actions'])))
+                # print("the average difference of predicated by expert demo and progress actions is: ", torch.mean(torch.abs(progress_action - batch['actions'])))
+
                 batch['actions'] = progress_action
                 predictions = self._forward_training(batch)
                 losses['progress_loss'] = self._compute_losses(predictions, batch)
                 # beta = 0.5
+
+                # print('the loss of expert demo is: ', losses['action_loss'])
+                # print('the loss of progress monitor is: ', losses['progress_loss']['action_loss'])
+
                 losses['actions_loss'] = losses['action_loss'] + losses['progress_loss']['action_loss']
 
                 step_info = self._train_step(losses)
