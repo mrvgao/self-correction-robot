@@ -56,6 +56,9 @@ class BaseConfig(Config):
         # store algo name class property in the config (must be implemented by subclasses)
         self.algo_name = type(self).ALGO_NAME
 
+        self.value_model_path = None
+        self.progress_model_path = None
+
         self.experiment_config()
         self.train_config()
         self.algo_config()

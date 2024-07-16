@@ -14,20 +14,6 @@ from transformers import DetrModel
 import argparse
 
 # Argument Parsing
-parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
-parser.add_argument('--name', type=str, required=True, help='Name for the training task.')
-parser.add_argument('--model', type=str, required=True, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
-parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
-parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
-parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
-args = parser.parse_args()
-
-# set wandb monitor
-run_name = f"{args.name}_model_{args.model}_lr{args.lr}_bs{args.batch_size}_epochs{args.num_epochs}"
-wandb.init(project="value-model-via-vision-transformer-finetuning", entity="minchiuan", name=run_name, config={
-    "system_metrics": True  # Enable system metrics logging
-})
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Using device: {device}")
 
@@ -113,7 +99,9 @@ class ValueResNetModel(nn.Module):
         self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
 
         # Define additional fully connected layers with dropout
-        self.fc1 = nn.Linear(self.resnet_fc_in_features * 2, 512)
+
+        self.fc1_double = nn.Linear(self.resnet_fc_in_features * 2, 512)
+        self.fc1_single = nn.Linear(self.resnet_fc_in_features, 512)
         self.relu1 = nn.ReLU()
         self.dropout1 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(512, 128)
@@ -122,12 +110,18 @@ class ValueResNetModel(nn.Module):
         self.fc3 = nn.Linear(128, 1)
 
     def forward(self, image1, image2):
-        outputs1 = self.resnet(image1)
-        outputs2 = self.resnet(image2)
-        concatenated = torch.cat((outputs1, outputs2), dim=1)
+        if image1 is not None:
+            outputs1 = self.resnet(image1)
+            outputs2 = self.resnet(image2)
+            concatenated = torch.cat((outputs1, outputs2), dim=1)
+            # Pass through fully connected layers with dropout
+            fc = self.fc1_double
+        else:
+            outputs2 = self.resnet(image2)
+            concatenated = outputs2
+            fc = self.fc1_single
 
-        # Pass through fully connected layers with dropout
-        x = self.fc1(concatenated)
+        x = fc(concatenated)
         x = self.relu1(x)
         x = self.dropout1(x)
         x = self.fc2(x)
@@ -136,7 +130,7 @@ class ValueResNetModel(nn.Module):
         x = self.fc3(x)
         return x
 
-def main():
+def main(args):
     # Initialize the feature extractor
 
     resnet_transformer = transforms.Compose([
@@ -195,7 +189,8 @@ def main():
         for i, (image1, image2, labels) in enumerate(progress_bar):
             image1, image2, labels = image1.to(device), image2.to(device), labels.to(device)
             optimizer.zero_grad()
-            outputs = model(image1, image2)
+            # outputs = model(image1, image2)
+            outputs = model(None, image2)
             loss = criterion(outputs, labels.unsqueeze(1))
             loss.backward()
             optimizer.step()
@@ -212,7 +207,6 @@ def main():
         print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {batch_loss / len(train_dataloader):.4f}")
 
         # Save the model
-        torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch + 1}.pth'))
 
         if epoch % 5 == 0:
             model.eval()
@@ -223,7 +217,7 @@ def main():
                     # Move data to GPU
                     image1, image2, labels = image1.to(device), image2.to(device), labels.to(device)
 
-                    outputs = model(image1, image2)
+                    outputs = model(None, image2)
                     loss = criterion(outputs, labels.unsqueeze(1))
                     val_loss += loss.item()
 
@@ -243,8 +237,24 @@ def main():
                     print("Early stopping triggered")
                     break
 
+        if epoch % 10 == 0:
+            torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch + 1}.pth'))
+
     wandb.finish()
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
+    parser.add_argument('--name', type=str, required=False, help='Name for the training task.')
+    parser.add_argument('--model', type=str, required=False, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
+    parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
+    parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
+    parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
+    args = parser.parse_args()
+
+    # set wandb monitor
+    run_name = f"{args.name}_model_{args.model}_lr{args.lr}_bs{args.batch_size}_epochs{args.num_epochs}"
+    wandb.init(project="value-model-via-vision-transformer-finetuning", entity="minchiuan", name=run_name, config={
+        "system_metrics": True  # Enable system metrics logging
+    })
+    main(args)

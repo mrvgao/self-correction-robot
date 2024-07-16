@@ -41,6 +41,8 @@ import robomimic.utils.lang_utils as LangUtils
 from robomimic.config import config_factory
 from robomimic.algo import algo_factory, RolloutPolicy
 from robomimic.utils.log_utils import PrintLogger, DataLogger, flush_warnings
+from robomimic.tasl_exp.progress_model_with_resnet import ProgressResNetModel
+from robomimic.tasl_exp.reward_model import ValueResNetModel
 
 
 def train(config, device):
@@ -59,6 +61,20 @@ def train(config, device):
     print(config)
     print("")
     log_dir, ckpt_dir, video_dir, vis_dir = TrainUtils.get_exp_dir(config)
+
+    if config.value_model_path:
+        value_model = ValueResNetModel()
+        value_model.load_state_dict(torch.load(config.value_model_path))
+        value_model.to(device)
+    else:
+        value_model = None
+
+    if config.progress_model_path:
+        progress_model = ProgressResNetModel()
+        progress_model.load_state_dict(torch.load(config.progress_model_path))
+        progress_model.to(device)
+    else:
+        progress_model = None
 
     if config.experiment.logging.terminal_output_to_txt:
         # log stdout and stderr to a text file
@@ -249,6 +265,8 @@ def train(config, device):
         if epoch > 0:
             step_log = TrainUtils.run_epoch(
                 model=model,
+                value_model=value_model,
+                progress_model=progress_model,
                 data_loader=train_loader,
                 epoch=epoch,
                 num_steps=train_num_steps,
@@ -284,7 +302,9 @@ def train(config, device):
             # Evaluate the model on validation set
             if config.experiment.validate:
                 with torch.no_grad():
-                    step_log = TrainUtils.run_epoch(model=model, data_loader=valid_loader, epoch=epoch, validate=True, num_steps=valid_num_steps)
+                    step_log = TrainUtils.run_epoch(model=model, value_model=value_model, progress_model=progress_model,
+                                                    data_loader=valid_loader, epoch=epoch, validate=True,
+                                                    num_steps=valid_num_steps)
                 for k, v in step_log.items():
                     if k.startswith("Time_"):
                         data_logger.record("Timing_Stats/Valid_{}".format(k[5:]), v, epoch)

@@ -14,20 +14,6 @@ from transformers import DetrModel, DetrFeatureExtractor
 import argparse
 
 # Argument Parsing
-parser = argparse.ArgumentParser(description='Train a Progress Predication Model Via Vision Transformer model.')
-parser.add_argument('--name', type=str, required=True, help='Name for the training task.')
-parser.add_argument('--model', type=str, required=True, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
-parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
-parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
-parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
-args = parser.parse_args()
-
-# set wandb monitor
-run_name = f"{args.name}_model_{args.model}_lr{args.lr}_bs{args.batch_size}_epochs{args.num_epochs}"
-wandb.init(project="progress-model-via-vision-transformer-finetuning", entity="minchiuan", name=run_name, config={
-    "system_metrics": True  # Enable system metrics logging
-})
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Using device: {device}")
 
@@ -48,7 +34,6 @@ class ProgressVitModelwithObjectDetection(nn.Module):
         return x
 
 
-
 class ProgressViTModel(nn.Module):
     def __init__(self, pretrained_model_name='google/vit-base-patch16-224'):
         super(ProgressViTModel, self).__init__()
@@ -65,57 +50,46 @@ class ProgressViTModel(nn.Module):
         x = self.sigmoid(x)
         return x
 
+
 class ProgressResNetModel(nn.Module):
     def __init__(self, pretrained_model_name='resnet50'):
         super(ProgressResNetModel, self).__init__()
-        # Initialize the DETR model
-        self.detr_feature_extractor = DetrFeatureExtractor.from_pretrained('facebook/detr-resnet-50')
-        self.detr_model = DetrModel.from_pretrained('facebook/detr-resnet-50')
-
         # Initialize the ResNet model
         self.resnet = models.resnet50(pretrained=True)
         self.resnet_fc_in_features = self.resnet.fc.in_features
         self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
 
         # Define additional fully connected layers
-        self.fc1 = nn.Linear(self.resnet_fc_in_features * 2, 512)
+        self.fc1_double = nn.Linear(self.resnet_fc_in_features * 2, 512)
+        self.fc1_single = nn.Linear(self.resnet_fc_in_features, 512)
         self.relu1 = nn.ReLU()
         self.dropout1 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(512, 128)
         self.relu2 = nn.ReLU()
         self.dropout2 = nn.Dropout(p=0.5)
         self.fc3 = nn.Linear(128, 1)
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, image1, image2):
-        detr_features1 = self.extract_detr_features(image1)
-        detr_features2 = self.extract_detr_features(image2)
-
-        # Pass the DETR features through ResNet
-        resnet_features1 = self.resnet(detr_features1)
-        resnet_features2 = self.resnet(detr_features2)
-
-        # Concatenate the features
-        concatenated = torch.cat((resnet_features1, resnet_features2), dim=1)
+        # Pass the images through ResNet
+        if image1 is not None:
+            resnet_features1 = self.resnet(image1)
+            resnet_features2 = self.resnet(image2)
+            concatenated = torch.cat((resnet_features1, resnet_features2), dim=1)
+            fc = self.fc1_double
+        else:
+            resnet_features1 = self.resnet(image2)
+            concatenated = resnet_features1
+            fc = self.fc1_single
 
         # Pass through fully connected layers
-        x = self.fc1(concatenated)
+        x = fc(concatenated)
         x = self.relu1(x)
         x = self.dropout1(x)
         x = self.fc2(x)
         x = self.relu2(x)
         x = self.dropout2(x)
         x = self.fc3(x)
-        x = self.sigmoid(x)
         return x
-
-    def extract_detr_features(self, image):
-        # Transform image to match the input requirements of DETR
-        encoding = self.detr_feature_extractor(images=image, return_tensors="pt")
-        pixel_values = encoding['pixel_values'].squeeze(0)  # Remove batch dimension
-        # Get the last hidden states (features) from DETR
-        outputs = self.detr_model(pixel_values=pixel_values)
-        return outputs.last_hidden_state
 
 
 class CustomImageDataset(Dataset):
@@ -161,7 +135,7 @@ class CustomImageDataset(Dataset):
         return image1, image2, torch.tensor(label, dtype=torch.float32)
 
 
-def main():
+def main(args):
     # Initialize the feature extractor
     feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')
 
@@ -211,7 +185,8 @@ def main():
         for i, (image1, image2, labels) in enumerate(progress_bar):
             image1, image2, labels = image1.to(device), image2.to(device), labels.to(device)
             optimizer.zero_grad()
-            outputs = model(image1, image2)
+            # outputs = model(image1, image2)
+            outputs = model(None, image2)
             loss = criterion(outputs, labels.unsqueeze(1))
             loss.backward()
             optimizer.step()
@@ -226,9 +201,6 @@ def main():
 
         print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {loss.item():.4f}")
 
-        # Save the model
-        torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch+1}.pth'))
-
         if epoch % 5 == 0:
             model.eval()
             val_loss = 0.0
@@ -238,7 +210,7 @@ def main():
                     # Move data to GPU
                     image1, image2, labels = image1.to(device), image2.to(device), labels.to(device)
 
-                    outputs = model(image1, image2)
+                    outputs = model(None, image2)
                     loss = criterion(outputs, labels.unsqueeze(1))
                     val_loss += loss.item()
 
@@ -246,8 +218,26 @@ def main():
                 wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss})
                 print(f"Epoch [{epoch + 1}/{num_epochs}], Validation Loss: {avg_val_loss:.4f}")
 
+        if epoch % 10 == 0:
+            # Save the model
+            torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch + 1}.pth'))
+
     wandb.finish()
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Train a Progress Predication Model Via Vision Transformer model.')
+    parser.add_argument('--name', type=str, required=False, help='Name for the training task.')
+    parser.add_argument('--model', type=str, required=False, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
+    parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
+    parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
+    parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
+    args = parser.parse_args()
+
+    # set wandb monitor
+    run_name = f"{args.name}_model_{args.model}_lr{args.lr}_bs{args.batch_size}_epochs{args.num_epochs}"
+    wandb.init(project="progress-model-via-vision-transformer-finetuning", entity="minchiuan", name=run_name, config={
+        "system_metrics": True  # Enable system metrics logging
+    })
+
+    main(args)

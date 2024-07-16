@@ -19,6 +19,7 @@ import robomimic.utils.obs_utils as ObsUtils
 from robomimic.macros import LANG_EMB_KEY
 
 from robomimic.algo import register_algo_factory_func, PolicyAlgo
+from robomimic.utils.tasl_exp import concatenate_images
 
 
 @register_algo_factory_func("bc")
@@ -115,7 +116,7 @@ class BC(PolicyAlgo):
         return TensorUtils.to_float(TensorUtils.to_device(input_batch, self.device))
 
 
-    def train_on_batch(self, batch, epoch, validate=False):
+    def train_on_batch(self, batch, epoch, value_model, reward_model, validate=False):
         """
         Training on a single batch of data.
 
@@ -132,18 +133,100 @@ class BC(PolicyAlgo):
             info (dict): dictionary of relevant inputs, outputs, and losses
                 that might be relevant for logging
         """
+        batch = concatenate_images(batch)
+
         with TorchUtils.maybe_no_grad(no_grad=validate):
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
             predictions = self._forward_training(batch)
             # calculate accumulated difference, if this value is greater than some threshold, re-train this model.
             losses = self._compute_losses(predictions, batch)
+            obs_images = batch['obs']['concatenated_images']
+            reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2], obs_images.shape[-1])
+            reshaped_concatenated_images = reshaped_concatenated_images.permute(0, 3, 1, 2)
+            progresses = reward_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
+            p_threshold = 0.8
+            rewards = torch.where(progresses > p_threshold, torch.tensor(1.0), torch.tensor(-1.0))
+            value_y_hats = value_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
+
+            value_y = torch.zeros_like(value_y_hats)
+            value_y[:, 0, :] = value_y_hats[:, 0, :]
+
+            for t in range(1, obs_images.shape[1]):
+                value_y[:, t, :] = value_y[:, t - 1, :] + rewards[:, t, :]
+
+            value_y_delta = value_y - value_y_hats
+            value_loss = torch.mean(value_y_delta ** 2)
+
+            value_optimizer = torch.optim.Adam(value_model.parameters(), lr=1e-5, weight_decay=1e-4)
+            value_optimizer.zero_grad()
+
+            value_loss.backward(retain_graph=True)
+            value_optimizer.step()
+
+            obs_images_copy = obs_images.clone().detach().requires_grad_(True)
+            obs_images_optimizer = torch.optim.AdamW([obs_images_copy], lr=1e-2, weight_decay=1e-4)
 
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
 
             if not validate:
+                for _ in range(1000): # get obs', the obs should be
+                    obs_images_optimizer.zero_grad()
+                    obs_images_copy.requires_grad = True
+
+                    reshaped_obs_images_copy = obs_images_copy.view(-1, obs_images_copy.shape[-3], obs_images_copy.shape[-2], obs_images_copy.shape[-1])
+                    reshaped_obs_images_copy = reshaped_obs_images_copy.permute(0, 3, 1, 2)
+                    value_y_hats_copy = value_model(None, reshaped_obs_images_copy).view(obs_images.shape[0], 10, -1)
+                    difference_copy = value_y_hats_copy - value_y
+                    loss_copy = torch.mean(difference_copy ** 2)
+                    loss_copy.backward(retain_graph=True)
+                    gradient_threshold = 1e-4
+
+                    grad_norm = torch.norm(obs_images_copy.grad) / obs_images_copy.numel()
+
+                    if grad_norm.item() < gradient_threshold:
+                        break
+                    else:
+                        obs_images_optimizer.step()
+
+                tmp_batch = batch.copy()
+
+                # tmp_batch = {k: (v.clone() if isinstance(v, torch.Tensor) else v) for k, v in batch.items()}
+                # tmp_batch['obs'] = {k: (v.clone() if isinstance(v, torch.Tensor) else v) for k, v in batch['obs'].items()}
+
+                # After optimization, split obs_images_copy and update tmp_batch
+                reshaped_obs_images_copy = obs_images_copy.view(-1, obs_images_copy.shape[-3],
+                                                                obs_images_copy.shape[-2], obs_images_copy.shape[-1])
+                reshaped_obs_images_copy = reshaped_obs_images_copy.permute(0, 3, 1,
+                                                                            2)  # Change to (batch_size, channels, height, width)
+
+                # Split the images
+                left_images = reshaped_obs_images_copy[:, :, :, :128]
+                right_images = reshaped_obs_images_copy[:, :, :, 128:256]
+                eye_in_hand_images = reshaped_obs_images_copy[:, :, :, 256:]
+
+                # Reshape back to the original shape
+                left_images = left_images.view(obs_images.shape[0], 10, 3, 128, 128)
+                right_images = right_images.view(obs_images.shape[0], 10, 3, 128, 128)
+                eye_in_hand_images = eye_in_hand_images.view(obs_images.shape[0], 10, 3, 128, 128)
+
+                tmp_batch['obs']['robot0_agentview_left_image'] = left_images
+                tmp_batch['obs']['robot0_agentview_right_image'] = right_images
+                tmp_batch['obs']['robot0_eye_in_hand_image'] = eye_in_hand_images
+
+                self.nets.training = False
+                progress_action = self.get_action(tmp_batch['obs'], keep_whole=True)
+                self.nets.training = True
+
+                batch['actions'] = progress_action
+                predictions = self._forward_training(batch)
+                losses['progress_loss'] = self._compute_losses(predictions, batch)
+                # beta = 0.5
+                losses['actions_loss'] = losses['action_loss'] + losses['progress_loss']['action_loss']
+
                 step_info = self._train_step(losses)
                 info.update(step_info)
+                value_optimizer.step()
 
         return info
 
@@ -772,7 +855,7 @@ class BC_Transformer(BC):
             predictions["actions"] = predictions["actions"][:, -1, :]
         return predictions
 
-    def get_action(self, obs_dict, goal_dict=None):
+    def get_action(self, obs_dict, goal_dict=None, keep_whole=False):
         """
         Get policy action outputs.
         Args:
@@ -785,15 +868,18 @@ class BC_Transformer(BC):
 
         output = self.nets["policy"](obs_dict, actions=None, goal_dict=goal_dict)
 
-        if self.supervise_all_steps:
-            if self.algo_config.transformer.pred_future_acs:
-                output = output[:, 0, :]
+        if keep_whole:
+            return output
+        else:
+            if self.supervise_all_steps:
+                if self.algo_config.transformer.pred_future_acs:
+                    output = output[:, 0, :]
+                else:
+                    output = output[:, -1, :]
             else:
                 output = output[:, -1, :]
-        else:
-            output = output[:, -1, :]
 
-        return output
+            return output
 
         
 
