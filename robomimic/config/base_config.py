@@ -58,6 +58,8 @@ class BaseConfig(Config):
 
         self.value_model_path = None
         self.progress_model_path = None
+        self.progress_threshold = None
+        self.progress_weight = None
 
         self.experiment_config()
         self.train_config()
