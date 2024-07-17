@@ -226,14 +226,15 @@ class BC(PolicyAlgo):
                 batch['actions'] = progress_action
                 predictions = self._forward_training(batch)
                 losses['progress_loss'] = self._compute_losses(predictions, batch)
-                # beta = 0.5
 
                 # print('the loss of expert demo is: ', losses['action_loss'])
                 # print('the loss of progress monitor is: ', losses['progress_loss']['action_loss'])
 
                 losses['losses_difference'] = torch.mean(torch.abs(losses['action_loss'] - losses['progress_loss']['action_loss']))
 
-                losses['actions_loss'] = losses['action_loss'] + losses['progress_loss']['action_loss']
+                progress_weight = config.progress_weight
+
+                losses['actions_loss'] = (1 - progress_weight) * losses['action_loss'] + progress_weight * losses['progress_loss']['action_loss']
 
                 step_info = self._train_step(losses)
                 info.update(step_info)
