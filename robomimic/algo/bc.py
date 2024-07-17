@@ -221,6 +221,8 @@ class BC(PolicyAlgo):
                 # print('the average value of expert demo action is: ', torch.mean(torch.abs(batch['actions'])))
                 # print("the average difference of predicated by expert demo and progress actions is: ", torch.mean(torch.abs(progress_action - batch['actions'])))
 
+                losses['action_difference'] = torch.mean(torch.abs(progress_action - batch['actions']))
+
                 batch['actions'] = progress_action
                 predictions = self._forward_training(batch)
                 losses['progress_loss'] = self._compute_losses(predictions, batch)
@@ -228,6 +230,8 @@ class BC(PolicyAlgo):
 
                 # print('the loss of expert demo is: ', losses['action_loss'])
                 # print('the loss of progress monitor is: ', losses['progress_loss']['action_loss'])
+
+                losses['losses_difference'] = torch.mean(torch.abs(losses['action_loss'] - losses['progress_loss']['action_loss']))
 
                 losses['actions_loss'] = losses['action_loss'] + losses['progress_loss']['action_loss']
 
@@ -322,6 +326,10 @@ class BC(PolicyAlgo):
         """
         log = super(BC, self).log_info(info)
         log["Loss"] = info["losses"]["action_loss"].item()
+        log['progress_loss'] = info["losses"]["progress_loss"]["action_loss"].item()
+        log['expert_and_progress_diff'] = info["action_difference"].item()
+        log['losses_difference'] = info["losses_difference"].item()
+
         if "l2_loss" in info["losses"]:
             log["L2_Loss"] = info["losses"]["l2_loss"].item()
         if "l1_loss" in info["losses"]:
