@@ -116,7 +116,7 @@ class BC(PolicyAlgo):
         return TensorUtils.to_float(TensorUtils.to_device(input_batch, self.device))
 
 
-    def train_on_batch(self, batch, epoch, value_model, reward_model, validate=False):
+    def train_on_batch(self, batch, epoch, value_model, reward_model, validate=False, config=None):
         """
         Training on a single batch of data.
 
@@ -144,7 +144,7 @@ class BC(PolicyAlgo):
             reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2], obs_images.shape[-1])
             reshaped_concatenated_images = reshaped_concatenated_images.permute(0, 3, 1, 2)
             progresses = reward_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
-            p_threshold = 0.8
+            p_threshold = config.progress_threshold
             rewards = torch.where(progresses > p_threshold, torch.tensor(1.0), torch.tensor(-1.0))
             value_y_hats = value_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
 

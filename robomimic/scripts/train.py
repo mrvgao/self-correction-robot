@@ -271,6 +271,7 @@ def train(config, device):
                 epoch=epoch,
                 num_steps=train_num_steps,
                 obs_normalization_stats=obs_normalization_stats,
+                config=config,
             )
             model.on_epoch_end(epoch)
 
@@ -304,7 +305,7 @@ def train(config, device):
                 with torch.no_grad():
                     step_log = TrainUtils.run_epoch(model=model, value_model=value_model, progress_model=progress_model,
                                                     data_loader=valid_loader, epoch=epoch, validate=True,
-                                                    num_steps=valid_num_steps)
+                                                    num_steps=valid_num_steps, config=config)
                 for k, v in step_log.items():
                     if k.startswith("Time_"):
                         data_logger.record("Timing_Stats/Valid_{}".format(k[5:]), v, epoch)

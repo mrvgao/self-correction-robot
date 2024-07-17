@@ -783,7 +783,7 @@ def save_model(model, config, env_meta, shape_meta, ckpt_path, obs_normalization
     print("save checkpoint to {}".format(ckpt_path))
 
 
-def run_epoch(model, data_loader, epoch, value_model=None, progress_model=None, validate=False, num_steps=None, obs_normalization_stats=None):
+def run_epoch(model, data_loader, epoch, value_model=None, progress_model=None, validate=False, num_steps=None, obs_normalization_stats=None, config=None):
     """
     Run an epoch of training or validation.
 
@@ -846,7 +846,7 @@ def run_epoch(model, data_loader, epoch, value_model=None, progress_model=None, 
 
         # forward and backward pass
         t = time.time()
-        info = model.train_on_batch(input_batch, epoch, value_model, progress_model, validate=validate)
+        info = model.train_on_batch(input_batch, epoch, value_model, progress_model, validate=validate, config=config)
         timing_stats["Train_Batch"].append(time.time() - t)
 
         # tensorboard logging
