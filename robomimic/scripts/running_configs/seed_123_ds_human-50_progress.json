@@ -3,13 +3,13 @@
     "value_model_path": "/home/minquangao/self-correction-robot/robomimic/tasl_exp/value_models/July_15_value_model_with_resnet_dropout_model_resnet_lr1e-05_bs100_epochs2000/best_model.pth",
     "progress_model_path": "/home/minquangao/self-correction-robot/robomimic/tasl_exp/models/july_15_progress_with_restnet_model_resnet_lr0.001_bs100_epochs100/model_epoch_91.pth",
     "experiment": {
-        "name": "july_15_full_seed_123_ds_human-50-mini-test-progress",
+        "name": "july_16_full_seed_123_ds_human-50-mini-test-progress",
         "validate": false,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "bc_xfmr_07-15-july-15-1k-counterToCanbinet_robocasa_im-mini-test-progress"
+            "wandb_proj_name": "bc_xfmr_07-16-july-16-1k-counterToCanbinet_robocasa_test-progress"
         },
         "mse": {},
         "save": {
