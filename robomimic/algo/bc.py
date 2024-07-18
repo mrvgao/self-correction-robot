@@ -115,10 +115,7 @@ class BC(PolicyAlgo):
         # this minimizes the amount of data transferred to GPU
         return TensorUtils.to_float(TensorUtils.to_device(input_batch, self.device))
 
-    def update_value_network(self, tau=0):
-        if tau == 0:
-            tau = 0.005
-
+    def update_value_network(self, tau=0.005):
         for target_param, param in zip(self.target_value_model.parameters(), self.main_value_model.parameters()):
             target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
@@ -172,6 +169,10 @@ class BC(PolicyAlgo):
 
             value_optimizer = torch.optim.Adam(self.main_value_model.parameters(), lr=1e-5, weight_decay=1e-4)
 
+            action_trust_in_progress = 1 - value_loss / torch.sum(torch.abs(value_y))
+
+            losses['action_loss'] *= action_trust_in_progress  # if some obs cannot get trustable progress prediction, we should not learn so much from it.
+
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
             # print(losses['action_loss'].item())
@@ -183,6 +184,7 @@ class BC(PolicyAlgo):
 
                 value_optimizer.zero_grad()
                 value_optimizer.step()
+                self.update_value_network(tau=0.005)
 
         return info
 
