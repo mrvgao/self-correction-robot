@@ -115,8 +115,14 @@ class BC(PolicyAlgo):
         # this minimizes the amount of data transferred to GPU
         return TensorUtils.to_float(TensorUtils.to_device(input_batch, self.device))
 
+    def update_value_network(self, tau=0):
+        if tau == 0:
+            tau = 0.005
 
-    def train_on_batch(self, batch, epoch, value_model, reward_model, validate=False, config=None):
+        for target_param, param in zip(self.target_value_model.parameters(), self.main_value_model.parameters()):
+            target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
+
+    def train_on_batch(self, batch, epoch, validate=False, config=None):
         """
         Training on a single batch of data.
 
@@ -136,108 +142,46 @@ class BC(PolicyAlgo):
         batch = concatenate_images(batch)
 
         with TorchUtils.maybe_no_grad(no_grad=validate):
+
+
+            obs_images = batch['obs']['concatenated_images']
+            reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2], obs_images.shape[-1])
+            reshaped_concatenated_images = reshaped_concatenated_images.permute(0, 3, 1, 2)
+            progresses = self.progress_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
+            p_threshold = config.progress_threshold
+            rewards = torch.where(progresses > p_threshold, torch.tensor(1.0), torch.tensor(-1.0))
+            value_y_hats = self.main_value_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
+            value_y_target = self.target_value_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
+
+            value_y = torch.zeros_like(value_y_target)
+            value_y[:, 0, :] = value_y_target[:, 0, :]
+
+            for t in range(1, obs_images.shape[1]):
+                value_y[:, t, :] = value_y_target[:, t - 1, :] + rewards[:, t, :]
+
+            batch['obs']['value'] = value_y
+
+            # get action fused value, which is corresponding with the progress
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
             predictions = self._forward_training(batch)
             # calculate accumulated difference, if this value is greater than some threshold, re-train this model.
             losses = self._compute_losses(predictions, batch)
-            obs_images = batch['obs']['concatenated_images']
-            reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2], obs_images.shape[-1])
-            reshaped_concatenated_images = reshaped_concatenated_images.permute(0, 3, 1, 2)
-            progresses = reward_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
-            p_threshold = config.progress_threshold
-            rewards = torch.where(progresses > p_threshold, torch.tensor(1.0), torch.tensor(-1.0))
-            value_y_hats = value_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
-
-            value_y = torch.zeros_like(value_y_hats)
-            value_y[:, 0, :] = value_y_hats[:, 0, :]
-
-            for t in range(1, obs_images.shape[1]):
-                value_y[:, t, :] = value_y[:, t - 1, :] + rewards[:, t, :]
 
             value_y_delta = value_y - value_y_hats
             value_loss = torch.mean(value_y_delta ** 2)
 
-            value_optimizer = torch.optim.Adam(value_model.parameters(), lr=1e-5, weight_decay=1e-4)
-            value_optimizer.zero_grad()
-
-            value_loss.backward(retain_graph=True)
-            value_optimizer.step()
-
-            obs_images_copy = obs_images.clone().detach().requires_grad_(True)
-            obs_images_optimizer = torch.optim.AdamW([obs_images_copy], lr=1e-2, weight_decay=1e-4)
+            value_optimizer = torch.optim.Adam(self.main_value_model.parameters(), lr=1e-5, weight_decay=1e-4)
 
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
+            # print(losses['action_loss'].item())
+            value_loss.backward(retain_graph=True)
 
             if not validate:
-                for _ in range(1000): # get obs', the obs should be
-                    obs_images_optimizer.zero_grad()
-                    obs_images_copy.requires_grad = True
-
-                    reshaped_obs_images_copy = obs_images_copy.view(-1, obs_images_copy.shape[-3], obs_images_copy.shape[-2], obs_images_copy.shape[-1])
-                    reshaped_obs_images_copy = reshaped_obs_images_copy.permute(0, 3, 1, 2)
-                    value_y_hats_copy = value_model(None, reshaped_obs_images_copy).view(obs_images.shape[0], 10, -1)
-                    difference_copy = value_y_hats_copy - value_y
-                    loss_copy = torch.mean(difference_copy ** 2)
-                    loss_copy.backward(retain_graph=True)
-                    gradient_threshold = 1e-4
-
-                    grad_norm = torch.norm(obs_images_copy.grad) / obs_images_copy.numel()
-
-                    if grad_norm.item() < gradient_threshold:
-                        break
-                    else:
-                        obs_images_optimizer.step()
-
-                tmp_batch = batch.copy()
-
-                # tmp_batch = {k: (v.clone() if isinstance(v, torch.Tensor) else v) for k, v in batch.items()}
-                # tmp_batch['obs'] = {k: (v.clone() if isinstance(v, torch.Tensor) else v) for k, v in batch['obs'].items()}
-
-                # After optimization, split obs_images_copy and update tmp_batch
-                reshaped_obs_images_copy = obs_images_copy.view(-1, obs_images_copy.shape[-3],
-                                                                obs_images_copy.shape[-2], obs_images_copy.shape[-1])
-                reshaped_obs_images_copy = reshaped_obs_images_copy.permute(0, 3, 1,
-                                                                            2)  # Change to (batch_size, channels, height, width)
-
-                # Split the images
-                left_images = reshaped_obs_images_copy[:, :, :, :128]
-                right_images = reshaped_obs_images_copy[:, :, :, 128:256]
-                eye_in_hand_images = reshaped_obs_images_copy[:, :, :, 256:]
-
-                # Reshape back to the original shape
-                left_images = left_images.view(obs_images.shape[0], 10, 3, 128, 128)
-                right_images = right_images.view(obs_images.shape[0], 10, 3, 128, 128)
-                eye_in_hand_images = eye_in_hand_images.view(obs_images.shape[0], 10, 3, 128, 128)
-
-                tmp_batch['obs']['robot0_agentview_left_image'] = left_images
-                tmp_batch['obs']['robot0_agentview_right_image'] = right_images
-                tmp_batch['obs']['robot0_eye_in_hand_image'] = eye_in_hand_images
-
-                self.nets.training = False
-                progress_action = self.get_action(tmp_batch['obs'], keep_whole=True)
-                self.nets.training = True
-
-                # print('the average value of expert demo action is: ', torch.mean(torch.abs(batch['actions'])))
-                # print("the average difference of predicated by expert demo and progress actions is: ", torch.mean(torch.abs(progress_action - batch['actions'])))
-
-                losses['action_difference'] = torch.mean(torch.abs(progress_action - batch['actions']))
-
-                batch['actions'] = progress_action
-                predictions = self._forward_training(batch)
-                losses['progress_loss'] = self._compute_losses(predictions, batch)
-
-                # print('the loss of expert demo is: ', losses['action_loss'])
-                # print('the loss of progress monitor is: ', losses['progress_loss']['action_loss'])
-
-                losses['losses_difference'] = torch.mean(torch.abs(losses['action_loss'] - losses['progress_loss']['action_loss']))
-
-                progress_weight = config.progress_weight
-
-                losses['actions_loss'] = (1 - progress_weight) * losses['action_loss'] + progress_weight * losses['progress_loss']['action_loss']
-
                 step_info = self._train_step(losses)
                 info.update(step_info)
+
+                value_optimizer.zero_grad()
                 value_optimizer.step()
 
         return info
@@ -902,7 +846,14 @@ class BC_Transformer(BC):
 class BC_Transformer_GMM(BC_Transformer):
     """
     BC training with a Transformer GMM policy.
+
     """
+    def __init__(self, main_value_model, target_value_model, progress_model, *args, **kwargs):
+        super(BC_Transformer_GMM, self).__init__(*args, **kwargs)
+        self.main_value_model = main_value_model
+        self.target_value_model = target_value_model
+        self.progress_model = progress_model
+
     def _create_networks(self):
         """
         Creates networks and places them into @self.nets.
@@ -911,6 +862,9 @@ class BC_Transformer_GMM(BC_Transformer):
         assert self.algo_config.transformer.enabled
 
         self.nets = nn.ModuleDict()
+
+        self.obs_shapes['value'] = [1]
+
         self.nets["policy"] = PolicyNets.TransformerGMMActorNetwork(
             obs_shapes=self.obs_shapes,
             goal_shapes=self.goal_shapes,
@@ -983,6 +937,7 @@ class BC_Transformer_GMM(BC_Transformer):
 
         # loss is just negative log-likelihood of action targets
         action_loss = -predictions["log_probs"].mean()
+
         return OrderedDict(
             log_probs=-action_loss,
             action_loss=action_loss,

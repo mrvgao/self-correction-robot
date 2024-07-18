@@ -54,7 +54,8 @@ def algo_name_to_factory_func(algo_name):
     return REGISTERED_ALGO_FACTORY_FUNCS[algo_name]
 
 
-def algo_factory(algo_name, config, obs_key_shapes, ac_dim, device):
+def algo_factory(algo_name, config, obs_key_shapes, ac_dim, device,
+                 main_value_model=None, target_value_model=None, progress_model=None):
     """
     Factory function for creating algorithms based on the algorithm name and config.
 
@@ -85,6 +86,9 @@ def algo_factory(algo_name, config, obs_key_shapes, ac_dim, device):
         obs_key_shapes=obs_key_shapes,
         ac_dim=ac_dim,
         device=device,
+        main_value_model=main_value_model,
+        target_value_model=target_value_model,
+        progress_model=progress_model,
         **algo_kwargs
     )
 

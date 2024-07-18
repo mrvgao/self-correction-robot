@@ -63,11 +63,16 @@ def train(config, device):
     log_dir, ckpt_dir, video_dir, vis_dir = TrainUtils.get_exp_dir(config)
 
     if config.value_model_path:
-        value_model = ValueResNetModel()
-        value_model.load_state_dict(torch.load(config.value_model_path))
-        value_model.to(device)
+        main_value_model = ValueResNetModel()
+        main_value_model.load_state_dict(torch.load(config.value_model_path))
+        main_value_model.to(device)
+
+        target_value_model = ValueResNetModel()
+        target_value_model.load_state_dict(torch.load(config.value_model_path))
+        target_value_model.to(device)
     else:
-        value_model = None
+        main_value_model = None
+        target_value_model = None
 
     if config.progress_model_path:
         progress_model = ProgressResNetModel()
@@ -172,12 +177,18 @@ def train(config, device):
         log_tb=config.experiment.logging.log_tb,
         log_wandb=config.experiment.logging.log_wandb,
     )
+    shape_meta_list[0]['all_shapes']['value'] = [1]
+    shape_meta_list[0]['all_obs_keys'].append('value')
+
     model = algo_factory(
         algo_name=config.algo_name,
         config=config,
         obs_key_shapes=shape_meta_list[0]["all_shapes"],
         ac_dim=shape_meta_list[0]["ac_dim"],
         device=device,
+        main_value_model=main_value_model,
+        target_value_model=target_value_model,
+        progress_model=progress_model,
     )
     
     # save the config as a json file
@@ -265,8 +276,6 @@ def train(config, device):
         if epoch > 0:
             step_log = TrainUtils.run_epoch(
                 model=model,
-                value_model=value_model,
-                progress_model=progress_model,
                 data_loader=train_loader,
                 epoch=epoch,
                 num_steps=train_num_steps,
@@ -303,7 +312,7 @@ def train(config, device):
             # Evaluate the model on validation set
             if config.experiment.validate:
                 with torch.no_grad():
-                    step_log = TrainUtils.run_epoch(model=model, value_model=value_model, progress_model=progress_model,
+                    step_log = TrainUtils.run_epoch(model=model,
                                                     data_loader=valid_loader, epoch=epoch, validate=True,
                                                     num_steps=valid_num_steps, config=config)
                 for k, v in step_log.items():

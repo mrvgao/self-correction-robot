@@ -622,6 +622,8 @@ class SequenceDataset(torch.utils.data.Dataset):
         # fetch observation from the dataset file
         seq = dict()
         for k in keys:
+            if k == 'obs/value': continue
+
             data = self.get_dataset_for_ep(demo_id, k)
             seq[k] = data[seq_begin_index: seq_end_index]
 
