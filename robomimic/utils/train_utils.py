@@ -29,6 +29,7 @@ from robomimic.algo import RolloutPolicy
 from tianshou.env import SubprocVectorEnv
 from robomimic.utils.exp_utils import find_all_zero_subtensor, find_false_value, get_images_matches_distance, show_batch_images
 from robomimic.utils.exp_utils import StateManager
+from robomimic.utils.tasl_exp import add_value
 from PIL import Image
 import cv2
 
@@ -270,6 +271,8 @@ def run_rollout(
         video_skip=5,
         terminate_on_success=False,
         frame_save_dir=None,
+        config=None,
+        device=None,
     ):
     """
     Runs a rollout in an environment with the current network parameters.
@@ -340,6 +343,7 @@ def run_rollout(
             ac = policy(ob=policy_ob, goal=goal_dict, batched=True) #, return_ob=True)
         else:
             policy_ob = ob_dict
+            policy_ob, _, _ = add_value(policy_ob, config, policy, policy.policy.device)
             ac = policy(ob=policy_ob, goal=goal_dict) #, return_ob=True)
 
         # play action
@@ -505,6 +509,8 @@ def rollout_with_stats(
         verbose=False,
         del_envs_after_rollouts=False,
         data_logger=None,
+        config=None,
+        device=None,
     ):
     """
     A helper function used in the train loop to conduct evaluation rollouts per environment
@@ -610,6 +616,8 @@ def rollout_with_stats(
                     video_skip=video_skip,
                     terminate_on_success=terminate_on_success,
                     frame_save_dir=save_frames_dir,
+                    config=config,
+                    device=device,
                 )
             except Exception as e:
                 print("Rollout exception at episode number {}!".format(ep_i))

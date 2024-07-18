@@ -19,7 +19,7 @@ import robomimic.utils.obs_utils as ObsUtils
 from robomimic.macros import LANG_EMB_KEY
 
 from robomimic.algo import register_algo_factory_func, PolicyAlgo
-from robomimic.utils.tasl_exp import concatenate_images
+from robomimic.utils.tasl_exp import concatenate_images, add_value
 
 
 @register_algo_factory_func("bc")
@@ -136,27 +136,10 @@ class BC(PolicyAlgo):
             info (dict): dictionary of relevant inputs, outputs, and losses
                 that might be relevant for logging
         """
-        batch = concatenate_images(batch)
 
         with TorchUtils.maybe_no_grad(no_grad=validate):
 
-
-            obs_images = batch['obs']['concatenated_images']
-            reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2], obs_images.shape[-1])
-            reshaped_concatenated_images = reshaped_concatenated_images.permute(0, 3, 1, 2)
-            progresses = self.progress_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
-            p_threshold = config.progress_threshold
-            rewards = torch.where(progresses > p_threshold, torch.tensor(1.0), torch.tensor(-1.0))
-            value_y_hats = self.main_value_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
-            value_y_target = self.target_value_model(None, reshaped_concatenated_images).view(obs_images.shape[0], 10, -1)
-
-            value_y = torch.zeros_like(value_y_target)
-            value_y[:, 0, :] = value_y_target[:, 0, :]
-
-            for t in range(1, obs_images.shape[1]):
-                value_y[:, t, :] = value_y_target[:, t - 1, :] + rewards[:, t, :]
-
-            batch['obs']['value'] = value_y
+            batch, value_y_hats, value_y = add_value(batch, config, self, self.device)
 
             # get action fused value, which is corresponding with the progress
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)

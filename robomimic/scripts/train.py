@@ -365,6 +365,8 @@ def train(config, device):
                 terminate_on_success=config.experiment.rollout.terminate_on_success,
                 del_envs_after_rollouts=True,
                 data_logger=data_logger,
+                config=config,
+                device=device,
             )
 
             #### move this code to rollout_with_stats function to log results one by one ####
