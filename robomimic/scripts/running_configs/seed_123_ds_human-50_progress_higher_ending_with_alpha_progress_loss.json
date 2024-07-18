@@ -75,10 +75,22 @@
     "train": {
         "data": [
             {
+                "horizon": 600,
+                "do_eval": true,
+                "filter_key": "50_demos",
+                "path": "/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_coffee/CoffeeSetupMug/2024-04-25/demo_gentex_im128_randcams.hdf5"
+            },
+            {
                 "horizon": 500,
                 "do_eval": true,
                 "filter_key": "50_demos",
                 "path": "/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5"
+            },
+             {
+                "horizon": 700,
+                "do_eval": true,
+                "filter_key": "50_demos",
+                "path": "/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToSink/2024-04-25/demo_gentex_im128_randcams.hdf5"
             }
         ],
         "output_dir": "~/expdata/robocasa/im/bc_xfmr/07-15-july-15-1k-counterToCanbinet",
