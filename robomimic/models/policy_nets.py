@@ -1275,8 +1275,8 @@ class TransformerGMMActorNetwork(TransformerActorNetwork):
 
         forward_kwargs = dict(obs=obs_dict, goal=goal_dict)
 
-        outputs = MIMO_Transformer.forward(self, **forward_kwargs)
-        
+        outputs, predict_value = MIMO_Transformer.forward(self, **forward_kwargs)
+
         means = outputs["mean"]
         scales = outputs["scale"]
         logits = outputs["logits"]
@@ -1311,7 +1311,7 @@ class TransformerGMMActorNetwork(TransformerActorNetwork):
             # Wrap distribution with Tanh
             dists = TanhWrappedDistribution(base_dist=dists, scale=1.)
 
-        return dists
+        return dists, predict_value
 
     def forward(self, obs_dict, actions=None, goal_dict=None):
         """
@@ -1323,7 +1323,7 @@ class TransformerGMMActorNetwork(TransformerActorNetwork):
         Returns:
             action (torch.Tensor): batch of actions from policy distribution
         """
-        out = self.forward_train(obs_dict=obs_dict, actions=actions, goal_dict=goal_dict)
+        out, _ = self.forward_train(obs_dict=obs_dict, actions=actions, goal_dict=goal_dict)
         return out.sample()
 
     def _to_string(self):

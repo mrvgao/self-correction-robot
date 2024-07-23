@@ -20,6 +20,7 @@ from robomimic.macros import LANG_EMB_KEY
 
 from robomimic.algo import register_algo_factory_func, PolicyAlgo
 from robomimic.utils.tasl_exp import concatenate_images, add_value
+from robomimic.utils.tasl_exp import get_diff_percentage
 
 
 @register_algo_factory_func("bc")
@@ -143,33 +144,33 @@ class BC(PolicyAlgo):
 
             # get action fused value, which is corresponding with the progress
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
-            predictions = self._forward_training(batch)
+            predictions, value_hat = self._forward_training(batch)
             # calculate accumulated difference, if this value is greater than some threshold, re-train this model.
             losses = self._compute_losses(predictions, batch)
 
-            value_y_delta = value_y - value_y_hats
+            value_y_delta = value_y - value_hat
             value_loss = torch.mean(value_y_delta ** 2)
 
-            value_optimizer = torch.optim.Adam(self.main_value_model.parameters(), lr=1e-5, weight_decay=1e-4)
+            value_optimizer = torch.optim.Adam(self.nets['policy'].parameters(), lr=1e-5, weight_decay=1e-4)
 
-            action_trust_in_progress = 1 - value_loss / torch.sum(torch.abs(value_y))
+            value_delta = get_diff_percentage(value_hat, value_y)
 
             # print('action_trust_in_progress', action_trust_in_progress)
 
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
             info[f'Parameters_hist_of_value_embedding_{epoch}'] = self.nets.policy.nets.value_embedding.weight.detach().cpu().numpy()
+            info["value_loss"] = TensorUtils.detach(value_loss)
 
-            # print(losses['action_loss'].item())
             value_loss.backward(retain_graph=True)
-            trust_threshold = 0.1
 
             if not validate:
                 value_optimizer.zero_grad()
                 value_optimizer.step()
-                self.update_value_network(tau=0.005)
 
-                if 1 - trust_threshold <= action_trust_in_progress <= 1 + trust_threshold:
+                if value_delta < 100:
+                    trust = 1 - value_delta
+                    losses['action_loss'] *= trust
                     step_info = self._train_step(losses)
                     info.update(step_info)
 
@@ -880,7 +881,7 @@ class BC_Transformer_GMM(BC_Transformer):
             msg="Error: expect temporal dimension of obs batch to match transformer context length {}".format(self.context_length),
         )
 
-        dists = self.nets["policy"].forward_train(
+        dists, predict_value = self.nets["policy"].forward_train(
             obs_dict=batch["obs"], 
             actions=None,
             goal_dict=batch["goal_obs"],
@@ -910,7 +911,7 @@ class BC_Transformer_GMM(BC_Transformer):
         predictions = OrderedDict(
             log_probs=log_probs,
         )
-        return predictions
+        return predictions, predict_value
 
     def _compute_losses(self, predictions, batch):
         """
@@ -943,7 +944,8 @@ class BC_Transformer_GMM(BC_Transformer):
         """
         log = PolicyAlgo.log_info(self, info)
         log["Loss"] = info["losses"]["action_loss"].item()
-        log["Log_Likelihood"] = info["losses"]["log_probs"].item() 
+        log["Log_Likelihood"] = info["losses"]["log_probs"].item()
+        log['value_loss'] = info['value_loss'].item()
         if "policy_grad_norms" in info:
             log["Policy_Grad_Norms"] = info["policy_grad_norms"]
 

@@ -81,3 +81,19 @@ def add_value(batch, config, obj, device):
         batch = batch['obs']
 
     return batch, value_y_hats, value_y_target
+
+
+def get_diff_percentage(V, V_t):
+    difference = torch.abs(V - V_t)
+
+    # Calculate the absolute target values
+    abs_target = torch.abs(V_t)
+
+    # Avoid division by zero by adding a small epsilon where abs_target is zero
+    epsilon = 1e-8
+    abs_target = torch.where(abs_target == 0, torch.tensor(epsilon), abs_target)
+
+    # Calculate the percentage difference
+    percentage_difference = (difference / abs_target) * 100
+
+    return torch.mean(percentage_difference)

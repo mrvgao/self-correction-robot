@@ -1001,6 +1001,7 @@ class MIMO_Transformer(Module):
         self.transformer_nn_parameter_for_timesteps = transformer_nn_parameter_for_timesteps
 
         self.nets["value_embedding"] = nn.Linear(1, transformer_embed_dim)
+        self.nets["value_decoder"] = nn.Linear(transformer_embed_dim, 1)
 
     def output_shape(self, input_shape=None):
         """
@@ -1118,7 +1119,10 @@ class MIMO_Transformer(Module):
             transformer_outputs, self.nets["decoder"]
         )
         transformer_outputs["transformer_encoder_outputs"] = transformer_encoder_outputs
-        return transformer_outputs
+
+        predict_value = self.nets["value_decoder"](transformer_encoder_outputs)
+
+        return transformer_outputs, predict_value
 
     def _to_string(self):
         """
