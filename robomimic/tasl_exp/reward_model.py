@@ -221,7 +221,6 @@ def main(args):
                     loss = criterion(outputs, labels.unsqueeze(1))
                     val_loss += loss.item()
 
-
                 avg_val_loss = val_loss / len(val_dataloader)
                 scheduler.step(avg_val_loss)
                 wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss})
