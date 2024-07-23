@@ -422,21 +422,21 @@ def run_rollout(
                     #     cam_imgs.append(im)
 
                     # frame = np.concatenate(cam_imgs, axis=0)
-                    image_left = ob_dict['robot0_agentview_left_image']
-                    image_hand = ob_dict['robot0_eye_in_hand_image']
-                    image_right = ob_dict['robot0_agentview_right_image']
+                    # image_left = ob_dict['robot0_agentview_left_image']
+                    # image_hand = ob_dict['robot0_eye_in_hand_image']
+                    # image_right = ob_dict['robot0_agentview_right_image']
 
-                    for left, hand, right in zip(image_left, image_hand, image_right):
-                        left = left.transpose((1, 2, 0))
-                        right = right.transpose((1, 2, 0))
-                        hand = hand.transpose((1, 2, 0))
-
-                        whole_image = np.concatenate((left, hand, right), axis=1) * 255
-                        whole_image = whole_image.astype(np.uint8)
-                        whole_image = cv2.cvtColor(whole_image, cv2.COLOR_BGR2RGB)
-                        frame_count += 1
-                        save_path = os.path.join(frame_save_dir, str(frame_count) + '.png')
-                        cv2.imwrite(save_path, whole_image)
+                    # for left, hand, right in zip(image_left, image_hand, image_right):
+                    #     left = left.transpose((1, 2, 0))
+                    #     right = right.transpose((1, 2, 0))
+                    #     hand = hand.transpose((1, 2, 0))
+                    #
+                    #     whole_image = np.concatenate((left, hand, right), axis=1) * 255
+                    #     whole_image = whole_image.astype(np.uint8)
+                    #     whole_image = cv2.cvtColor(whole_image, cv2.COLOR_BGR2RGB)
+                    #     frame_count += 1
+                        # save_path = os.path.join(frame_save_dir, str(frame_count) + '.png')
+                        # cv2.imwrite(save_path, whole_image)
                     video_frames.append(frame)
 
             video_count += 1
@@ -870,7 +870,7 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
             if k not in step_log_dict:
                 step_log_dict[k] = []
             step_log_dict[k].append(step_log_all[i][k])
-    step_log_all = dict((k, float(np.mean(v))) for k, v in step_log_dict.items())
+    step_log_all = dict((k, float(np.mean(v))) if not k.startswith('Parameters') else (k, np.mean(v, axis=0)) for k, v in step_log_dict.items())
 
     # add in timing stats
     for k in timing_stats:

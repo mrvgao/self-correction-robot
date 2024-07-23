@@ -11,6 +11,7 @@ import textwrap
 import time
 from tqdm import tqdm
 from termcolor import colored
+import wandb
 
 import robomimic
 
@@ -109,7 +110,7 @@ class DataLogger(object):
             log_stats (bool): whether to store the mean/max/min/std for all data logged so far with key k
         """
 
-        assert data_type in ['scalar', 'image']
+        assert data_type in ['scalar', 'image', 'hist']
 
         if data_type == 'scalar':
             # maybe update internal cache if logging stats for this key
@@ -141,8 +142,10 @@ class DataLogger(object):
                         for (stat_k, stat_v) in stats.items():
                             self._wandb_logger.log({stat_k: stat_v}, step=epoch)
                 elif data_type == 'image':
-                    import wandb
                     self._wandb_logger.log({k: wandb.Image(v)}, step=epoch)
+                elif data_type == 'hist':
+                    self._wandb_logger.log({k: wandb.Histogram(v)}, step=epoch)
+
             except Exception as e:
                 log_warning("wandb logging: {}".format(e))
 

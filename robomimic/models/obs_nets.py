@@ -1000,6 +1000,8 @@ class MIMO_Transformer(Module):
         self.transformer_sinusoidal_embedding = transformer_sinusoidal_embedding
         self.transformer_nn_parameter_for_timesteps = transformer_nn_parameter_for_timesteps
 
+        self.nets["value_embedding"] = nn.Linear(1, transformer_embed_dim)
+
     def output_shape(self, input_shape=None):
         """
         Returns output shape for this module, which is a dictionary instead
@@ -1048,6 +1050,7 @@ class MIMO_Transformer(Module):
     def input_embedding(
         self,
         inputs,
+        values,
     ):
         """
         Process encoded observations into embeddings to pass to transformer,
@@ -1060,6 +1063,13 @@ class MIMO_Transformer(Module):
         embeddings = self.nets["embed_encoder"](inputs)
         time_embeddings = self.embed_timesteps(embeddings)
         embeddings = embeddings + time_embeddings
+
+        # Add value embeddings
+        batch_size, seq_len, _ = embeddings.shape
+
+        value_embeddings = self.nets["value_embedding"](values)
+        embeddings = embeddings + value_embeddings
+
         embeddings = self.nets["embed_ln"](embeddings)
         embeddings = self.nets["embed_drop"](embeddings)
 
@@ -1095,8 +1105,10 @@ class MIMO_Transformer(Module):
         )
         assert transformer_inputs.ndim == 3  # [B, T, D]
 
+        input_values = inputs['obs']['value']
+
         if transformer_encoder_outputs is None:
-            transformer_embeddings = self.input_embedding(transformer_inputs)
+            transformer_embeddings = self.input_embedding(transformer_inputs, input_values)
             # pass encoded sequences through transformer
             transformer_encoder_outputs = self.nets["transformer"].forward(transformer_embeddings)
 

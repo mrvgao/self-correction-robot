@@ -5,13 +5,13 @@
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
     "experiment": {
-        "name": "july_18_full_seed_123_ds_human-50-mini-test-progress",
+        "name": "july_21_with_value_embedding",
         "validate": false,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "bc_xfmr_07-18-july-18-1k-counterToCanbinet_robocasa_test-progress"
+            "wandb_proj_name": "with-value-embedding"
         },
         "mse": {},
         "save": {
@@ -24,7 +24,7 @@
             "on_best_rollout_success_rate": false
         },
         "epoch_every_n_steps": 500,
-        "validation_epoch_every_n_steps": 10,
+        "validation_epoch_every_n_steps": 100,
         "env": null,
         "additional_envs": null,
         "render": false,
@@ -34,7 +34,7 @@
         "rollout": {
             "enabled": true,
             "n": 50,
-            "horizon": 500,
+            "horizon": 700,
             "rate": 100,
             "warmstart": 0,
             "terminate_on_success": true
@@ -75,25 +75,13 @@
     "train": {
         "data": [
             {
-                "horizon": 600,
-                "do_eval": true,
-                "filter_key": "50_demos",
-                "path": "/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_coffee/CoffeeSetupMug/2024-04-25/demo_gentex_im128_randcams.hdf5"
-            },
-            {
                 "horizon": 500,
                 "do_eval": true,
                 "filter_key": "50_demos",
                 "path": "/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5"
-            },
-             {
-                "horizon": 700,
-                "do_eval": true,
-                "filter_key": "50_demos",
-                "path": "/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToSink/2024-04-25/demo_gentex_im128_randcams.hdf5"
             }
         ],
-        "output_dir": "~/expdata/robocasa/im/bc_xfmr/07-18-july-18-1k-three-tasks",
+        "output_dir": "~/expdata/robocasa/im/bc_xfmr/with-value-embedding",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,

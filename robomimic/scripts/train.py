@@ -272,6 +272,8 @@ def train(config, device):
     train_num_steps = config.experiment.epoch_every_n_steps
     valid_num_steps = config.experiment.validation_epoch_every_n_steps
 
+    all_value_embeddings = []
+
     for epoch in range(0, config.train.num_epochs + 1): # epoch numbers start at 1
         if epoch > 0:
             step_log = TrainUtils.run_epoch(
@@ -301,11 +303,19 @@ def train(config, device):
                 last_ckpt_time = time.time()
                 ckpt_reason = "time"
 
-            print("Train Epoch {}".format(epoch))
-            print(json.dumps(step_log, sort_keys=True, indent=4))
+            # print("Train Epoch {}".format(epoch))
+            # print(step_log, sort_keys=True, indent=4)
+
+            PARAMTERS = 'Parameters'
+
             for k, v in step_log.items():
                 if k.startswith("Time_"):
                     data_logger.record("Timing_Stats/Train_{}".format(k[5:]), v, epoch)
+                elif k.startswith(PARAMTERS):
+                    # data_logger.record("{}/{}".format(PARAMTERS, k[len(PARAMTERS):]), v, epoch, data_type='hist')
+                    epoch_value_embedding = np.concatenate(v, axis=0)
+                    all_value_embeddings.append(epoch_value_embedding)
+                    data_logger.record('{}/value_embeddings'.format(PARAMTERS), all_value_embeddings, epoch, data_type='hist')
                 else:
                     data_logger.record("Train/{}".format(k), v, epoch)
 
@@ -321,8 +331,8 @@ def train(config, device):
                     else:
                         data_logger.record("Valid/{}".format(k), v, epoch)
 
-                print("Validation Epoch {}".format(epoch))
-                print(json.dumps(step_log, sort_keys=True, indent=4))
+                # print("Validation Epoch {}".format(epoch))
+                # print(step_log, sort_keys=True, indent=4)
 
                 # save checkpoint if achieve new best validation loss
                 valid_check = "Loss" in step_log
@@ -425,8 +435,8 @@ def train(config, device):
                 data_logger.record("{}".format(k), v, epoch, data_type='image')
 
 
-            print("MSE Log Epoch {}".format(epoch))
-            print(json.dumps(mse_log, sort_keys=True, indent=4))
+            # print("MSE Log Epoch {}".format(epoch))
+            # print(json.dumps(mse_log, sort_keys=True, indent=4))
         
         # # Only keep saved videos if the ckpt should be saved (but not because of validation score)
         # should_save_video = (should_save_ckpt and (ckpt_reason != "valid")) or config.experiment.keep_all_videos
