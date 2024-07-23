@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torchvision import models
 from transformers import ViTFeatureExtractor, ViTModel
 import os
 from PIL import Image
@@ -14,7 +15,7 @@ import argparse
 from transformers import CLIPModel, CLIPProcessor
 
 # Argument Parsing
-parser = argparse.ArgumentParser(description='Train a Progress Predication Model Via CLIP.')
+parser = argparse.ArgumentParser(description='Train a Progress Predication Model Via CLIP and MSE.')
 parser.add_argument('--name', type=str, required=True, help='Name for the training task.')
 parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
 parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
@@ -24,7 +25,7 @@ args = parser.parse_args()
 
 # set wandb monitor
 run_name = f"{args.name}_{args.lr}_bs{args.batch_size}_epochs{args.num_epochs}"
-wandb.init(project="progress-model-via-CLIP", entity="minchiuan", name=run_name, config={
+wandb.init(project="progress-model-via-CLIP-MSE", entity="minchiuan", name=run_name, config={
     "system_metrics": True  # Enable system metrics logging
 })
 
@@ -83,24 +84,38 @@ class CLIPCombinedModel(nn.Module):
         print('loading clip model')
         self.clip_model = CLIPModel.from_pretrained(clip_model_name)
 
-        # Define a fully connected layer for the combined features
-        # self.fc = nn.Linear(self.clip_model.config.projection_dim, 1)
-        self.fc = nn.Linear(1, 1)  # Since the similarity score is scalar
+        # Load pre-trained ResNet model
+        print('loading resnet model')
+        self.resnet_model = models.resnet50(pretrained=True)
+        self.resnet_model.fc = nn.Identity()  # Remove the final classification layer
+
+        # Define projection layers to match dimensions
+        self.image_proj = nn.Linear(self.clip_model.config.projection_dim + 2048, 768)
+        self.fc = nn.Linear(768, 1)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, image, input_ids, attention_mask):
-        # Process the image and sentence
+        # Process the image through ResNet
+        resnet_features = self.resnet_model(image)
+
+        # Process the image and sentence through CLIP
         vision_outputs = self.clip_model.get_image_features(image)
         text_outputs = self.clip_model.get_text_features(input_ids, attention_mask)
 
-        # Get similarity scores
-        similarity_score = (vision_outputs * text_outputs).sum(dim=1, keepdim=True)
+        # Concatenate ResNet features and CLIP vision features
+        combined_features = torch.cat((vision_outputs, resnet_features), dim=1)
+
+        # Project combined features to match text feature dimensions
+        projected_features = self.image_proj(combined_features)
+
+        # Get similarity scores with text features
+        similarity_score = (projected_features * text_outputs).sum(dim=1, keepdim=True)
 
         # Pass through the fully connected layer
-        output = self.fc(similarity_score)
+        # output = self.fc(similarity_score)
 
         # Apply sigmoid activation to constrain output between 0 and 1
-        output = self.sigmoid(output)
+        output = self.sigmoid(similarity_score)
 
         return output.squeeze()
 
@@ -122,7 +137,7 @@ def main():
 
     dataset = CustomImageDataset(root_dir, processor, task_descrpition)
 
-    train_size = int(0.9 * len(dataset))
+    train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
@@ -139,7 +154,7 @@ def main():
         model.load_state_dict(torch.load(args.model_path))
         print(f"Loaded pretrained model from {args.model_path}")
 
-    criterion = nn.BCELoss()
+    criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     task_name = wandb.run.name

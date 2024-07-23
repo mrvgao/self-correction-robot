@@ -149,7 +149,7 @@ def main(args):
     root_dir = '/home/minquangao/robocasa/playground/counterToCab-robot-merged-image/'
     dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
 
-    train_size = int(0.9 * len(dataset))
+    train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
