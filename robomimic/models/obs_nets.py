@@ -26,6 +26,8 @@ from robomimic.models.base_nets import Module, Sequential, MLP, RNN_Base, ResNet
 from robomimic.models.obs_core import VisualCore, Randomizer, VisualCoreLanguageConditioned
 from robomimic.models.transformers import PositionalEncoding, GPT_Backbone
 from robomimic.macros import LANG_EMB_KEY
+from robomimic.utils.tasl_exp import custom_init
+from functools import partial
 
 def obs_encoder_factory(
         obs_shapes,
@@ -1001,7 +1003,15 @@ class MIMO_Transformer(Module):
         self.transformer_nn_parameter_for_timesteps = transformer_nn_parameter_for_timesteps
 
         self.nets["value_embedding"] = nn.Linear(1, transformer_embed_dim)
-        self.nets["value_decoder"] = nn.Linear(transformer_embed_dim, 1)
+        self.nets["value_decoder"] = self.nets["value_decoder"] = nn.Sequential(
+            nn.Linear(transformer_embed_dim, transformer_embed_dim // 2),
+            nn.ReLU(),
+            nn.Linear(transformer_embed_dim // 2, transformer_embed_dim // 4),
+            nn.Sigmoid(),
+            nn.Linear(transformer_embed_dim // 4, 1)
+        )
+
+        self.nets['value_decoder'].apply(partial(custom_init, lower=-0.1, upper=0.1))
 
     def output_shape(self, input_shape=None):
         """

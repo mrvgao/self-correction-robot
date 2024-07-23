@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 
 
 def concatenate_images(batch, direct_obs=False):
@@ -97,3 +98,19 @@ def get_diff_percentage(V, V_t):
     percentage_difference = (difference / abs_target) * 100
 
     return torch.mean(percentage_difference)
+
+
+def custom_init(m, lower, upper):
+    if isinstance(m, nn.Linear):
+        nn.init.uniform_(m.weight, lower, upper)  # Uniform initialization
+        if m.bias is not None:
+            nn.init.constant_(m.bias, 0)
+
+
+# Example of normalization function
+def normalize(value, min_val=-500, max_val=1):
+    return (value - min_val) / (max_val - min_val)
+
+
+def denormalize(value, min_val=-500, max_val=1):
+    return value * (max_val - min_val) + min_val

@@ -20,7 +20,7 @@ from robomimic.macros import LANG_EMB_KEY
 
 from robomimic.algo import register_algo_factory_func, PolicyAlgo
 from robomimic.utils.tasl_exp import concatenate_images, add_value
-from robomimic.utils.tasl_exp import get_diff_percentage
+from robomimic.utils.tasl_exp import get_diff_percentage, normalize, denormalize
 
 
 @register_algo_factory_func("bc")
@@ -148,14 +148,18 @@ class BC(PolicyAlgo):
             # calculate accumulated difference, if this value is greater than some threshold, re-train this model.
             losses = self._compute_losses(predictions, batch)
 
-            value_y_delta = value_y - value_hat
+            normalized_value_y = normalize(value_y)
+
+            # value_y_delta = value_y - value_hat
+            value_y_delta = normalized_value_y - value_hat
+
             value_loss = torch.mean(value_y_delta ** 2)
 
-            value_optimizer = torch.optim.Adam(self.nets['policy'].parameters(), lr=1e-5, weight_decay=1e-4)
+            # value_optimizer = torch.optim.Adam(self.nets['policy'].parameters(), lr=1e-6, weight_decay=1e-4)
 
-            value_delta = get_diff_percentage(value_hat, value_y)
+            value_delta = get_diff_percentage(value_hat, normalized_value_y)
 
-            # print('action_trust_in_progress', action_trust_in_progress)
+            # print('value loss: {}, value delta: {}'.format(value_loss.item(), value_delta.item()))
 
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
@@ -164,13 +168,19 @@ class BC(PolicyAlgo):
 
             value_loss.backward(retain_graph=True)
 
-            if not validate:
-                value_optimizer.zero_grad()
-                value_optimizer.step()
+            trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
+            info['trust'] = TensorUtils.detach(trust) if not isinstance(trust, (int, float)) else trust
+            # print('action_trust', trust)
 
-                if value_delta < 100:
-                    trust = 1 - value_delta
-                    losses['action_loss'] *= trust
+            # print('trust, ', trust)
+
+            if not validate:
+                # value_optimizer.zero_grad()
+                # value_optimizer.step()
+
+                # trust_threshold = 10
+                if trust > 0:
+                    losses['action_loss'] += (1 - trust) * value_loss
                     step_info = self._train_step(losses)
                     info.update(step_info)
 
@@ -946,6 +956,7 @@ class BC_Transformer_GMM(BC_Transformer):
         log["Loss"] = info["losses"]["action_loss"].item()
         log["Log_Likelihood"] = info["losses"]["log_probs"].item()
         log['value_loss'] = info['value_loss'].item()
+        log['trust'] = info['trust'].item()
         if "policy_grad_norms" in info:
             log["Policy_Grad_Norms"] = info["policy_grad_norms"]
 

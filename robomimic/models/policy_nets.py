@@ -21,6 +21,7 @@ from robomimic.models.transformers import GPT_Backbone
 from robomimic.models.obs_nets import MIMO_MLP, RNN_MIMO_MLP, MIMO_Transformer, ObservationDecoder
 from robomimic.models.vae_nets import VAE
 from robomimic.models.distributions import TanhWrappedDistribution
+from robomimic.utils.tasl_exp import custom_init
 
 
 class ActorNetwork(MIMO_MLP):
