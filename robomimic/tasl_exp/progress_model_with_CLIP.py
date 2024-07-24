@@ -166,6 +166,7 @@ def main():
 
     early_stopping_patience = 3
     early_stopping_counter = 0
+    best_val_loss = float('inf')
 
     for epoch in range(num_epochs):
         epoch_loss = 0
