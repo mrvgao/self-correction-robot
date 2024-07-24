@@ -171,12 +171,17 @@ def main(args):
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
     task_name = wandb.run.name
     wandb.watch(model)
 
     save_dir = f'models/{task_name}'
     os.makedirs(save_dir, exist_ok=True)
+
+    early_stopping_patience = 3
+    early_stopping_counter = 0
+    best_val_loss = float('inf')
 
     for epoch in range(num_epochs):
         model.train()
@@ -201,6 +206,7 @@ def main(args):
 
         print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {loss.item():.4f}")
 
+
         if epoch % 5 == 0:
             model.eval()
             val_loss = 0.0
@@ -215,8 +221,19 @@ def main(args):
                     val_loss += loss.item()
 
                 avg_val_loss = val_loss / len(val_dataloader)
+                scheduler.step(avg_val_loss)
                 wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss})
                 print(f"Epoch [{epoch + 1}/{num_epochs}], Validation Loss: {avg_val_loss:.4f}")
+
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                torch.save(model.state_dict(), os.path.join(save_dir, 'best_model.pth'))
+                early_stopping_counter = 0
+            else:
+                early_stopping_counter += 1
+                if early_stopping_counter >= early_stopping_patience:
+                    print("Early stopping triggered")
+                    break
 
         if epoch % 10 == 0:
             # Save the model

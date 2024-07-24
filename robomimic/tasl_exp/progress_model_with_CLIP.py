@@ -216,6 +216,7 @@ def main():
                     val_loss += loss.item()
 
                 avg_val_loss = val_loss / len(val_dataloader)
+                scheduler.step(avg_val_loss)
                 wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss})
                 print(f"Epoch [{epoch + 1}/{num_epochs}], Validation Loss: {avg_val_loss:.4f}")
 
