@@ -169,7 +169,7 @@ class BC(PolicyAlgo):
             value_loss.backward(retain_graph=True)
 
             trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
-            info['trust'] = TensorUtils.detach(trust) if not isinstance(trust, (int, float)) else trust
+            info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
             # print('action_trust', trust)
 
             # print('trust, ', trust)
@@ -956,7 +956,7 @@ class BC_Transformer_GMM(BC_Transformer):
         log["Loss"] = info["losses"]["action_loss"].item()
         log["Log_Likelihood"] = info["losses"]["log_probs"].item()
         log['value_loss'] = info['value_loss'].item()
-        log['trust'] = info['trust'].item()
+        log['trust'] = info['trust']
         if "policy_grad_norms" in info:
             log["Policy_Grad_Norms"] = info["policy_grad_norms"]
 
