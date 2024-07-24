@@ -13,3 +13,5 @@ torch
 torchvision
 diffusers==0.11.1
 pytorch3d==0.7.3
+wandb
+nvidia-ml-py3
