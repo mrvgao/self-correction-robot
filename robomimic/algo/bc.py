@@ -168,9 +168,6 @@ class BC(PolicyAlgo):
 
             trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
             info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
-            # print('action_trust', trust)
-
-            # print('trust, ', trust)
             value_optimizer.zero_grad()
             value_loss.backward(retain_graph=True)
 
