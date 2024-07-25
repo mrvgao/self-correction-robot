@@ -171,6 +171,8 @@ class BC(PolicyAlgo):
             # print('action_trust', trust)
 
             # print('trust, ', trust)
+            value_optimizer.zero_grad()
+            value_loss.backward(retain_graph=True)
 
             if not validate:
 
@@ -180,8 +182,6 @@ class BC(PolicyAlgo):
                     step_info = self._train_step(losses)
                     info.update(step_info)
 
-                value_optimizer.zero_grad()
-                value_loss.backward(retain_graph=True)
                 value_optimizer.step()
 
         return info
