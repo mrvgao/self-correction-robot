@@ -171,11 +171,12 @@ class BC(PolicyAlgo):
 
             if not validate:
 
-                # trust_threshold = 0.85
+                # trust_threshold = 0.80
+                value_loss_threshold = 0.01 # MSE error 10%
 
-                # if trust > trust_threshold:
-                step_info = self._train_step(losses)
-                info.update(step_info)
+                if value_loss.detach().cpu().numpy() < value_loss_threshold:
+                    step_info = self._train_step(losses)
+                    info.update(step_info)
 
                 value_optimizer.step()
 
