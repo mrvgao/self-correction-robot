@@ -155,7 +155,7 @@ class BC(PolicyAlgo):
 
             value_loss = torch.mean(value_y_delta ** 2)
 
-            # value_optimizer = torch.optim.Adam(self.nets['policy'].parameters(), lr=1e-6, weight_decay=1e-4)
+            value_optimizer = torch.optim.Adam(self.nets['policy'].parameters(), lr=1e-6, weight_decay=1e-4)
 
             value_delta = get_diff_percentage(value_hat, normalized_value_y)
 
@@ -166,8 +166,6 @@ class BC(PolicyAlgo):
             info[f'Parameters_hist_of_value_embedding_{epoch}'] = self.nets.policy.nets.value_embedding.weight.detach().cpu().numpy()
             info["value_loss"] = TensorUtils.detach(value_loss)
 
-            value_loss.backward(retain_graph=True)
-
             trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
             info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
             # print('action_trust', trust)
@@ -175,14 +173,16 @@ class BC(PolicyAlgo):
             # print('trust, ', trust)
 
             if not validate:
-                # value_optimizer.zero_grad()
-                # value_optimizer.step()
 
-                # trust_threshold = 10
-                if trust > 0:
-                    losses['action_loss'] += (1 - trust) * value_loss
+                trust_threshold = 0.85
+
+                if trust > trust_threshold:
                     step_info = self._train_step(losses)
                     info.update(step_info)
+
+                value_optimizer.zero_grad()
+                value_loss.backward(retain_graph=True)
+                value_optimizer.step()
 
         return info
 
