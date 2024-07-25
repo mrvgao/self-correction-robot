@@ -159,8 +159,6 @@ class BC(PolicyAlgo):
 
             value_delta = get_diff_percentage(value_hat, normalized_value_y)
 
-            # print('value loss: {}, value delta: {}'.format(value_loss.item(), value_delta.item()))
-
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
             info[f'Parameters_hist_of_value_embedding_{epoch}'] = self.nets.policy.nets.value_embedding.weight.detach().cpu().numpy()
