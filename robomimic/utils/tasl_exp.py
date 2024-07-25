@@ -34,11 +34,11 @@ def add_value(batch, config, obj, device):
         batch['obs'] = batch.copy()
         direct_obs = True
         progress_model = obj.policy.progress_model
-        main_value_model = obj.policy.main_value_model
+        # main_value_model = obj.policy.main_value_model
         target_value_model = obj.policy.target_value_model
     else:
         progress_model = obj.progress_model
-        main_value_model = obj.main_value_model
+        # main_value_model = obj.main_value_model
         target_value_model = obj.target_value_model
 
     batch = concatenate_images(batch, direct_obs)
@@ -67,7 +67,7 @@ def add_value(batch, config, obj, device):
     p_threshold = config.progress_threshold
     rewards = torch.where(progresses > p_threshold, torch.tensor(1.0, device=device), torch.tensor(-1.0, device=device))
 
-    value_y_hats = main_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
+    # value_y_hats = main_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
     value_y_target = target_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
 
     value_y = torch.zeros_like(value_y_target, device=device)
@@ -81,7 +81,7 @@ def add_value(batch, config, obj, device):
     if direct_obs:
         batch = batch['obs']
 
-    return batch, value_y_hats, value_y_target
+    return batch, None, value_y_target
 
 
 def get_diff_percentage(V, V_t):
