@@ -6,7 +6,6 @@
     "progress_weight": 0.3,
     "experiment": {
         "name": "join loss with value embedding",
-        "ckpt_path": "/home/minquangao/expdata/robocasa/im/bc_xfmr/joint-loss/20240725120002/models/model_epoch_150.pth",
         "validate": false,
         "only_rollout": false,
         "logging": {
