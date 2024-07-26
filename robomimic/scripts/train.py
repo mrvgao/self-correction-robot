@@ -316,7 +316,7 @@ def train(config, device):
                     data_logger.record("Timing_Stats/Train_{}".format(k[5:]), v, epoch)
                 elif k.startswith(PARAMTERS):
                     # data_logger.record("{}/{}".format(PARAMTERS, k[len(PARAMTERS):]), v, epoch, data_type='hist')
-                    epoch_value_embedding = np.concat(v, axis=0)
+                    epoch_value_embedding = np.concatenate(v, axis=0)
                     all_value_embeddings.append(epoch_value_embedding)
                     data_logger.record('{}/value_embeddings'.format(PARAMTERS), all_value_embeddings, epoch, data_type='hist')
                 else:
