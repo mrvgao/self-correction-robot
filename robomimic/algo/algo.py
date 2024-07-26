@@ -26,6 +26,7 @@ import robomimic.utils.lang_utils as LangUtils
 from robomimic.macros import LANG_EMB_KEY
 
 from torch.utils.data import DataLoader
+from robomimic.utils.tasl_exp import post_process_ac
 
 # mapping from algo name to factory functions that map algo configs to algo class names
 REGISTERED_ALGO_FACTORY_FUNCS = OrderedDict()
@@ -686,26 +687,28 @@ class RolloutPolicy(object):
         if goal is not None:
             goal = self._prepare_observation(goal, batched=batched)
         ac = self.policy.get_action(obs_dict=ob, goal_dict=goal)
-        if not batched:
-            ac = ac[0]
-        ac = TensorUtils.to_numpy(ac)
-        if self.action_normalization_stats is not None:
-            action_keys = self.policy.global_config.train.action_keys
-            action_shapes = {k: self.action_normalization_stats[k]["offset"].shape[1:] for k in self.action_normalization_stats}
-            ac_dict = AcUtils.vector_to_action_dict(ac, action_shapes=action_shapes, action_keys=action_keys)
-            ac_dict = ObsUtils.unnormalize_dict(ac_dict, normalization_stats=self.action_normalization_stats)
-            action_config = self.policy.global_config.train.action_config
-            for key, value in ac_dict.items():
-                this_format = action_config[key].get("format", None)
-                if this_format == "rot_6d":
-                    rot_6d = torch.from_numpy(value).unsqueeze(0)
-                    conversion_format = action_config[key].get("convert_at_runtime", "rot_axis_angle")
-                    if conversion_format == "rot_axis_angle":
-                        rot = TorchUtils.rot_6d_to_axis_angle(rot_6d=rot_6d).squeeze().numpy()
-                    elif conversion_format == "rot_euler":
-                        rot = TorchUtils.rot_6d_to_euler_angles(rot_6d=rot_6d, convention="XYZ").squeeze().numpy()
-                    else:
-                        raise ValueError
-                    ac_dict[key] = rot
-            ac = AcUtils.action_dict_to_vector(ac_dict, action_keys=action_keys)
+
+        ac = post_process_ac(ac, batched, obj=self)
+        # if not batched:
+        #     ac = ac[0]
+        # ac = TensorUtils.to_numpy(ac)
+        # if self.action_normalization_stats is not None:
+        #     action_keys = self.policy.global_config.train.action_keys
+        #     action_shapes = {k: self.action_normalization_stats[k]["offset"].shape[1:] for k in self.action_normalization_stats}
+        #     ac_dict = AcUtils.vector_to_action_dict(ac, action_shapes=action_shapes, action_keys=action_keys)
+        #     ac_dict = ObsUtils.unnormalize_dict(ac_dict, normalization_stats=self.action_normalization_stats)
+        #     action_config = self.policy.global_config.train.action_config
+        #     for key, value in ac_dict.items():
+        #         this_format = action_config[key].get("format", None)
+        #         if this_format == "rot_6d":
+        #             rot_6d = torch.from_numpy(value).unsqueeze(0)
+        #             conversion_format = action_config[key].get("convert_at_runtime", "rot_axis_angle")
+        #             if conversion_format == "rot_axis_angle":
+        #                 rot = TorchUtils.rot_6d_to_axis_angle(rot_6d=rot_6d).squeeze().numpy()
+        #             elif conversion_format == "rot_euler":
+        #                 rot = TorchUtils.rot_6d_to_euler_angles(rot_6d=rot_6d, convention="XYZ").squeeze().numpy()
+        #             else:
+        #                 raise ValueError
+        #             ac_dict[key] = rot
+        #     ac = AcUtils.action_dict_to_vector(ac_dict, action_keys=action_keys)
         return ac

@@ -33,6 +33,7 @@ from torch.utils.data import DataLoader
 
 import robomimic
 import robomimic.utils.train_utils as TrainUtils
+import robomimic.tasl_exp.rollout as RolloutUtils
 import robomimic.utils.torch_utils as TorchUtils
 import robomimic.utils.obs_utils as ObsUtils
 import robomimic.utils.env_utils as EnvUtils
@@ -137,7 +138,8 @@ def train(config, device):
         eval_env_meta_list.append(env_meta_list[dataset_i])
         eval_shape_meta_list.append(shape_meta_list[dataset_i])
         eval_env_name_list.append(env_meta_list[dataset_i]["env_name"])
-        horizon = dataset_cfg.get("horizon", config.experiment.rollout.horizon)
+        # horizon = dataset_cfg.get("horizon", config.experiment.rollout.horizon)
+        horizon = max(dataset_cfg.get('horizon', 0), config.experiment.rollout.horizon)
         eval_env_horizon_list.append(horizon)
     
     # create environments
@@ -276,7 +278,7 @@ def train(config, device):
     all_value_embeddings = []
 
     for epoch in range(0, config.train.num_epochs + 1): # epoch numbers start at 1
-        if epoch > 0:
+        if epoch > 0 and not config.experiment.only_rollout:
             step_log = TrainUtils.run_epoch(
                 model=model,
                 data_loader=train_loader,
@@ -314,7 +316,7 @@ def train(config, device):
                     data_logger.record("Timing_Stats/Train_{}".format(k[5:]), v, epoch)
                 elif k.startswith(PARAMTERS):
                     # data_logger.record("{}/{}".format(PARAMTERS, k[len(PARAMTERS):]), v, epoch, data_type='hist')
-                    epoch_value_embedding = np.concatenate(v, axis=0)
+                    epoch_value_embedding = np.concat(v, axis=0)
                     all_value_embeddings.append(epoch_value_embedding)
                     data_logger.record('{}/value_embeddings'.format(PARAMTERS), all_value_embeddings, epoch, data_type='hist')
                 else:
@@ -363,7 +365,7 @@ def train(config, device):
             )
 
             num_episodes = config.experiment.rollout.n
-            all_rollout_logs, video_paths = TrainUtils.rollout_with_stats(
+            all_rollout_logs, video_paths = RolloutUtils.rollout_with_stats(
                 policy=rollout_model,
                 envs=env_iterator(),
                 horizon=eval_env_horizon_list,
@@ -378,6 +380,8 @@ def train(config, device):
                 data_logger=data_logger,
                 config=config,
                 device=device,
+                value_model=target_value_model,
+                with_progress_correct=config.experiment.rollout.with_progress_correct,
             )
 
             #### move this code to rollout_with_stats function to log results one by one ####
@@ -395,7 +399,7 @@ def train(config, device):
             #     print(json.dumps(rollout_logs, sort_keys=True, indent=4))
 
             # checkpoint and video saving logic
-            updated_stats = TrainUtils.should_save_from_rollout_logs(
+            updated_stats = RolloutUtils.should_save_from_rollout_logs(
                 all_rollout_logs=all_rollout_logs,
                 best_return=best_return,
                 best_success_rate=best_success_rate,

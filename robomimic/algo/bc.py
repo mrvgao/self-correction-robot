@@ -837,7 +837,6 @@ class BC_Transformer(BC):
 
             return output
 
-        
 
 class BC_Transformer_GMM(BC_Transformer):
     """

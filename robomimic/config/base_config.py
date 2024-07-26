@@ -61,6 +61,9 @@ class BaseConfig(Config):
         self.progress_threshold = None
         self.progress_weight = None
 
+        self.experiment.only_rollout = None
+        self.experiment.rollout.with_progress_correct = None
+
         self.experiment_config()
         self.train_config()
         self.algo_config()

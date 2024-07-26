@@ -6,9 +6,9 @@
     "progress_weight": 0.3,
     "experiment": {
         "name": "join loss with value embedding",
-        "ckpt_path": "/home/minquangao/expdata/robocasa/im/bc_xfmr/joint-loss/20240725120002/models/model_epoch_150.pth",
+        "ckpt_path": "/home/minquangao/expdata/robocasa/im/bc_xfmr/joint-loss/20240725120002/models/model_epoch_100.pth",
+        "only_rollout": true,
         "validate": false,
-        "only_rollout": false,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,
@@ -25,22 +25,22 @@
             "on_best_rollout_return": false,
             "on_best_rollout_success_rate": false
         },
-        "epoch_every_n_steps": 500,
+        "epoch_every_n_steps": 5,
         "validation_epoch_every_n_steps": 100,
         "env": null,
         "additional_envs": null,
         "render": false,
         "render_video": true,
         "keep_all_videos": false,
-        "video_skip": 5,
+        "video_skip": 2,
         "rollout": {
             "enabled": true,
-            "n": 50,
+            "n": 5,
             "horizon": 1000,
-            "rate": 100,
+            "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
-            "with_progress_correct": false
+            "with_progress_correct": true
         },
         "env_meta_update_dict": {
             "env_kwargs": {
@@ -100,7 +100,7 @@
         ],
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 8,
+        "batch_size": 2,
         "num_epochs": 1000,
         "max_grad_norm": 100.0,
         "seed": 123,

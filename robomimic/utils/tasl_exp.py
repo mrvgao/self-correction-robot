@@ -1,5 +1,9 @@
 import torch
 from torch import nn
+import robomimic.utils.tensor_utils as TensorUtils
+import robomimic.utils.torch_utils as TorchUtils
+import robomimic.utils.obs_utils as ObsUtils
+import robomimic.utils.action_utils as AcUtils
 
 
 def concatenate_images(batch, direct_obs=False):
@@ -44,6 +48,9 @@ def add_value(batch, config, obj, device):
     batch = concatenate_images(batch, direct_obs)
     obs_images = batch['obs']['concatenated_images']
 
+    target_value_model = target_value_model.to(device)
+    progress_model = progress_model.to(device)
+
     # Check if obs_images has a batch dimension
     if len(obs_images.shape) == 5:
         # Case when obs_images has shape (batch, 10, 128, 384, 3)
@@ -59,7 +66,7 @@ def add_value(batch, config, obj, device):
                                                        obs_images.shape[-1])
 
     # Move to CUDA device if available
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     reshaped_concatenated_images = reshaped_concatenated_images.permute(0, 3, 1, 2).to(device)
 
     # Assuming progress_model, main_value_model, and target_value_model are defined and on the correct device
@@ -114,3 +121,31 @@ def normalize(value, min_val=-500, max_val=1):
 
 def denormalize(value, min_val=-500, max_val=1):
     return value * (max_val - min_val) + min_val
+
+
+def post_process_ac(ac, batched, obj):
+    if not batched:
+        ac = ac[0]
+    ac = TensorUtils.to_numpy(ac)
+    if obj.action_normalization_stats is not None:
+        action_keys = obj.policy.global_config.train.action_keys
+        action_shapes = {k: obj.action_normalization_stats[k]["offset"].shape[1:] for k in
+                         obj.action_normalization_stats}
+        ac_dict = AcUtils.vector_to_action_dict(ac, action_shapes=action_shapes, action_keys=action_keys)
+        ac_dict = ObsUtils.unnormalize_dict(ac_dict, normalization_stats=obj.action_normalization_stats)
+        action_config = obj.policy.global_config.train.action_config
+        for key, value in ac_dict.items():
+            this_format = action_config[key].get("format", None)
+            if this_format == "rot_6d":
+                rot_6d = torch.from_numpy(value).unsqueeze(0)
+                conversion_format = action_config[key].get("convert_at_runtime", "rot_axis_angle")
+                if conversion_format == "rot_axis_angle":
+                    rot = TorchUtils.rot_6d_to_axis_angle(rot_6d=rot_6d).squeeze().numpy()
+                elif conversion_format == "rot_euler":
+                    rot = TorchUtils.rot_6d_to_euler_angles(rot_6d=rot_6d, convention="XYZ").squeeze().numpy()
+                else:
+                    raise ValueError
+                ac_dict[key] = rot
+        ac = AcUtils.action_dict_to_vector(ac_dict, action_keys=action_keys)
+    return ac
+
