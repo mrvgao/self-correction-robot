@@ -122,7 +122,7 @@ def run_rollout(
             if value_loss > trust_threshold:
                 print('this state is NOT reliable!')
                 original_state = deepcopy(env.get_state())
-                for i in range(100):
+                for i in range(1000):
                     print('trying time: ', i)
                     tmp_ac = ac_dist.sample()[:, 0, :]
                     tmp_ac = post_process_ac(tmp_ac, batched, obj=policy)
