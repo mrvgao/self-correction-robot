@@ -102,8 +102,8 @@ def run_rollout(
         #     ac = policy(ob=policy_ob, goal=goal_dict, batched=True) #, return_ob=True)
         # else:
         policy_ob = ob_dict
-        # policy_ob, _, _ = add_value(policy_ob, config, policy, policy.policy.device)
-        policy_ob, _, _ = add_value(policy_ob, config, policy, device='cpu')
+        policy_ob, _, _ = add_value(policy_ob, config, policy, device)
+        # policy_ob, _, _ = add_value(policy_ob, config, policy, device='cpu')
 
         if with_progress_correct:
             rollout_prepared_batch = policy._prepare_observation(policy_ob)
@@ -112,8 +112,8 @@ def run_rollout(
             execute_value_predict = value_predict[:, 0, :]
             execute_ac = ac_dist.sample()[:, 0, :]
             execute_ac = post_process_ac(execute_ac, batched, obj=policy)
-            target_value = value_model(None, rollout_prepared_batch['concatenated_images'][:, 0, :, :].permute(0, 3, 1, 2).to('cpu'))
-            value_loss = torch.mean((normalize(target_value).cpu() - execute_value_predict.cpu())**2)
+            target_value = value_model(None, rollout_prepared_batch['concatenated_images'][:, 0, :, :].permute(0, 3, 1, 2).to(device))
+            value_loss = torch.mean((normalize(target_value) - execute_value_predict)**2)
 
             trust_threshold = 0.01
 
