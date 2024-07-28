@@ -174,7 +174,6 @@ class BC(PolicyAlgo):
                 # trust_threshold = 0.80
                 value_loss_threshold = 0.01 # MSE error 10%
 
-                print("Before detach and conversion")
                 torch.cuda.synchronize()  # Synchronize before moving to CPU
 
                 if torch.isnan(value_loss).any() or torch.isinf(value_loss).any():
