@@ -161,7 +161,7 @@ class BC(PolicyAlgo):
 
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
-            info[f'Parameters_hist_of_value_embedding_{epoch}'] = self.nets.policy.nets.value_embedding.weight.detach().cpu().numpy()
+            # info[f'Parameters_hist_of_value_embedding_{epoch}'] = self.nets.policy.nets.value_embedding.weight.detach().cpu().numpy()
             info["value_loss"] = TensorUtils.detach(value_loss)
 
             trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
@@ -864,7 +864,7 @@ class BC_Transformer_GMM(BC_Transformer):
 
         self.nets = nn.ModuleDict()
 
-        self.obs_shapes['value'] = [1]
+        # self.obs_shapes['value'] = [1]
 
         self.nets["policy"] = PolicyNets.TransformerGMMActorNetwork(
             obs_shapes=self.obs_shapes,

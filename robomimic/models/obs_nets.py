@@ -1061,7 +1061,6 @@ class MIMO_Transformer(Module):
     def input_embedding(
         self,
         inputs,
-        values,
     ):
         """
         Process encoded observations into embeddings to pass to transformer,
@@ -1116,10 +1115,10 @@ class MIMO_Transformer(Module):
         )
         assert transformer_inputs.ndim == 3  # [B, T, D]
 
-        input_values = inputs['obs']['value']
+        # input_values = inputs['obs']['value']
 
         if transformer_encoder_outputs is None:
-            transformer_embeddings = self.input_embedding(transformer_inputs, input_values)
+            transformer_embeddings = self.input_embedding(transformer_inputs)
             # pass encoded sequences through transformer
             transformer_encoder_outputs = self.nets["transformer"].forward(transformer_embeddings)
 
