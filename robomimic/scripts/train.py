@@ -180,8 +180,8 @@ def train(config, device):
         log_tb=config.experiment.logging.log_tb,
         log_wandb=config.experiment.logging.log_wandb,
     )
-    shape_meta_list[0]['all_shapes']['value'] = [1]
-    shape_meta_list[0]['all_obs_keys'].append('value')
+    # shape_meta_list[0]['all_shapes']['value'] = [1]
+    # shape_meta_list[0]['all_obs_keys'].append('value')
 
     model = algo_factory(
         algo_name=config.algo_name,

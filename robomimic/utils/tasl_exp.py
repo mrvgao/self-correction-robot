@@ -26,7 +26,7 @@ def concatenate_images(batch, direct_obs=False):
     return batch
 
 
-def add_value(batch, config, obj, device):
+def get_value_target(batch, config, obj, device):
     assert isinstance(batch, dict)
 
     direct_obs = False
@@ -83,12 +83,12 @@ def add_value(batch, config, obj, device):
     for t in range(1, step_size):
         value_y[:, t, :] = value_y_target[:, t - 1, :] + rewards[:, t, :]
 
-    batch['obs']['value'] = value_y.view(step_size, 1) if batch_size == 1 else value_y
+    # batch['obs']['value'] = value_y.view(step_size, 1) if batch_size == 1 else value_y
 
-    if direct_obs:
-        batch = batch['obs']
+    # if direct_obs:
+    #     batch = batch['obs']
 
-    return batch, None, value_y_target
+    return value_y_target
 
 
 def get_diff_percentage(V, V_t):

@@ -4,7 +4,7 @@ from robomimic.algo import algo_factory, RolloutPolicy
 from robomimic.envs.env_base import EnvBase
 from robomimic.envs.wrappers import EnvWrapper
 from tianshou.env import SubprocVectorEnv
-from robomimic.utils.tasl_exp import add_value
+from robomimic.utils.tasl_exp import get_value_target
 from copy import deepcopy
 import robomimic.utils.tensor_utils as TensorUtils
 
@@ -64,7 +64,7 @@ def correct_by_trust_policy_region(
         # get action from policy
 
         policy_ob = ob_dict
-        policy_ob, _, _ = add_value(policy_ob, config, policy, policy.policy.device)
+        policy_ob, _, _ = get_value_target(policy_ob, config, policy, policy.policy.device)
         # 1. prepare observation
         # 2. get ac, value predicated
         # 3. determine the value's loss by compared with the value_model

@@ -1002,7 +1002,7 @@ class MIMO_Transformer(Module):
         self.transformer_sinusoidal_embedding = transformer_sinusoidal_embedding
         self.transformer_nn_parameter_for_timesteps = transformer_nn_parameter_for_timesteps
 
-        self.nets["value_embedding"] = nn.Linear(1, transformer_embed_dim)
+        # self.nets["value_embedding"] = nn.Linear(1, transformer_embed_dim)
         self.nets["value_decoder"] = self.nets["value_decoder"] = nn.Sequential(
             nn.Linear(transformer_embed_dim, transformer_embed_dim // 2),
             nn.ReLU(),
@@ -1078,8 +1078,8 @@ class MIMO_Transformer(Module):
         # Add value embeddings
         batch_size, seq_len, _ = embeddings.shape
 
-        value_embeddings = self.nets["value_embedding"](values)
-        embeddings = embeddings + value_embeddings
+        # value_embeddings = self.nets["value_embedding"](values)
+        # embeddings = embeddings + value_embeddings
 
         embeddings = self.nets["embed_ln"](embeddings)
         embeddings = self.nets["embed_drop"](embeddings)

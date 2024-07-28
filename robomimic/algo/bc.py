@@ -19,7 +19,7 @@ import robomimic.utils.obs_utils as ObsUtils
 from robomimic.macros import LANG_EMB_KEY
 
 from robomimic.algo import register_algo_factory_func, PolicyAlgo
-from robomimic.utils.tasl_exp import concatenate_images, add_value
+from robomimic.utils.tasl_exp import concatenate_images, get_value_target
 from robomimic.utils.tasl_exp import get_diff_percentage, normalize, denormalize
 
 
@@ -140,7 +140,7 @@ class BC(PolicyAlgo):
 
         with TorchUtils.maybe_no_grad(no_grad=validate):
 
-            batch, value_y_hats, value_y = add_value(batch, config, self, self.device)
+            value_y = get_value_target(batch, config, self, self.device)
 
             # get action fused value, which is corresponding with the progress
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)

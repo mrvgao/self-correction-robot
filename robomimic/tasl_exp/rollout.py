@@ -3,7 +3,7 @@ from robomimic.envs.wrappers import EnvWrapper
 from robomimic.algo import RolloutPolicy
 from tianshou.env import SubprocVectorEnv
 from robomimic.utils.exp_utils import StateManager
-from robomimic.utils.tasl_exp import add_value, post_process_ac, normalize, denormalize
+from robomimic.utils.tasl_exp import get_value_target, post_process_ac, normalize, denormalize
 import json
 import imageio
 from collections import OrderedDict
@@ -102,7 +102,7 @@ def run_rollout(
         #     ac = policy(ob=policy_ob, goal=goal_dict, batched=True) #, return_ob=True)
         # else:
         policy_ob = ob_dict
-        policy_ob, _, _ = add_value(policy_ob, config, policy, device)
+        policy_ob, _, _ = get_value_target(policy_ob, config, policy, device)
         # policy_ob, _, _ = add_value(policy_ob, config, policy, device='cpu')
 
         if with_progress_correct:
@@ -128,7 +128,7 @@ def run_rollout(
                     tmp_ac = post_process_ac(tmp_ac, batched, obj=policy)
                     tmp_ob_dict, _, _, _ = env.step(tmp_ac)  # drive first time
 
-                    tmp_ob, _, _, = add_value(tmp_ob_dict, config, policy, policy.policy.device)
+                    tmp_ob, _, _, = get_value_target(tmp_ob_dict, config, policy, policy.policy.device)
 
                     tmp_prepared_batch = policy._prepare_observation(tmp_ob)
                     tmp_next_ac_dist, tmp_value = policy.policy.nets['policy'].forward_train(obs_dict=tmp_prepared_batch)
