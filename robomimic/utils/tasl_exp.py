@@ -77,11 +77,11 @@ def get_value_target(batch, config, obj, device):
     # value_y_hats = main_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
     value_y_target = target_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
 
-    value_y = torch.zeros_like(value_y_target, device=device)
-    value_y[:, 0, :] = value_y_target[:, 0, :]
+    # value_y = torch.zeros_like(value_y_target, device=device)
+    # value_y[:, 0, :] = value_y_target[:, 0, :]
 
-    for t in range(1, step_size):
-        value_y[:, t, :] = value_y_target[:, t - 1, :] + rewards[:, t, :]
+    # for t in range(1, step_size):
+    #     value_y[:, t, :] = value_y_target[:, t - 1, :] + rewards[:, t, :]
 
     # batch['obs']['value'] = value_y.view(step_size, 1) if batch_size == 1 else value_y
 
