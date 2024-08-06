@@ -56,7 +56,7 @@ def algo_name_to_factory_func(algo_name):
 
 
 def algo_factory(algo_name, config, obs_key_shapes, ac_dim, device,
-                 main_value_model=None, target_value_model=None, progress_model=None):
+                 main_value_model=None, target_value_model=None):
     """
     Factory function for creating algorithms based on the algorithm name and config.
 
@@ -89,7 +89,6 @@ def algo_factory(algo_name, config, obs_key_shapes, ac_dim, device,
         device=device,
         main_value_model=main_value_model,
         target_value_model=target_value_model,
-        progress_model=progress_model,
         **algo_kwargs
     )
 
@@ -139,6 +138,9 @@ class Algo(object):
         self._create_shapes(obs_config.modalities, obs_key_shapes)
         self._create_networks()
         self._create_optimizers()
+
+        self.epsilon_train = float('inf')
+
         assert isinstance(self.nets, nn.ModuleDict)
 
     def _create_shapes(self, obs_keys, obs_key_shapes):

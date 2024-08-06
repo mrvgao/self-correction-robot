@@ -76,12 +76,12 @@ def train(config, device):
         main_value_model = None
         target_value_model = None
 
-    if config.progress_model_path:
-        progress_model = ProgressResNetModel()
-        progress_model.load_state_dict(torch.load(config.progress_model_path))
-        progress_model.to(device)
-    else:
-        progress_model = None
+    # if config.progress_model_path:
+    #     progress_model = ProgressResNetModel()
+    #     progress_model.load_state_dict(torch.load(config.progress_model_path))
+    #     progress_model.to(device)
+    # else:
+    #     progress_model = None
 
     if config.experiment.logging.terminal_output_to_txt:
         # log stdout and stderr to a text file
@@ -191,7 +191,7 @@ def train(config, device):
         device=device,
         main_value_model=main_value_model,
         target_value_model=target_value_model,
-        progress_model=progress_model,
+        # progress_model=progress_model,
     )
     
     # save the config as a json file

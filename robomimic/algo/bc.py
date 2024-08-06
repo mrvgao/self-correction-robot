@@ -140,7 +140,7 @@ class BC(PolicyAlgo):
 
         with TorchUtils.maybe_no_grad(no_grad=validate):
 
-            value_y = get_value_target(batch, config, self, self.device)
+            _, value_y = get_value_target(batch, config, self, self.device)
 
             # get action fused value, which is corresponding with the progress
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
@@ -167,23 +167,49 @@ class BC(PolicyAlgo):
             trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
             info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
             value_optimizer.zero_grad()
-            value_loss.backward(retain_graph=True)
+
+            tau = 30
+            _lambda = 0.01
+
+            if self.epsilon_train < value_loss:
+                self.epsilon_train = value_loss
+
+            epsilon_LVM = 0.05
+
+            log_prob = info["losses"]["log_probs"]
+            threshold_value = tau * (value_loss + epsilon_LVM + self.epsilon_train)
+
+            regularization_term = torch.max(
+                torch.zeros_like(log_prob),
+                threshold_value - log_prob
+            )
+
+            info['threshold_term'] = TensorUtils.detach(regularization_term)
+
+            # value_loss += _lambda * regularization_term
+
+            value_reg_loss = value_loss + _lambda * regularization_term
+
+            value_reg_loss.backward(retain_graph=True)
+
+            # value_loss.backward(retain_graph=True)
 
             if not validate:
 
                 # trust_threshold = 0.80
-                value_loss_threshold = 0.01 # MSE error 10%
+                # value_loss_threshold = 0.01 # MSE error 10%
+                # value_loss_lambda = 0.1
 
                 torch.cuda.synchronize()  # Synchronize before moving to CPU
 
                 if torch.isnan(value_loss).any() or torch.isinf(value_loss).any():
                     print("value_loss contains NaN or Inf values.")
                 else:
-                    value_loss_cpu = value_loss.detach().cpu().item()
-                    if value_loss_cpu < value_loss_threshold:
-                        step_info = self._train_step(losses)
-                        info.update(step_info)
-
+                    # value_loss_cpu = value_loss.detach().cpu().item()
+                    # if value_loss_cpu < value_loss_threshold:
+                    # losses['action_loss'] *= trust
+                    step_info = self._train_step(losses)
+                    info.update(step_info)
                     value_optimizer.step()
 
         return info
@@ -849,11 +875,11 @@ class BC_Transformer_GMM(BC_Transformer):
     BC training with a Transformer GMM policy.
 
     """
-    def __init__(self, main_value_model, target_value_model, progress_model, *args, **kwargs):
+    def __init__(self, main_value_model, target_value_model, *args, **kwargs):
         super(BC_Transformer_GMM, self).__init__(*args, **kwargs)
         self.main_value_model = main_value_model
         self.target_value_model = target_value_model
-        self.progress_model = progress_model
+        # self.progress_model = progress_model
 
     def _create_networks(self):
         """
@@ -957,7 +983,8 @@ class BC_Transformer_GMM(BC_Transformer):
         log["Loss"] = info["losses"]["action_loss"].item()
         log["Log_Likelihood"] = info["losses"]["log_probs"].item()
         log['value_loss'] = info['value_loss'].item()
-        log['trust'] = info['trust']
+        # log['trust'] = info['trust']
+        log['regularization_term'] =  info['threshold_term'].item()
         if "policy_grad_norms" in info:
             log["Policy_Grad_Norms"] = info["policy_grad_norms"]
 
