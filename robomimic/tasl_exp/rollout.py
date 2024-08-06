@@ -3,7 +3,8 @@ from robomimic.envs.wrappers import EnvWrapper
 from robomimic.algo import RolloutPolicy
 from tianshou.env import SubprocVectorEnv
 from robomimic.utils.exp_utils import StateManager
-from robomimic.utils.tasl_exp import get_value_target, post_process_ac, normalize, denormalize
+from robomimic.utils.tasl_exp import  normalize, get_deployment_action_and_value_from_obs, concatenate_images, get_value_target
+from robomimic.utils.tasl_exp import find_new_ac, post_process_ac
 import json
 import imageio
 from collections import OrderedDict
@@ -15,6 +16,61 @@ import os
 import time
 import traceback
 import torch
+import cv2
+import pickle
+from tqdm import tqdm
+
+
+def adaptive_threshold(i, max_step):
+    start = 1.20
+    end = 1.25
+    threshold = start + ((end - start) / max_step) * i
+    return threshold
+
+
+def find_reliable_action(step_i, original_ac_dist, env, policy, config, batched, previous_value, video_frames):
+    original_state = env.get_state()
+    TRYING = 50
+
+    for i in range(TRYING):
+        print('{}/{}'.format(i, TRYING))
+        # if step_i == 0:
+        #     tmp_ob_dict = env.reset()
+        # else:
+        tmp_ac = original_ac_dist.sample()[:, 0, :]
+        tmp_ac = post_process_ac(tmp_ac, batched, obj=policy)
+        tmp_ob_dict, _, _, _ = env.step(tmp_ac)  # drive first time
+
+        tmp_ob, tmp_target_value = get_value_target(tmp_ob_dict, config, policy, policy.policy.device)
+
+        tmp_prepared_batch = policy._prepare_observation(tmp_ob)
+        tmp_next_ac_dist, tmp_value = policy.policy.nets['policy'].forward_train(obs_dict=tmp_prepared_batch)
+
+        tmp_target_value = tmp_target_value[0][0][0]
+        tmp_target_value = normalize(tmp_target_value)
+
+        tmp_value = tmp_value[0][0][0]
+
+        tmp_value_loss = torch.mean((tmp_target_value - tmp_value)**2)
+
+        trust_threshold = adaptive_threshold(i, TRYING)
+        print(f'trying time: {i}, loss is :{tmp_value_loss} threshold is : {trust_threshold}')
+
+        if tmp_value_loss < trust_threshold and tmp_target_value > previous_value:
+            # print(f'success: got tmp loss: {tmp_value_loss} and tmp_value: {tmp_value}, with compared to previous_loss: {previous_value}')
+            previous_value = tmp_target_value
+
+            # print('find NEW action that can drive to TRUST state')
+            ac = post_process_ac(tmp_next_ac_dist.sample()[:, 0, :], batched, obj=policy)
+            revert_frame = env.render(mode="rgb_array", height=512, width=512)
+            video_frames.append(revert_frame)
+
+            return ac, previous_value, tmp_ob_dict, tmp_value, tmp_value_loss
+        elif step_i == 0: env.reset()
+        else:
+            env.reset_to(original_state)
+
+    return None, previous_value, None, None, None
 
 
 def run_rollout(
@@ -92,95 +148,59 @@ def run_rollout(
     else:
         video_frames = []
 
-    for step_i in range(horizon):  # LogUtils.tqdm(range(horizon)):
-        print('step := {}/{}'.format(step_i, horizon))
-        # if step_i == 1:
-        #     print('1')
-        # get action from policy
-        # if batched:
-        #     policy_ob = batchify_obs(ob_dict)
-        #     ac = policy(ob=policy_ob, goal=goal_dict, batched=True) #, return_ob=True)
-        # else:
-        policy_ob = ob_dict
-        policy_ob, _, _ = get_value_target(policy_ob, config, policy, device)
-        # policy_ob, _, _ = add_value(policy_ob, config, policy, device='cpu')
+    previous_value = torch.Tensor([-float('inf')]).to(device)
+    previous_value = previous_value[0]
+
+    STATE, LOSS = 'states', 'loss'
+    abnormal_states = {STATE: [], LOSS: []}
+
+    # value_model.eval()
+
+    final_step = 0
+
+    # horizon = 700
+
+    for step_i in tqdm(range(horizon)):
+        # print('step := {}/{}'.format(step_i, horizon))
+
+        final_step = step_i
 
         if with_progress_correct:
-            rollout_prepared_batch = policy._prepare_observation(policy_ob)
-            # from output to dist
-            ac_dist, value_predict = policy.policy.nets['policy'].forward_train(obs_dict=rollout_prepared_batch)
-            execute_value_predict = value_predict[:, 0, :]
-            execute_ac = ac_dist.sample()[:, 0, :]
-            execute_ac = post_process_ac(execute_ac, batched, obj=policy)
-            target_value = value_model(None, rollout_prepared_batch['concatenated_images'][:, 0, :, :].permute(0, 3, 1, 2).to(device))
-            value_loss = torch.mean((normalize(target_value) - execute_value_predict)**2)
+            original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
+                rollout_policy=policy, obs_dict=ob_dict)
+            ac, previous_value, ob_dict, target_value, current_value_loss = find_reliable_action(
+                step_i, original_ac_dist, env, policy, config, batched,
+                previous_value, video_frames
+            )
 
-            trust_threshold = 0.01
-
-            ac = execute_ac
-
-            if value_loss > trust_threshold:
-                print('this state is NOT reliable!')
-                original_state = deepcopy(env.get_state())
-                for i in range(1000):
-                    print('trying time: ', i)
-                    tmp_ac = ac_dist.sample()[:, 0, :]
-                    tmp_ac = post_process_ac(tmp_ac, batched, obj=policy)
-                    tmp_ob_dict, _, _, _ = env.step(tmp_ac)  # drive first time
-
-                    tmp_ob, _, _, = get_value_target(tmp_ob_dict, config, policy, policy.policy.device)
-
-                    tmp_prepared_batch = policy._prepare_observation(tmp_ob)
-                    tmp_next_ac_dist, tmp_value = policy.policy.nets['policy'].forward_train(obs_dict=tmp_prepared_batch)
-                    tmp_target_value = value_model(None, tmp_prepared_batch['concatenated_images'][:, 0, :, :].permute(0, 3, 1, 2))
-                    tmp_value_loss = torch.mean((normalize(tmp_target_value) - tmp_value)**2)
-
-                    if tmp_value_loss < trust_threshold:
-                        print('find NEW action that can drive to TRUST state')
-                        ac = post_process_ac(tmp_next_ac_dist.sample()[:, 0, :], batched, obj=policy)
-                        revert_frame = env.render(mode="rgb_array", height=512, width=512)
-                        video_frames.append(revert_frame)
-
-                        break
-
-                    env.reset_to(original_state)
-
-                else:
-                    print('we cannot find a new action that can drive to trust state')
+            if ac is None:
+                abnormal_states[STATE].append(env.get_state())
+                abnormal_states[LOSS].append(current_value_loss)
+                # print('we cannot find a new action that can drive to trust state')
+                # print('re-start a new task')
+                break
             else:
-                print('this state is reliable!')
+                previous_value = target_value
+                # print('this state is reliable!')
         else:
-            ac = policy(ob=policy_ob, goal=goal_dict)  # , return_ob=True)
+            ac = policy(ob=ob_dict, goal=goal_dict)
+            ob_dict, r, done, _ = env.step(ac)
 
-        # play action
-        ob_dict, r, done, info = env.step(ac)
-
-        # state_manager.append(env)
-
-        # if step_i > 20:
-        #     state_manager.reverse_play_envs()
-        #     print('test done!')
-
-        # render to screen
-        if render:
-            env.render(mode="human")
-
-        # compute reward
-        rews.append(r)
+        # rews.append(r)
 
         # cur_success_metrics = env.is_success()
-        if batched:
-            cur_success_metrics = TensorUtils.list_of_flat_dict_to_dict_of_list(
-                [info[i]["is_success"] for i in range(len(info))])
-            cur_success_metrics = {k: np.array(v) for (k, v) in cur_success_metrics.items()}
-        else:
-            cur_success_metrics = info["is_success"]
+        # if batched:
+        #     cur_success_metrics = TensorUtils.list_of_flat_dict_to_dict_of_list(
+        #         [info[i]["is_success"] for i in range(len(info))])
+        #     cur_success_metrics = {k: np.array(v) for (k, v) in cur_success_metrics.items()}
+        # else:
+        #     cur_success_metrics = info["is_success"]
 
-        if success is None:
-            success = deepcopy(cur_success_metrics)
-        else:
-            for k in success:
-                success[k] = success[k] | cur_success_metrics[k]
+        # if success is None:
+        #     success = deepcopy(cur_success_metrics)
+        # else:
+        #     for k in success:
+        #         success[k] = success[k] | cur_success_metrics[k]
 
         # visualization
         if video_writer is not None:
@@ -255,12 +275,16 @@ def run_rollout(
                 if end_step[env_i] is not None:
                     continue
 
-                if done[env_i] or (terminate_on_success and success["task"][env_i]):
-                    end_step[env_i] = step_i
-        else:
-            if done or (terminate_on_success and success["task"]):
-                end_step = step_i
-                break
+                # if done[env_i] or (terminate_on_success and success["task"][env_i]):
+                #     end_step[env_i] = step_i
+        # else:
+        #     if done or (terminate_on_success and success["task"]):
+        #         end_step = step_i
+        #         break
+
+    with open(f'abnormal_states_{frame_save_dir}.pkl', 'wb') as f:
+        pickle.dump(abnormal_states, f)
+        print('PICKLED abnormal state done!')
 
     if video_writer is not None:
         if batched:
@@ -288,15 +312,17 @@ def run_rollout(
 
         results["Return"] = total_reward
         results["Horizon"] = end_step + 1
-        results["Success_Rate"] = float(success["task"])
+        # results["Success_Rate"] = float(success["task"])
 
     # log additional success metrics
-    for k in success:
-        if k != "task":
-            if batched:
-                results["{}_Success_Rate".format(k)] = success[k].astype(float)
-            else:
-                results["{}_Success_Rate".format(k)] = float(success[k])
+    # for k in success:
+    #     if k != "task":
+    #         if batched:
+    #             results["{}_Success_Rate".format(k)] = success[k].astype(float)
+    #         else:
+    #             results["{}_Success_Rate".format(k)] = float(success[k])
+
+    results['final_step'] = final_step
 
     return results
 
@@ -407,12 +433,14 @@ def rollout_with_stats(
 
         save_frames_dir_base = 'roll_out_saved_frames'
 
+        final_steps = []
+
         for ep_i in iterator:
             rollout_timestamp = time.time()
 
             save_frames_dir = save_frames_dir_base + '-' + str(ep_i)
-            if not os.path.exists(save_frames_dir):
-                os.makedirs(save_frames_dir)
+            # if not os.path.exists(save_frames_dir):
+            #     os.makedirs(save_frames_dir)
 
             try:
                 rollout_info = run_rollout(
@@ -430,10 +458,15 @@ def rollout_with_stats(
                     value_model=value_model,
                     with_progress_correct=with_progress_correct
                 )
+
+                final_steps.append(rollout_info['final_step'])
+                print('THE FINAL STEPS ARE: ', final_steps)
+
             except Exception as e:
                 print("Rollout exception at episode number {}!".format(ep_i))
                 print(traceback.format_exc())
                 break
+
 
             if batched:
                 rollout_info["time"] = [(time.time() - rollout_timestamp) / len(env)] * len(env)
@@ -445,7 +478,7 @@ def rollout_with_stats(
                 rollout_info["time"] = time.time() - rollout_timestamp
 
                 rollout_logs.append(rollout_info)
-                num_success += rollout_info["Success_Rate"]
+                # num_success += rollout_info["Success_Rate"]
 
             if verbose:
                 if batched:
@@ -489,6 +522,7 @@ def rollout_with_stats(
         video_writer.close()
 
     return all_rollout_logs, None
+
 
 
 def should_save_from_rollout_logs(
@@ -543,13 +577,13 @@ def should_save_from_rollout_logs(
                 should_save_ckpt = True
                 ckpt_reason = "return"
 
-        if rollout_logs["Success_Rate"] > best_success_rate[env_name]:
-            best_success_rate[env_name] = rollout_logs["Success_Rate"]
-            if save_on_best_rollout_success_rate:
-                # save checkpoint if achieve new best success rate
-                epoch_ckpt_name += "_{}_success_{}".format(env_name, best_success_rate[env_name])
-                should_save_ckpt = True
-                ckpt_reason = "success"
+        # if rollout_logs["Success_Rate"] > best_success_rate[env_name]:
+        #     best_success_rate[env_name] = rollout_logs["Success_Rate"]
+        #     if save_on_best_rollout_success_rate:
+        #         # save checkpoint if achieve new best success rate
+        #         epoch_ckpt_name += "_{}_success_{}".format(env_name, best_success_rate[env_name])
+        #         should_save_ckpt = True
+        #         ckpt_reason = "success"
 
     # return the modified input attributes
     return dict(

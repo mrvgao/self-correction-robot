@@ -139,7 +139,7 @@ class Algo(object):
         self._create_networks()
         self._create_optimizers()
 
-        self.epsilon_train = float('inf')
+        self.epsilon_train = 2
 
         assert isinstance(self.nets, nn.ModuleDict)
 

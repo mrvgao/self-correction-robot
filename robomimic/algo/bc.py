@@ -186,6 +186,8 @@ class BC(PolicyAlgo):
 
             info['threshold_term'] = TensorUtils.detach(regularization_term)
 
+            # print('regularization term: ', regularization_term.item())
+
             # value_loss += _lambda * regularization_term
 
             value_reg_loss = value_loss + _lambda * regularization_term
