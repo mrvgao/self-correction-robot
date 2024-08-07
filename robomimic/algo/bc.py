@@ -168,7 +168,7 @@ class BC(PolicyAlgo):
             info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
             value_optimizer.zero_grad()
 
-            tau = 30
+            tau = config.experiment.tau
             _lambda = 0.01
 
             if self.epsilon_train < value_loss:
