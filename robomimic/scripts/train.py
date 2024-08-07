@@ -490,7 +490,7 @@ def main(args):
         config.experiment.name = args.name
 
     # get torch device
-    device = TorchUtils.get_torch_device(try_to_use_cuda=config.train.cuda)
+    device = TorchUtils.get_torch_device(try_to_use_cuda=config.train.cuda, cuda_mark=config.cuda_mark)
 
     # maybe modify config for debugging purposes
     if args.debug:
