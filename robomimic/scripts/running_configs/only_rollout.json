@@ -6,19 +6,20 @@
     "progress_weight": 0.3,
     "experiment": {
         "name": "join loss with value embedding",
+        "ckpt_path": "/home/minquangao/expdata/robocasa/im/bc_xfmr/joint-loss-without-value-loss-threshold-for-update/20240805162209/models/model_epoch_500.pth",
         "validate": false,
-        "only_rollout": false,
+        "only_rollout": true,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "regularization-term"
+            "wandb_proj_name": "joint-loss"
         },
         "mse": {},
         "save": {
             "enabled": true,
             "every_n_seconds": null,
-            "every_n_epochs": 5,
+            "every_n_epochs": 50,
             "epochs": [],
             "on_best_validation": false,
             "on_best_rollout_return": false,
@@ -33,13 +34,13 @@
         "keep_all_videos": false,
         "video_skip": 5,
         "rollout": {
-            "enabled": false,
+            "enabled": true,
             "n": 10,
             "horizon": 500,
-            "rate": 100,
+            "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
-            "with_progress_correct": false
+            "with_progress_correct": true
         },
         "env_meta_update_dict": {
             "env_kwargs": {
@@ -57,6 +58,7 @@
                         2
                     ],
                     [
+
                         4,
                         4
                     ],
@@ -83,7 +85,7 @@
                 "path": "/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5"
             }
         ],
-        "output_dir": "~/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term",
+        "output_dir": "~/expdata/robocasa/im/bc_xfmr/predict-action-without-value-threshold",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
@@ -99,7 +101,7 @@
         ],
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 16,
+        "batch_size": 2,
         "num_epochs": 1000,
         "max_grad_norm": 100.0,
         "seed": 123,
