@@ -157,15 +157,15 @@ class BC(PolicyAlgo):
 
             value_optimizer = torch.optim.Adam(self.nets['policy'].parameters(), lr=1e-6, weight_decay=1e-4)
 
-            value_delta = get_diff_percentage(value_hat, normalized_value_y)
+            # value_delta = get_diff_percentage(value_hat, normalized_value_y)
 
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
             # info[f'Parameters_hist_of_value_embedding_{epoch}'] = self.nets.policy.nets.value_embedding.weight.detach().cpu().numpy()
             info["value_loss"] = TensorUtils.detach(value_loss)
 
-            trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
-            info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
+            # trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
+            # info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
             value_optimizer.zero_grad()
 
             tau = config.experiment.tau
