@@ -63,6 +63,7 @@ class BaseConfig(Config):
 
         self.experiment.only_rollout = None
         self.experiment.rollout.with_progress_correct = None
+        self.experiment.tau = 0
 
         self.experiment_config()
         self.train_config()
