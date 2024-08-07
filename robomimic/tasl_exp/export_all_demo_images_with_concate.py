@@ -144,7 +144,7 @@ def generate_concated_images_from_demo_path(task_name):
     config = config_factory(ext_cfg["algo_name"])
     with config.values_unlocked():
         config.update(ext_cfg)
-    device = TorchUtils.get_torch_device(try_to_use_cuda=config.train.cuda)
+    device = TorchUtils.get_torch_device(try_to_use_cuda=config.train.cuda, cuda_mark=config.cuda_mark)
 
     """
     Train a model using the algorithm.
