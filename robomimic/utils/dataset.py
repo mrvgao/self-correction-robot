@@ -46,6 +46,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         shuffled_obs_key_groups=None,
         lang_encoder=None,
         dataset_lang=None,
+        config=None,
     ):
         """
         Dataset class for fetching sequences of experience.
@@ -142,7 +143,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         self.pad_frame_stack = pad_frame_stack
         self.get_pad_mask = get_pad_mask
 
-        self.load_demo_info(filter_by_attribute=self.filter_by_attribute)
+        self.load_demo_info(filter_by_attribute=self.filter_by_attribute, config=config)
 
         # maybe prepare for observation normalization
         self.obs_normalization_stats = None
@@ -190,7 +191,7 @@ class SequenceDataset(torch.utils.data.Dataset):
 
         self.close_and_delete_hdf5_handle()
 
-    def load_demo_info(self, filter_by_attribute=None, demos=None):
+    def load_demo_info(self, filter_by_attribute=None, demos=None, config=None):
         """
         Args:
             filter_by_attribute (str): if provided, use the provided filter key
@@ -258,7 +259,7 @@ class SequenceDataset(torch.utils.data.Dataset):
                 self._index_to_demo_id[self.total_num_sequences] = ep
                 self.total_num_sequences += 1
 
-        device = TorchUtils.get_torch_device(try_to_use_cuda=True)
+        device = TorchUtils.get_torch_device(try_to_use_cuda=config.experiment.cuda, cuda_mark=config.cuda_mark)
         lang_encoder = LangUtils.LangEncoder(
             device=device,
         )
