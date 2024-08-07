@@ -4,7 +4,7 @@
     "progress_model_path": "/data2/mgao/pretrained-models/value-model/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:3",
+    "cuda_mark": "cuda:5",
     "experiment": {
         "name": "join loss with value embedding",
         "validate": false,
@@ -104,7 +104,7 @@
         "batch_size": 16,
         "num_epochs": 1000,
         "max_grad_norm": 100.0,
-        "seed": 123,
+        "seed": 999,
         "action_config": {
             "actions": {
                 "normalization": null
