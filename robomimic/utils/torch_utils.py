@@ -34,7 +34,7 @@ def hard_update(source, target):
             target_param.copy_(param)
 
 
-def get_torch_device(try_to_use_cuda):
+def get_torch_device(try_to_use_cuda, cuda_mark):
     """
     Return torch device. If using cuda (GPU), will also set cudnn.benchmark to True
     to optimize CNNs.
@@ -47,7 +47,10 @@ def get_torch_device(try_to_use_cuda):
     """
     if try_to_use_cuda and torch.cuda.is_available():
         torch.backends.cudnn.benchmark = True
-        device = torch.device("cuda:0")
+        if cuda_mark:
+            device = torch.device(cuda_mark)
+        else:
+            device = torch.device("cuda:0")
     else:
         device = torch.device("cpu")
     return device
