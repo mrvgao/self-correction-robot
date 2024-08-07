@@ -1,7 +1,7 @@
 {
     "algo_name": "bc",
-    "value_model_path": "/home/minquangao/self-correction-robot/robomimic/tasl_exp/value_models/July_15_value_model_with_resnet_dropout_model_resnet_lr1e-05_bs100_epochs2000/best_model.pth",
-    "progress_model_path": "/home/minquangao/self-correction-robot/robomimic/tasl_exp/models/july_15_progress_with_restnet_model_resnet_lr0.001_bs100_epochs100/best_model.pth",
+    "value_model_path": "/data2/mgao/pretrained-models/progress-model/best_model.pth",
+    "progress_model_path": "/data2/mgao/pretrained-models/value-model/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
     "experiment": {
