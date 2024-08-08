@@ -21,10 +21,10 @@ def concatenate_images(batch, direct_obs=False):
     # Concatenate the images along the width dimension (dim=3)
     concatenated_images = torch.cat((left_image, eye_in_hand_image, right_image), dim=-1)
 
-    if not direct_obs:
-        concatenated_images = concatenated_images.permute(0, 1, 3, 4, 2)
-    else:
-        concatenated_images = concatenated_images.permute(0, 2, 3, 1)
+    # if not direct_obs:
+    concatenated_images = concatenated_images.permute(0, 1, 3, 4, 2)
+    # else:
+    #     concatenated_images = concatenated_images.permute(0, 2, 3, 1)
 
     # Add the new concatenated image tensor to the 'obs' dictionary
     batch['obs']['concatenated_images'] = concatenated_images
@@ -158,7 +158,20 @@ def post_process_ac(ac, batched, obj):
     return ac
 
 
-def get_deployment_action_and_value_from_obs(rollout_policy, obs_dict):
+def get_current_state_value_loss(rollout_policy, config, obs_dict):
+    obs_dict = rollout_policy._prepare_observation(obs_dict)
+    tmp_ob, tmp_target_value = get_value_target(obs_dict, config, rollout_policy, rollout_policy.policy.device)
+    ac_dist, value_predict = rollout_policy.policy.nets['policy'].forward_train(obs_dict=obs_dict)
+    # execute_value_predict = value_predict[:, 0, :][0][0]
+    # tmp_target_value = tmp_target_value[0][0][0]
+    tmp_target_value = normalize(tmp_target_value)
+
+    tmp_value_loss = torch.mean((value_predict - tmp_target_value) ** 2)
+
+    return tmp_value_loss, ac_dist
+
+
+def get_deployment_action_and_value_from_obs(rollout_policy, config, obs_dict):
     obs_dict = rollout_policy._prepare_observation(obs_dict)
     ac_dist, value_predict = rollout_policy.policy.nets['policy'].forward_train(obs_dict=obs_dict)
     execute_value_predict = value_predict[:, 0, :]

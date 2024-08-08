@@ -19,6 +19,7 @@ import torch
 import cv2
 import pickle
 from tqdm import tqdm
+from robomimic.utils.tasl_exp import get_current_state_value_loss
 
 
 def adaptive_threshold(i, max_step):
@@ -28,49 +29,72 @@ def adaptive_threshold(i, max_step):
     return threshold
 
 
-def find_reliable_action(step_i, original_ac_dist, env, policy, config, batched, previous_value, video_frames):
+def find_reliable_action(ob_dict, env, policy, config):
     original_state = env.get_state()
     TRYING = 50
 
+    tmp_value_loss, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
+
+    max_trust = -float('inf')
+
+    sample = ac_dist.sample()
+    max_ac = sample[:, 0, :]
+
     for i in range(TRYING):
-        print('{}/{}'.format(i, TRYING))
+        # print('{}/{}'.format(i, TRYING))
         # if step_i == 0:
         #     tmp_ob_dict = env.reset()
         # else:
-        tmp_ac = original_ac_dist.sample()[:, 0, :]
-        tmp_ac = post_process_ac(tmp_ac, batched, obj=policy)
-        tmp_ob_dict, _, _, _ = env.step(tmp_ac)  # drive first time
+        sample = ac_dist.sample()
+        tmp_log_prob = ac_dist.log_prob(sample).mean()
+        tmp_ac = sample[:, 0, :]
 
-        tmp_ob, tmp_target_value = get_value_target(tmp_ob_dict, config, policy, policy.policy.device)
+        # tmp_ac = post_process_ac(tmp_ac, batched, obj=policy)
+        # tmp_ob_dict, _, _, _ = env.step(tmp_ac)  # drive first time
 
-        tmp_prepared_batch = policy._prepare_observation(tmp_ob)
-        tmp_next_ac_dist, tmp_value = policy.policy.nets['policy'].forward_train(obs_dict=tmp_prepared_batch)
+        # tmp_ob, tmp_target_value = get_value_target(tmp_ob_dict, config, policy, policy.policy.device)
 
-        tmp_target_value = tmp_target_value[0][0][0]
-        tmp_target_value = normalize(tmp_target_value)
+        # tmp_prepared_batch = policy._prepare_observation(tmp_ob)
+        # tmp_next_ac_dist, tmp_value = policy.policy.nets['policy'].forward_train(obs_dict=tmp_prepared_batch)
 
-        tmp_value = tmp_value[0][0][0]
+        # tmp_target_value = tmp_target_value[0][0][0]
+        # tmp_target_value = normalize(tmp_target_value)
 
-        tmp_value_loss = torch.mean((tmp_target_value - tmp_value)**2)
+        # tmp_value = tmp_value[0][0][0]
 
-        trust_threshold = adaptive_threshold(i, TRYING)
-        print(f'trying time: {i}, loss is :{tmp_value_loss} threshold is : {trust_threshold}')
+        # tmp_value_loss = torch.mean((tmp_target_value - tmp_value)**2)
 
-        if tmp_value_loss < trust_threshold and tmp_target_value > previous_value:
+        # trust_threshold = adaptive_threshold(i, TRYING)
+        # print(f'trying time: {i}, loss is :{tmp_value_loss} threshold is : {trust_threshold}')
+
+        epsilon_LVM = 0.05
+        threshold_value = config.experiment.tau * (tmp_value_loss + epsilon_LVM + 0.3)
+
+        trust = tmp_log_prob - threshold_value
+
+        # print(f'tmp log_prob - threshold_value = {tmp_log_prob} - {threshold_value} = {trust}')
+        if trust.item() > 0 and trust > max_trust:
+        # if tmp_value_loss < trust_threshold and tmp_target_value > previous_value:
             # print(f'success: got tmp loss: {tmp_value_loss} and tmp_value: {tmp_value}, with compared to previous_loss: {previous_value}')
-            previous_value = tmp_target_value
+            # previous_value = tmp_target_value
 
             # print('find NEW action that can drive to TRUST state')
-            ac = post_process_ac(tmp_next_ac_dist.sample()[:, 0, :], batched, obj=policy)
-            revert_frame = env.render(mode="rgb_array", height=512, width=512)
-            video_frames.append(revert_frame)
+            # ac = post_process_ac(tmp_next_ac_dist.sample()[:, 0, :], batched, obj=policy)
+            # revert_frame = env.render(mode="rgb_array", height=512, width=512)
+            # video_frames.append(revert_frame)
 
-            return ac, previous_value, tmp_ob_dict, tmp_value, tmp_value_loss
-        elif step_i == 0: env.reset()
-        else:
-            env.reset_to(original_state)
+            max_trust = trust.item()
+            max_ac = tmp_ac
 
-    return None, previous_value, None, None, None
+            # return tmp_ac, ob_dict
+        # else:
+            # print(f'tmp log_prob - threshold_value = {tmp_log_prob} - {threshold_value} = {trust}')
+
+        # elif step_i == 0: env.reset()
+        # else:
+        #     env.reset_to(original_state)
+
+    return max_ac
 
 
 def run_rollout(
@@ -158,7 +182,7 @@ def run_rollout(
 
     final_step = 0
 
-    # horizon = 700
+    horizon = 700
 
     for step_i in range(horizon):
         # print('step := {}/{}'.format(step_i, horizon))
@@ -166,21 +190,19 @@ def run_rollout(
         final_step = step_i
 
         if with_progress_correct:
-            original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
-                rollout_policy=policy, obs_dict=ob_dict)
-            ac, previous_value, ob_dict, target_value, current_value_loss = find_reliable_action(
-                step_i, original_ac_dist, env, policy, config, batched,
-                previous_value, video_frames
-            )
+            # original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
+            #     rollout_policy=policy, obs_dict=ob_dict)
+            ac = find_reliable_action(ob_dict, env, policy, config)
 
             if ac is None:
                 abnormal_states[STATE].append(env.get_state())
-                abnormal_states[LOSS].append(current_value_loss)
+                # abnormal_states[LOSS].append(current_value_loss)
                 # print('we cannot find a new action that can drive to trust state')
                 # print('re-start a new task')
                 break
             else:
-                previous_value = target_value
+                # previous_value = target_value
+                pass
                 # print('this state is reliable!')
         else:
             ac = policy(ob=ob_dict, goal=goal_dict)

@@ -6,8 +6,9 @@
     "progress_weight": 0.3,
     "experiment": {
         "name": "join loss with value embedding",
-        "ckpt_path": "/home/minquangao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240806155952/models/model_epoch_800.pth",
+        "ckpt_path": "/home/minquangao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240806155952/models/model_epoch_500.pth",
         "validate": false,
+        "tau": 50,
         "only_rollout": true,
         "logging": {
             "terminal_output_to_txt": true,
@@ -40,7 +41,7 @@
             "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
-            "with_progress_correct": false
+            "with_progress_correct": true
         },
         "env_meta_update_dict": {
             "env_kwargs": {
