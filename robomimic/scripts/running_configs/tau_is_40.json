@@ -8,7 +8,7 @@
     "experiment": {
         "name": "join loss with value embedding",
         "validate": false,
-        "tau": 10,
+        "tau": 40,
         "only_rollout": false,
         "logging": {
             "terminal_output_to_txt": true,
