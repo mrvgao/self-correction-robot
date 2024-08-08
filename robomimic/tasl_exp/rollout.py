@@ -68,11 +68,11 @@ def find_reliable_action(ob_dict, env, policy, config):
         # print(f'trying time: {i}, loss is :{tmp_value_loss} threshold is : {trust_threshold}')
 
         epsilon_LVM = 0.05
-        threshold_value = config.experiment.tau * (tmp_value_loss + epsilon_LVM + 0.3)
+        threshold_value = config.experiment.tau * (1 + tmp_value_loss + epsilon_LVM + 0.3)
 
         trust = tmp_log_prob - threshold_value
 
-        # print(f'tmp log_prob - threshold_value = {tmp_log_prob} - {threshold_value} = {trust}')
+        print(f'tmp log_prob - threshold_value = {tmp_log_prob} - {threshold_value} = {trust}')
         if trust.item() > 0 and trust.item() > max_trust:
         # if tmp_value_loss < trust_threshold and tmp_target_value > previous_value:
             # print(f'success: got tmp loss: {tmp_value_loss} and tmp_value: {tmp_value}, with compared to previous_loss: {previous_value}')
