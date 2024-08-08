@@ -174,7 +174,7 @@ class BC(PolicyAlgo):
             if self.epsilon_train < value_loss:
                 self.epsilon_train = value_loss
 
-            epsilon_LVM = 0.05
+            epsilon_LVM = 0.1
 
             log_prob = info["losses"]["log_probs"]
             threshold_value = tau * (value_loss + epsilon_LVM + self.epsilon_train)

@@ -73,7 +73,7 @@ def find_reliable_action(ob_dict, env, policy, config):
         trust = tmp_log_prob - threshold_value
 
         # print(f'tmp log_prob - threshold_value = {tmp_log_prob} - {threshold_value} = {trust}')
-        if trust.item() > 0 and trust > max_trust:
+        if trust.item() > 0 and trust.item() > max_trust:
         # if tmp_value_loss < trust_threshold and tmp_target_value > previous_value:
             # print(f'success: got tmp loss: {tmp_value_loss} and tmp_value: {tmp_value}, with compared to previous_loss: {previous_value}')
             # previous_value = tmp_target_value
@@ -87,14 +87,14 @@ def find_reliable_action(ob_dict, env, policy, config):
             max_ac = tmp_ac
 
             # return tmp_ac, ob_dict
-        # else:
-            # print(f'tmp log_prob - threshold_value = {tmp_log_prob} - {threshold_value} = {trust}')
+        elif trust.item() < 0:
+            print(f'tmp log_prob - threshold_value = {tmp_log_prob} - {threshold_value} = {trust}')
 
         # elif step_i == 0: env.reset()
         # else:
         #     env.reset_to(original_state)
 
-    return max_ac
+    return max_ac[0].clone().detach().cpu().numpy()
 
 
 def run_rollout(
@@ -206,7 +206,8 @@ def run_rollout(
                 # print('this state is reliable!')
         else:
             ac = policy(ob=ob_dict, goal=goal_dict)
-            ob_dict, r, done, _ = env.step(ac)
+
+        ob_dict, r, done, _ = env.step(ac)
 
         # rews.append(r)
 
