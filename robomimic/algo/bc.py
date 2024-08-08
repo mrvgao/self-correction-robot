@@ -169,7 +169,7 @@ class BC(PolicyAlgo):
             value_optimizer.zero_grad()
 
             tau = config.experiment.tau
-            _lambda = 0.01
+            _lambda = 0.05
 
             if self.epsilon_train < value_loss:
                 self.epsilon_train = value_loss
