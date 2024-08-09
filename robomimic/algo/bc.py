@@ -167,7 +167,7 @@ class BC(PolicyAlgo):
             self.value_optimizer.zero_grad()
             self.scheduler.step(value_loss)
 
-            info["value_lr"] = TensorUtils.detach(self.value_optimizer.param_groups[0]['lr'])
+            info["value_lr"] = self.value_optimizer.param_groups[0]['lr']
 
             tau = config.experiment.tau
             _lambda = 0.05
