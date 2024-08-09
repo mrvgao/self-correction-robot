@@ -172,7 +172,7 @@ class BC(PolicyAlgo):
             _lambda = 0.05
 
             if value_loss < self.epsilon_train:
-                self.epsilon_train = value_loss
+                self.epsilon_train = value_loss.clone().detach()
 
             epsilon_LVM = 0.1
 
