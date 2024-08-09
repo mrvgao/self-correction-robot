@@ -4,7 +4,8 @@
     "progress_model_path": "/data2/mgao/pretrained-models/value-model/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:6",
+    "cuda_mark": "cuda:0",
+    "bias": 1,
     "experiment": {
         "name": "seed-123",
         "validate": false,

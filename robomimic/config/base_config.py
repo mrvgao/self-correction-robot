@@ -65,6 +65,7 @@ class BaseConfig(Config):
         self.experiment.rollout.with_progress_correct = None
         self.experiment.tau = 0
         self.cuda_mark = "cuda:0"
+        self.bias = 0
 
         self.experiment_config()
         self.train_config()

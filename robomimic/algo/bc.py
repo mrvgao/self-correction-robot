@@ -177,7 +177,7 @@ class BC(PolicyAlgo):
             epsilon_LVM = 0.1
 
             log_prob = info["losses"]["log_probs"]
-            threshold_value = tau * (1 + value_loss + epsilon_LVM + self.epsilon_train)
+            threshold_value = tau * (config.bias + value_loss + epsilon_LVM + self.epsilon_train)
 
             regularization_term = torch.max(
                 torch.zeros_like(log_prob),
