@@ -95,6 +95,20 @@ class BC(PolicyAlgo):
         )
         self.nets = self.nets.float().to(self.device)
 
+        self.value_optimizer = torch.optim.Adam(
+            self.nets['policy'].parameters(),
+            lr=self.glbal_config.value_lr,
+            weight_decay=self.global_config.value_weight_decay
+        )
+
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            self.value_optimizer,
+            mode='min',
+            factor=0.1,
+            patience=2,
+            verbose=False
+        )
+
     def process_batch_for_training(self, batch):
         """
         Processes input batch from a data loader to filter out
@@ -155,8 +169,6 @@ class BC(PolicyAlgo):
 
             value_loss = torch.mean(value_y_delta ** 2)
 
-            value_optimizer = torch.optim.Adam(self.nets['policy'].parameters(), lr=config.value_lr, weight_decay=config.value_weight_decay)
-
             # value_delta = get_diff_percentage(value_hat, normalized_value_y)
 
             info["predictions"] = TensorUtils.detach(predictions)
@@ -166,7 +178,10 @@ class BC(PolicyAlgo):
 
             # trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
             # info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
-            value_optimizer.zero_grad()
+            self.value_optimizer.zero_grad()
+            self.scheduler.step(value_loss)
+
+            info["value_lr"] = TensorUtils.detach(self.value_optimizer.param_groups[0]['lr'])
 
             tau = config.experiment.tau
             _lambda = 0.05
@@ -987,7 +1002,8 @@ class BC_Transformer_GMM(BC_Transformer):
         log["Log_Likelihood"] = info["losses"]["log_probs"].item()
         log['value_loss'] = info['value_loss'].item()
         # log['trust'] = info['trust']
-        log['regularization_term'] =  info['threshold_term'].item()
+        log['regularization_term'] = info['threshold_term'].item()
+        log['value_lr'] = info['value_lr']
         if "policy_grad_norms" in info:
             log["Policy_Grad_Norms"] = info["policy_grad_norms"]
 
