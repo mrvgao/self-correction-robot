@@ -207,7 +207,7 @@ class BC(PolicyAlgo):
 
                 if torch.isnan(value_loss).any() or torch.isinf(value_loss).any():
                     print("value_loss contains NaN or Inf values.")
-                elif regularization_term.item() > 0:
+                elif regularization_term.item() <= 0:
                     # value_loss_cpu = value_loss.detach().cpu().item()
                     # if value_loss_cpu < value_loss_threshold:
                     # losses['action_loss'] *= trust

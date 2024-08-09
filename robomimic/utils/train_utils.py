@@ -342,8 +342,6 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
 
         # Check if there is any False value in the tensor
 
-        hand_eye_images = batch['obs']['robot0_eye_in_hand_image']
-
         # process batch for training
         t = time.time()
         input_batch = model.process_batch_for_training(batch)
