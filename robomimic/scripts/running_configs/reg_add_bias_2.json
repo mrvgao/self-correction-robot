@@ -9,7 +9,7 @@
     "value_weight_decay": 0,
     "bias": 1,
     "experiment": {
-        "name": "bias_1_seed-0-value-lr-1e-4",
+        "name": "bias_1_seed-0-value-lr-1e-7-weight-decay-0",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
