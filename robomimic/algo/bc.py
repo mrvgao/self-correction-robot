@@ -171,7 +171,7 @@ class BC(PolicyAlgo):
             tau = config.experiment.tau
             _lambda = 0.05
 
-            if self.epsilon_train < value_loss:
+            if value_loss < self.epsilon_train:
                 self.epsilon_train = value_loss
 
             epsilon_LVM = 0.1

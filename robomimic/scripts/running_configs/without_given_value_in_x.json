@@ -4,6 +4,7 @@
     "progress_model_path": "/home/minquangao/self-correction-robot/robomimic/tasl_exp/models/july_15_progress_with_restnet_model_resnet_lr0.001_bs100_epochs100/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
+    "cuda_mark": "cuda:0",
     "experiment": {
         "name": "join loss with value embedding",
         "validate": false,
@@ -100,7 +101,6 @@
         ],
         "goal_mode": null,
         "cuda": true,
-        "cuda_mark": "cuda:0",
         "batch_size": 16,
         "num_epochs": 1000,
         "max_grad_norm": 100.0,
