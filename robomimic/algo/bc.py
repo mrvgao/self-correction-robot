@@ -155,7 +155,7 @@ class BC(PolicyAlgo):
 
             value_loss = torch.mean(value_y_delta ** 2)
 
-            value_optimizer = torch.optim.Adam(self.nets['policy'].parameters(), lr=1e-4, weight_decay=1e-4)
+            value_optimizer = torch.optim.Adam(self.nets['policy'].parameters(), lr=config.value_lr, weight_decay=config.value_weight_decay)
 
             # value_delta = get_diff_percentage(value_hat, normalized_value_y)
 
