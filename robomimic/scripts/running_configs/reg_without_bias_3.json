@@ -7,7 +7,7 @@
     "cuda_mark": "cuda:5",
     "bias": 0,
     "experiment": {
-        "name": "seed-666",
+        "name": "bias_0_seed-666",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
