@@ -914,7 +914,7 @@ class BC_Transformer_GMM(BC_Transformer):
 
         self.value_optimizer = torch.optim.Adam(
             self.nets['policy'].parameters(),
-            lr=self.glbal_config.value_lr,
+            lr=self.global_config.value_lr,
             weight_decay=self.global_config.value_weight_decay
         )
 
