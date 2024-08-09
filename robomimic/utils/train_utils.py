@@ -362,7 +362,7 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
         step_log_all.append(step_log)
         timing_stats["Log_Info"].append(time.time() - t)
 
-        epoch_avg_value_losses.append(info['value_loss'])
+        epoch_avg_value_losses.append(info['value_loss'].cpu().numpy())
 
     model.scheduler.step(np.mean(epoch_avg_value_losses))
 
