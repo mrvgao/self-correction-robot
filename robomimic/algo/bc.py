@@ -214,7 +214,7 @@ class BC(PolicyAlgo):
                     # losses['action_loss'] *= trust
                     step_info = self._train_step(losses)
                     info.update(step_info)
-                    value_optimizer.step()
+                    self.value_optimizer.step()
 
         return info
 
