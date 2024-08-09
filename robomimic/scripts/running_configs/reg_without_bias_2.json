@@ -9,7 +9,7 @@
     "value_lr": 1e-5,
     "value_weight_decay": 0,
     "experiment": {
-        "name": "bias_0_seed-0-value-lr-1e-5-weight-decay-0",
+        "name": "with_reg_constraint_update_bias_0_seed-0-value-lr-1e-5-weight-decay-0",
         "validate": false,
         "tau": 30,
         "only_rollout": false,

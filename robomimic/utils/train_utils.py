@@ -343,7 +343,6 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
         # Check if there is any False value in the tensor
 
         hand_eye_images = batch['obs']['robot0_eye_in_hand_image']
-        difference_array = np.zeros((hand_eye_images.shape[0], hand_eye_images.shape[1]))
 
         # process batch for training
         t = time.time()
@@ -364,7 +363,9 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
 
         epoch_avg_value_losses.append(info['value_loss'].cpu().numpy())
 
-    model.scheduler.step(np.mean(epoch_avg_value_losses))
+    mean_value_loss = np.mean(epoch_avg_value_losses)
+    print(f'mean value loss of epoch {epoch} is {mean_value_loss}')
+    model.scheduler.step(mean_value_loss)
 
     # flatten and take the mean of the metrics
     step_log_dict = {}
