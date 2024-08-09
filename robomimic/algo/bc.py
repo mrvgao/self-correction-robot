@@ -184,6 +184,7 @@ class BC(PolicyAlgo):
                 threshold_value - log_prob
             )
 
+            info['threshold_value'] = TensorUtils.detach(threshold_value)
             info['threshold_term'] = TensorUtils.detach(regularization_term)
 
             # print('regularization term: ', regularization_term.item())
@@ -1006,6 +1007,7 @@ class BC_Transformer_GMM(BC_Transformer):
         # log['trust'] = info['trust']
         log['regularization_term'] = info['threshold_term'].item()
         log['value_lr'] = info['value_lr']
+        log['threshold_value'] = info['threshold_value'].item()
         if "policy_grad_norms" in info:
             log["Policy_Grad_Norms"] = info["policy_grad_norms"]
 
