@@ -175,6 +175,7 @@ class BC(PolicyAlgo):
                 self.epsilon_train = value_loss.clone().detach()
 
             epsilon_LVM = 0.1
+            vloss_threshold = 0.01
 
             log_prob = info["losses"]["log_probs"]
             threshold_value = tau * (config.bias + value_loss + epsilon_LVM + self.epsilon_train)
@@ -208,7 +209,7 @@ class BC(PolicyAlgo):
 
                 if torch.isnan(value_loss).any() or torch.isinf(value_loss).any():
                     print("value_loss contains NaN or Inf values.")
-                elif regularization_term.item() <= 0:
+                elif value_loss.item() < vloss_threshold:
                     # value_loss_cpu = value_loss.detach().cpu().item()
                     # if value_loss_cpu < value_loss_threshold:
                     # losses['action_loss'] *= trust
