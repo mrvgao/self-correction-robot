@@ -325,6 +325,9 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
     start_time = time.time()
 
     data_loader_iter = iter(data_loader)
+
+    epoch_avg_value_losses = []
+
     for _ in LogUtils.custom_tqdm(range(num_steps)):
 
         # load next batch from data loader
@@ -358,6 +361,10 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
         step_log = model.log_info(info)
         step_log_all.append(step_log)
         timing_stats["Log_Info"].append(time.time() - t)
+
+        epoch_avg_value_losses.append(info['value_loss'])
+
+    model.scheduler.step(np.mean(epoch_avg_value_losses))
 
     # flatten and take the mean of the metrics
     step_log_dict = {}

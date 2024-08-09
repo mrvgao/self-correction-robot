@@ -165,7 +165,6 @@ class BC(PolicyAlgo):
             # trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
             # info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
             self.value_optimizer.zero_grad()
-            self.scheduler.step(value_loss)
 
             info["value_lr"] = self.value_optimizer.param_groups[0]['lr']
 
