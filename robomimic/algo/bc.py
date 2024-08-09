@@ -95,20 +95,6 @@ class BC(PolicyAlgo):
         )
         self.nets = self.nets.float().to(self.device)
 
-        self.value_optimizer = torch.optim.Adam(
-            self.nets['policy'].parameters(),
-            lr=self.glbal_config.value_lr,
-            weight_decay=self.global_config.value_weight_decay
-        )
-
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            self.value_optimizer,
-            mode='min',
-            factor=0.1,
-            patience=2,
-            verbose=False
-        )
-
     def process_batch_for_training(self, batch):
         """
         Processes input batch from a data loader to filter out
@@ -463,6 +449,20 @@ class BC_GMM(BC_Gaussian):
         )
 
         self.nets = self.nets.float().to(self.device)
+
+        self.value_optimizer = torch.optim.Adam(
+            self.nets['policy'].parameters(),
+            lr=self.glbal_config.value_lr,
+            weight_decay=self.global_config.value_weight_decay
+        )
+
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            self.value_optimizer,
+            mode='min',
+            factor=0.1,
+            patience=2,
+            verbose=False
+        )
 
 
 class BC_VAE(BC):
