@@ -4,10 +4,10 @@
     "progress_model_path": "/data2/mgao/pretrained-models/value-model/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:4",
+    "cuda_mark": "cuda:6",
     "bias": 1,
     "experiment": {
-        "name": "bias_1_seed-666",
+        "name": "bias_1_seed-0",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
@@ -105,7 +105,7 @@
         "batch_size": 16,
         "num_epochs": 1000,
         "max_grad_norm": 100.0,
-        "seed": 666,
+        "seed": 0,
         "action_config": {
             "actions": {
                 "normalization": null

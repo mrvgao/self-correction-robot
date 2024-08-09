@@ -4,10 +4,10 @@
     "progress_model_path": "/data2/mgao/pretrained-models/value-model/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:1",
+    "cuda_mark": "cuda:2",
     "bias": 1,
     "experiment": {
-        "name": "seed-999",
+        "name": "bias_1_seed-999",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
@@ -15,7 +15,7 @@
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "regularization-term-add-bias"
+            "wandb_proj_name": "regularization-term-lambda_0.005"
         },
         "mse": {},
         "save": {
