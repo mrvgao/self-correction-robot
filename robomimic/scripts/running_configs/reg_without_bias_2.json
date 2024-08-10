@@ -10,7 +10,7 @@
     "value_weight_decay": 0,
     "experiment": {
         "name": "with_reg_constraint_update_bias_0_seed-0-value-lr-1e-5-weight-decay-0",
-        "ckpt_path": "save checkpoint to /data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240809165846/models/model_epoch_95.pth",
+        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240809165846/models/model_epoch_95.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
