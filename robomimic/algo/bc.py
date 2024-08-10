@@ -195,11 +195,10 @@ class BC(PolicyAlgo):
             beta = 5
             value_reg_loss = beta * value_loss + _lambda * regularization_term
 
-            value_reg_loss.backward(retain_graph=True)
-
             # value_loss.backward(retain_graph=True)
 
             if not validate:
+                value_reg_loss.backward(retain_graph=True)
 
                 # trust_threshold = 0.80
                 # value_loss_threshold = 0.01 # MSE error 10%
