@@ -10,6 +10,7 @@
     "value_weight_decay": 0,
     "experiment": {
         "name": "with_reg_constraint_update_bias_0_seed-999-value-lr-1e-5-weight-decay-0",
+        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240809165843/models/model_epoch_95.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
@@ -38,7 +39,7 @@
         "keep_all_videos": false,
         "video_skip": 5,
         "rollout": {
-            "enabled": true,
+            "enabled": false,
             "n": 50,
             "horizon": 500,
             "rate": 100,
