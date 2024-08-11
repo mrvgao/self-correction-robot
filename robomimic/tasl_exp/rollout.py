@@ -186,7 +186,7 @@ def run_rollout(
     horizon = 700
 
     for step_i in range(horizon):
-        # print('step := {}/{}'.format(step_i, horizon))
+        print('step := {}/{}'.format(step_i, horizon))
 
         final_step = step_i
 
