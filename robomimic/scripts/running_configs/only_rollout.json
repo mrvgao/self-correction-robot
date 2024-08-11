@@ -5,8 +5,8 @@
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
     "experiment": {
-        "name": "join loss with value embedding",
-        "ckpt_path": "/home/minquangao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240806155952/models/model_epoch_500.pth",
+        "name": "reg-constraint-seed-999",
+        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240810091647/models/model_epoch_505.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": true,
@@ -14,11 +14,11 @@
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "joint-loss"
+            "wandb_proj_name": "rollout"
         },
         "mse": {},
         "save": {
-            "enabled": true,
+            "enabled": false,
             "every_n_seconds": null,
             "every_n_epochs": 50,
             "epochs": [],
@@ -41,7 +41,7 @@
             "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
-            "with_progress_correct": true
+            "with_progress_correct": false
         },
         "env_meta_update_dict": {
             "env_kwargs": {
