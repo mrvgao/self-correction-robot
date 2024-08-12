@@ -112,7 +112,8 @@ def run_rollout(
         config=None,
         device=None,
         value_model=None,
-        with_progress_correct=False
+        with_progress_correct=False,
+        persist_log=list()
 ):
     """
     Runs a rollout in an environment with the current network parameters.
@@ -184,6 +185,9 @@ def run_rollout(
 
     final_step = 0
 
+    persist_log['log_prob'].append([])
+    persist_log['vloss'].append([])
+
     for step_i in range(config.experiment.rollout.horizon):
         # print('step := {}/{}'.format(step_i, horizon))
 
@@ -205,7 +209,12 @@ def run_rollout(
                 pass
                 # print('this state is reliable!')
         else:
+            tmp_value_loss, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
             ac = policy(ob=ob_dict, goal=goal_dict)
+            tmp_log_prob = ac_dist.log_prob(ac).mean()
+
+            persist_log['log_prob'][-1].append(tmp_log_prob)
+            persist_log['vloss'][-1].append(tmp_log_prob)
 
         ob_dict, r, done, _ = env.step(ac)
 
@@ -436,6 +445,10 @@ def rollout_with_stats(
             video_path = os.path.join(video_dir, "{}{}".format(env_name, video_str))
             video_writer = imageio.get_writer(video_path, fps=20)
 
+            pickle_str = "_epoch_{}.pkl".format(epoch) if epoch is not None else ".pkl"
+
+            pickled_path = os.path.join(video_dir, "{}{}.pkl".format(env_name, pickle_str))
+
         env_video_writer = None
         if write_video:
             print("video writes to " + video_path)
@@ -458,6 +471,11 @@ def rollout_with_stats(
 
         final_steps = []
 
+        saving_data = {
+            'log_prob': [],
+            'vloss': [],
+        }
+
         for ep_i in iterator:
             rollout_timestamp = time.time()
 
@@ -479,11 +497,15 @@ def rollout_with_stats(
                     config=config,
                     device=device,
                     value_model=value_model,
-                    with_progress_correct=with_progress_correct
+                    with_progress_correct=with_progress_correct,
+                    persist_log=saving_data
                 )
 
                 final_steps.append(rollout_info['final_step'])
                 print('THE FINAL STEPS ARE: ', final_steps)
+
+                with open(pickled_path, 'wb') as f:
+                    pickle.dump(saving_data, f)
 
             except Exception as e:
                 print("Rollout exception at episode number {}!".format(ep_i))
