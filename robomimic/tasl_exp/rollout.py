@@ -98,7 +98,7 @@ def find_reliable_action(ob_dict, env, batched, policy, config):
         # else:
         #     env.reset_to(original_state)
 
-    return max_ac[0], tmp_value_loss, tmp_log_prob
+    return max_ac, tmp_value_loss, tmp_log_prob
 
 
 def run_rollout(
