@@ -148,13 +148,6 @@ def run_rollout(
     ob_dict = env.reset()
     policy.start_episode(lang=env._ep_lang_str)
 
-    environment_states = []
-    # save deepcopy version of environments. If we want to set backtrack, we can just reset the env's index
-
-    state_manager = StateManager(env)
-
-    frame_count = 0
-
     goal_dict = None
     if use_goals:
         # retrieve goal from the environment
@@ -176,13 +169,8 @@ def run_rollout(
     else:
         video_frames = []
 
-    previous_value = torch.Tensor([-float('inf')]).to(device)
-    previous_value = previous_value[0]
-
     STATE, LOSS = 'states', 'loss'
     abnormal_states = {STATE: [], LOSS: []}
-
-    # value_model.eval()
 
     final_step = 0
 
