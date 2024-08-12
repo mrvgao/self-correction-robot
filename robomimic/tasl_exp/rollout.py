@@ -74,7 +74,7 @@ def find_reliable_action(ob_dict, env, policy, config):
 
         delta = 0
 
-        print(f'tmp log_prob - threshold_value = {tmp_log_prob} - {threshold_value} = {trust}')
+        print(f'vloss = ', tmp_value_loss)
 
         if trust.item() > delta and trust.item() > max_trust:
         # if tmp_value_loss < trust_threshold and tmp_target_value > previous_value:
