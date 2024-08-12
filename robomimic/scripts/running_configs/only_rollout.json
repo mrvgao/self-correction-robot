@@ -1,25 +1,24 @@
 {
     "algo_name": "bc",
-    "value_model_path": "/data2/mgao/pretrained-models/progress-model/best_model.pth",
-    "progress_model_path": "/data2/mgao/pretrained-models/value-model/best_model.pth",
+    "value_model_path": "/home/minquangao/self-correction-robot/robomimic/tasl_exp/value_models/July_15_value_model_with_resnet_dropout_model_resnet_lr1e-05_bs100_epochs2000/best_model.pth",
+    "progress_model_path": "/home/minquangao/self-correction-robot/robomimic/tasl_exp/models/july_15_progress_with_restnet_model_resnet_lr0.001_bs100_epochs100/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:5",
     "experiment": {
-        "name": "reg-constraint-seed-999",
-        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240810091647/models/model_epoch_505.pth",
+        "name": "join loss with value embedding",
+        "ckpt_path": "/home/minquangao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240806155952/models/model_epoch_500.pth",
         "validate": false,
-        "tau": 30,
+        "tau": 50,
         "only_rollout": true,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "rollout"
+            "wandb_proj_name": "joint-loss"
         },
         "mse": {},
         "save": {
-            "enabled": false,
+            "enabled": true,
             "every_n_seconds": null,
             "every_n_epochs": 50,
             "epochs": [],
@@ -37,12 +36,12 @@
         "video_skip": 5,
         "rollout": {
             "enabled": true,
-            "n": 2,
+            "n": 5,
             "horizon": 500,
             "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
-            "with_progress_correct": false
+            "with_progress_correct": true
         },
         "env_meta_update_dict": {
             "env_kwargs": {
@@ -84,10 +83,10 @@
                 "horizon": 500,
                 "do_eval": true,
                 "filter_key": "50_demos",
-                "path": "/data2/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5"
+                "path": "/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5"
             }
         ],
-        "output_dir": "/data2/mgao/expdata/robocasa/im/bc_xfmr/predict-action-without-value-threshold",
+        "output_dir": "~/expdata/robocasa/im/bc_xfmr/predict-action-without-value-threshold",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
@@ -263,7 +262,7 @@
         }
     },
     "meta": {
-        "hp_base_config_file": "/data2/mgao/minquangao/robomimic/robomimic/exps/templates/bc_transformer.json",
+        "hp_base_config_file": "/home/minquangao/robomimic/robomimic/exps/templates/bc_transformer.json",
         "hp_keys": [
             "seed",
             "ds",

@@ -31,7 +31,7 @@ def adaptive_threshold(i, max_step):
 
 def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
     original_state = env.get_state()
-    TRYING = 5
+    TRYING = 20
 
     tmp_value_loss, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
@@ -53,17 +53,17 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
 
         # apply ac
         tmp_ac = post_process_ac(tmp_ac, False, obj=policy)
-        tmp_ob_dict, _, _, _ = env.step(tmp_ac)  # drive first time
+        tmp_ob_dict_next, _, _, _ = env.step(tmp_ac)  # drive first time
 
-        tmp_ob, tmp_target_value = get_value_target(tmp_ob_dict, config, policy, policy.policy.device)
+        _, tmp_target_value_next = get_value_target(tmp_ob_dict_next, config, policy, policy.policy.device)
 
-        tmp_prepared_batch = policy._prepare_observation(tmp_ob)
-        tmp_next_ac_dist, tmp_value = policy.policy.nets['policy'].forward_train(obs_dict=tmp_prepared_batch)
+        tmp_prepared_batch_next = policy._prepare_observation(tmp_ob_dict_next)
+        tmp_next_ac_dist, tmp_value_next = policy.policy.nets['policy'].forward_train(obs_dict=tmp_prepared_batch_next)
 
-        tmp_target_value = tmp_target_value[0][0][0]
+        tmp_target_value = tmp_target_value_next
         tmp_target_value = normalize(tmp_target_value)
 
-        tmp_value = tmp_value[0][0][0]
+        tmp_value = tmp_value_next
         #
         tmp_value_loss = torch.mean((tmp_target_value - tmp_value)**2)
 
@@ -195,8 +195,7 @@ def run_rollout(
                 # print('this state is reliable!')
         else:
             ac = policy(ob=ob_dict, goal=goal_dict)
-
-        ob_dict, r, done, _ = env.step(ac)
+            ob_dict, r, done, _ = env.step(ac)
 
         # rews.append(r)
 
