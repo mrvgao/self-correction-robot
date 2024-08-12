@@ -31,7 +31,7 @@ def adaptive_threshold(i, max_step):
 
 def find_reliable_action(ob_dict, env, policy, config):
     original_state = env.get_state()
-    TRYING = 50
+    TRYING = 5
 
     tmp_value_loss, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
@@ -39,6 +39,8 @@ def find_reliable_action(ob_dict, env, policy, config):
 
     sample = ac_dist.sample()
     max_ac = sample[:, 0, :]
+
+    print('valus loss = ', tmp_value_loss)
 
     for i in range(TRYING):
         # print('{}/{}'.format(i, TRYING))
