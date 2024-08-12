@@ -29,9 +29,9 @@ def adaptive_threshold(i, max_step):
     return threshold
 
 
-def find_reliable_action(ob_dict, env, policy, config):
+def find_reliable_action(ob_dict, env, batched, policy, config):
     original_state = env.get_state()
-    TRYING = 50
+    TRYING = 1
 
     tmp_value_loss, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
@@ -39,6 +39,8 @@ def find_reliable_action(ob_dict, env, policy, config):
 
     sample = ac_dist.sample()
     max_ac = sample[:, 0, :]
+
+    tmp_log_prob = None
 
     for i in range(TRYING):
         # print('{}/{}'.format(i, TRYING))
@@ -85,7 +87,7 @@ def find_reliable_action(ob_dict, env, policy, config):
             # video_frames.append(revert_frame)
 
             max_trust = trust.item()
-            max_ac = tmp_ac
+            max_ac = post_process_ac(tmp_ac, batched=batched, obj=policy)
 
             # return tmp_ac, ob_dict
         elif trust.item() < delta:
@@ -96,7 +98,7 @@ def find_reliable_action(ob_dict, env, policy, config):
         # else:
         #     env.reset_to(original_state)
 
-    return max_ac[0].clone().detach().cpu().numpy()
+    return max_ac, tmp_value_loss, tmp_log_prob
 
 
 def run_rollout(
@@ -112,7 +114,8 @@ def run_rollout(
         config=None,
         device=None,
         value_model=None,
-        with_progress_correct=False
+        with_progress_correct=False,
+        persist_log=list()
 ):
     """
     Runs a rollout in an environment with the current network parameters.
@@ -184,6 +187,9 @@ def run_rollout(
 
     final_step = 0
 
+    persist_log['log_prob'].append([])
+    persist_log['vloss'].append([])
+
     for step_i in range(config.experiment.rollout.horizon):
         print('step := {}/{}'.format(step_i, horizon))
 
@@ -192,7 +198,10 @@ def run_rollout(
         if with_progress_correct:
             # original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
             #     rollout_policy=policy, obs_dict=ob_dict)
-            ac = find_reliable_action(ob_dict, env, policy, config)
+            ac, tmp_vloss, tmp_log_prob = find_reliable_action(ob_dict, env, batched, policy, config)
+
+            persist_log['log_prob'][-1].append(tmp_log_prob)
+            persist_log['vloss'][-1].append(tmp_vloss)
 
             if ac is None:
                 abnormal_states[STATE].append(env.get_state())
@@ -436,6 +445,10 @@ def rollout_with_stats(
             video_path = os.path.join(video_dir, "{}{}".format(env_name, video_str))
             video_writer = imageio.get_writer(video_path, fps=20)
 
+            pickle_str = "_epoch_{}.pkl".format(epoch) if epoch is not None else ".pkl"
+
+            pickled_path = os.path.join(video_dir, "{}{}.pkl".format(env_name, pickle_str))
+
         env_video_writer = None
         if write_video:
             print("video writes to " + video_path)
@@ -458,6 +471,11 @@ def rollout_with_stats(
 
         final_steps = []
 
+        saving_data = {
+            'log_prob': [],
+            'vloss': [],
+        }
+
         for ep_i in iterator:
             rollout_timestamp = time.time()
 
@@ -479,11 +497,15 @@ def rollout_with_stats(
                     config=config,
                     device=device,
                     value_model=value_model,
-                    with_progress_correct=with_progress_correct
+                    with_progress_correct=with_progress_correct,
+                    persist_log=saving_data
                 )
 
                 final_steps.append(rollout_info['final_step'])
                 print('THE FINAL STEPS ARE: ', final_steps)
+
+                with open(pickled_path, 'wb') as f:
+                    pickle.dump(saving_data, f)
 
             except Exception as e:
                 print("Rollout exception at episode number {}!".format(ep_i))
