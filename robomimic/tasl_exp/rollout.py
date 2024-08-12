@@ -211,7 +211,7 @@ def run_rollout(
         else:
             tmp_value_loss, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
             ac = policy(ob=ob_dict, goal=goal_dict)
-            tmp_log_prob = ac_dist.log_prob(ac).mean()
+            tmp_log_prob = ac_dist.log_prob(torch.tensor(ac)).mean()
 
             persist_log['log_prob'][-1].append(tmp_log_prob)
             persist_log['vloss'][-1].append(tmp_log_prob)
