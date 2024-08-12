@@ -40,7 +40,7 @@ def find_reliable_action(ob_dict, env, batched, policy, config):
     sample = ac_dist.sample()
     max_ac = sample[:, 0, :]
 
-    tmp_value_loss = None
+    tmp_log_prob = None
 
     for i in range(TRYING):
         # print('{}/{}'.format(i, TRYING))
