@@ -85,7 +85,7 @@ def find_reliable_action(ob_dict, env, policy, config):
             # video_frames.append(revert_frame)
 
             max_trust = trust.item()
-            max_ac = tmp_ac
+            max_ac = post_process_ac(tmp_ac, False, obj=policy)
 
             # return tmp_ac, ob_dict
         elif trust.item() < delta:
@@ -96,7 +96,7 @@ def find_reliable_action(ob_dict, env, policy, config):
         # else:
         #     env.reset_to(original_state)
 
-    return max_ac[0].clone().detach().cpu().numpy()
+    return max_ac
 
 
 def run_rollout(
