@@ -74,8 +74,6 @@ def find_reliable_action(ob_dict, env, policy, config):
 
         delta = 0
 
-        print(f'vloss = ', tmp_value_loss)
-
         if trust.item() > delta and trust.item() > max_trust:
         # if tmp_value_loss < trust_threshold and tmp_target_value > previous_value:
             # print(f'success: got tmp loss: {tmp_value_loss} and tmp_value: {tmp_value}, with compared to previous_loss: {previous_value}')
@@ -90,8 +88,9 @@ def find_reliable_action(ob_dict, env, policy, config):
             max_ac = tmp_ac
 
             # return tmp_ac, ob_dict
-        # elif trust.item() < delta:
-        #     print(f'tmp log_prob - threshold_value = {tmp_log_prob} - {threshold_value} = {trust}')
+        elif trust.item() < delta:
+            print(f'vloss = ', tmp_value_loss)
+            print(f'tmp log_prob - threshold_value = {tmp_log_prob} - {threshold_value} = {trust}')
 
         # elif step_i == 0: env.reset()
         # else:
