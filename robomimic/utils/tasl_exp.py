@@ -39,7 +39,7 @@ def get_value_target(batch, config, obj, device):
     if 'obs' not in batch and 'robot0_eye_in_hand_image' in batch:
         for key in batch:
             if 'image' in key:
-                batch[key] = batch[key].clone().detach().to(device)
+                batch[key] = torch.tensor(batch[key]).to(device)
 
         batch['obs'] = batch.copy()
         direct_obs = True
