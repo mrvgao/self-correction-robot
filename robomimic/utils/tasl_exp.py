@@ -22,9 +22,9 @@ def concatenate_images(batch, direct_obs=False):
     concatenated_images = torch.cat((left_image, eye_in_hand_image, right_image), dim=-1)
 
     # if not direct_obs:
-    concatenated_images = concatenated_images.permute(0, 1, 3, 4, 2)
+    # concatenated_images = concatenated_images.permute(0, 1, 3, 4, 2)
     # else:
-    #     concatenated_images = concatenated_images.permute(0, 2, 3, 1)
+    concatenated_images = concatenated_images.permute(0, 2, 3, 1)
 
     # Add the new concatenated image tensor to the 'obs' dictionary
     batch['obs']['concatenated_images'] = concatenated_images
