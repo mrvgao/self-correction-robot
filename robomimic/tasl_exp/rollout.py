@@ -216,7 +216,6 @@ def run_rollout(
         else:
             ac = policy(ob=ob_dict, goal=goal_dict)
 
-
         ob_dict, r, done, _ = env.step(ac)
 
         # rews.append(r)
