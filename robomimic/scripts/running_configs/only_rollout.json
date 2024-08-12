@@ -4,7 +4,7 @@
     "progress_model_path": "/data2/mgao/pretrained-models/value-model/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:6",
+    "cuda_mark": "cuda:7",
     "experiment": {
         "name": "reg-constraint-seed-999",
         "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240810091647/models/model_epoch_505.pth",
