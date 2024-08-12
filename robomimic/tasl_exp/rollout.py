@@ -29,9 +29,9 @@ def adaptive_threshold(i, max_step):
     return threshold
 
 
-def find_reliable_action(ob_dict, env, policy, config):
+def find_reliable_action(ob_dict, env, batched, policy, config):
     original_state = env.get_state()
-    TRYING = 50
+    TRYING = 1
 
     tmp_value_loss, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
@@ -39,6 +39,8 @@ def find_reliable_action(ob_dict, env, policy, config):
 
     sample = ac_dist.sample()
     max_ac = sample[:, 0, :]
+
+    tmp_value_loss = None
 
     for i in range(TRYING):
         # print('{}/{}'.format(i, TRYING))
@@ -85,7 +87,7 @@ def find_reliable_action(ob_dict, env, policy, config):
             # video_frames.append(revert_frame)
 
             max_trust = trust.item()
-            max_ac = tmp_ac
+            max_ac = post_process_ac(tmp_ac, batched=batched, obj=policy)
 
             # return tmp_ac, ob_dict
         elif trust.item() < delta:
@@ -96,7 +98,7 @@ def find_reliable_action(ob_dict, env, policy, config):
         # else:
         #     env.reset_to(original_state)
 
-    return max_ac[0].clone().detach().cpu().numpy()
+    return max_ac[0].clone().detach().cpu().numpy(), tmp_value_loss, tmp_log_prob
 
 
 def run_rollout(
@@ -196,7 +198,10 @@ def run_rollout(
         if with_progress_correct:
             # original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
             #     rollout_policy=policy, obs_dict=ob_dict)
-            ac = find_reliable_action(ob_dict, env, policy, config)
+            ac, tmp_vloss, tmp_log_prob = find_reliable_action(ob_dict, env, batched, policy, config)
+
+            persist_log['log_prob'][-1].append(tmp_log_prob)
+            persist_log['vloss'][-1].append(tmp_vloss)
 
             if ac is None:
                 abnormal_states[STATE].append(env.get_state())
@@ -209,12 +214,8 @@ def run_rollout(
                 pass
                 # print('this state is reliable!')
         else:
-            tmp_value_loss, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
             ac = policy(ob=ob_dict, goal=goal_dict)
-            tmp_log_prob = ac_dist.log_prob(torch.tensor(ac).to(device)).mean()
 
-            persist_log['log_prob'][-1].append(tmp_log_prob)
-            persist_log['vloss'][-1].append(tmp_log_prob)
 
         ob_dict, r, done, _ = env.step(ac)
 
