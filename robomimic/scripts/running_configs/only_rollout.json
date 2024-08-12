@@ -6,7 +6,7 @@
     "progress_weight": 0.3,
     "experiment": {
         "name": "reg-constraint-seed-999",
-        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240810091647/models/model_epoch_505.pth",
+        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240810091647/models/model_epoch_660.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": true,
