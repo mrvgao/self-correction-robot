@@ -43,7 +43,7 @@ def find_reliable_action(ob_dict, env, batched, policy, config):
     tmp_log_prob = None
 
     for i in range(TRYING):
-        print('{}/{}'.format(i, TRYING))
+        # print('{}/{}'.format(i, TRYING))
         # if step_i == 0:
         #     tmp_ob_dict = env.reset()
         # else:
@@ -191,7 +191,7 @@ def run_rollout(
     persist_log['vloss'].append([])
 
     for step_i in range(config.experiment.rollout.horizon):
-        # print('step := {}/{}'.format(step_i, horizon))
+        print('step := {}/{}'.format(step_i, horizon))
 
         final_step = step_i
 
