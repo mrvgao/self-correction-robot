@@ -189,6 +189,8 @@ def run_rollout(
                 pass
                 # print('this state is reliable!')
         else:
+            tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
+            print('tmp value loss', tmp_value_loss_current)
             ac = policy(ob=ob_dict, goal=goal_dict)
             ob_dict, r, done, _ = env.step(ac)
 
