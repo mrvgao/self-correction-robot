@@ -31,7 +31,7 @@ def adaptive_threshold(i, max_step):
 
 def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
     original_state = env.get_state()
-    TRYING = 5
+    TRYING = 10
 
     tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
@@ -44,6 +44,8 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
     minimal_loss_state = None
     minimal_loss_ac_dist = None
     minimal_index = -1
+
+    CONSTRAINT_FORWARD = False
 
     for i in range(TRYING):
 
@@ -62,7 +64,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
             if minimal_loss > trust_threshold:
                 ob_dict = env.reset()
                 tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
-            else:
+            elif CONSTRAINT_FORWARD:
                 if minimal_index != i: env = env.reset_to(minimal_loss_state)
 
                 frame = env.render(mode="rgb_array", height=512, width=512)
