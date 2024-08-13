@@ -64,14 +64,14 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
             if minimal_loss > trust_threshold:
                 ob_dict = env.reset()
                 tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
-            elif CONSTRAINT_FORWARD:
+            else:
                 if minimal_index != i: env = env.reset_to(minimal_loss_state)
 
                 frame = env.render(mode="rgb_array", height=512, width=512)
                 video_frames.append(frame)
                 find = True
                 break
-        else:
+        elif CONSTRAINT_FORWARD:
             sample = ac_dist.sample()
             tmp_ac = sample[:, 0, :]
 
