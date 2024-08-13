@@ -40,24 +40,34 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
     # max_ac = None
     find = False
 
+    minimal_loss = float('inf')
+    minimal_loss_state = None
+    minimal_loss_ac_dist = None
+    minimal_index = -1
+
     for i in range(TRYING):
 
         trust_threshold = adaptive_threshold(i, TRYING-1)
 
         if step_i == 0:
-            tmp_value_loss = tmp_value_loss_current
+            # tmp_value_loss = tmp_value_loss_current
+            if tmp_value_loss_current < minimal_loss:
+                minimal_loss = tmp_value_loss_current
+                minimal_loss_state = env.get_state()
+                minimal_loss_ac_dist = ac_dist
+                minimal_index = i
 
-            print(f'trying time: {i}, loss is :{tmp_value_loss} threshold is : {trust_threshold}')
+            print(f'trying time: {i}, miniaml loss is :{minimal_loss} threshold is : {trust_threshold}')
 
-            if tmp_value_loss > trust_threshold:
+            if minimal_loss > trust_threshold:
                 ob_dict = env.reset()
                 tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
             else:
-                sample = ac_dist.sample()
-                max_ac = sample[:, 0, :]
+                if minimal_index != i: env = env.reset_to(minimal_loss_state)
+
                 frame = env.render(mode="rgb_array", height=512, width=512)
-                find = True
                 video_frames.append(frame)
+                find = True
                 break
         else:
             sample = ac_dist.sample()
@@ -77,17 +87,21 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
 
             tmp_value = tmp_value_next
             #
-            tmp_value_loss = torch.mean((tmp_target_value - tmp_value)**2)
+            tmp_value_loss_forward = torch.mean((tmp_target_value - tmp_value)**2)
 
-            print(f'trying time: {i}, loss is :{tmp_value_loss} threshold is : {trust_threshold}')
+            if tmp_value_loss_forward < minimal_loss:
+                minimal_loss = tmp_value_loss_forward
+                minimal_loss_state = env.get_state()
+                minimal_loss_ac_dist = ac_dist
+                minimal_index = i
 
-            if tmp_value_loss < trust_threshold: # get the action that can drive to next state
-                # if tmp_value_loss < trust_threshold and tmp_target_value > previous_value:
-                # print(f'success: got tmp loss: {tmp_value_loss} and tmp_value: {tmp_value}')
+            print(f'trying time: {i}, mini loss is :{minimal_loss} threshold is : {trust_threshold}')
 
+            if minimal_loss < trust_threshold: # get the action that can drive to next state
                 print('find NEW action that can drive to TRUST state')
-                max_ac = post_process_ac(tmp_next_ac_dist.sample()[:, 0, :], False, obj=policy)
                 find = True
+                if i != minimal_index: env.reset_to(minimal_loss_state)
+
                 revert_frame = env.render(mode="rgb_array", height=512, width=512)
                 video_frames.append(revert_frame)
                 break
