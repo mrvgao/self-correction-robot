@@ -198,6 +198,7 @@ def run_rollout(
             #     rollout_policy=policy, obs_dict=ob_dict)
             # find = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames)
             tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
+            print('tmp value loss', tmp_value_loss_current)
 
             for i in range(10):
                 if step_i == 0 and tmp_value_loss_current < 0.012:
