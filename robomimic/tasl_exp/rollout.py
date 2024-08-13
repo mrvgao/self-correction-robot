@@ -37,7 +37,8 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
 
     max_trust = -float('inf')
 
-    max_ac = None
+    # max_ac = None
+    find = False
 
     for i in range(TRYING):
 
@@ -55,6 +56,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
                 sample = ac_dist.sample()
                 max_ac = sample[:, 0, :]
                 frame = env.render(mode="rgb_array", height=512, width=512)
+                find = True
                 video_frames.append(frame)
                 break
         else:
@@ -85,13 +87,14 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
 
                 print('find NEW action that can drive to TRUST state')
                 max_ac = post_process_ac(tmp_next_ac_dist.sample()[:, 0, :], False, obj=policy)
+                find = True
                 revert_frame = env.render(mode="rgb_array", height=512, width=512)
                 video_frames.append(revert_frame)
                 break
             else:
                 env.reset_to(original_state)
 
-    return max_ac
+    return find
 
 
 def run_rollout(
@@ -175,18 +178,18 @@ def run_rollout(
         if with_progress_correct:
             # original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
             #     rollout_policy=policy, obs_dict=ob_dict)
-            ac = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames)
+            find = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames)
 
-            if ac is None:
+            if not find:
                 abnormal_states[STATE].append(env.get_state())
+                print('cannot find reliable forward state!')
                 # abnormal_states[LOSS].append(current_value_loss)
                 # print('we cannot find a new action that can drive to trust state')
                 # print('re-start a new task')
                 break
-            else:
+            # else:
                 # previous_value = target_value
-                break
-                print('cannot find reliable forward state!')
+                # break
                 # print('this state is reliable!')
         else:
             tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
