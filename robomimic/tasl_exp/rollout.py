@@ -196,24 +196,31 @@ def run_rollout(
         if with_progress_correct:
             # original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
             #     rollout_policy=policy, obs_dict=ob_dict)
-            find = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames)
+            # find = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames)
+            tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
-            if not find:
-                abnormal_states[STATE].append(env.get_state())
-                print('cannot find reliable forward state!')
+            for i in range(5):
+                print('trying more with ', tmp_value_loss_current)
+                if tmp_value_loss_current < 0.012:
+                    ob_dict = env.reset()
+                    tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
+
+            # if not find:
+            #     abnormal_states[STATE].append(env.get_state())
+            #     print('cannot find reliable forward state!')
                 # abnormal_states[LOSS].append(current_value_loss)
                 # print('we cannot find a new action that can drive to trust state')
                 # print('re-start a new task')
-                break
+                # break
             # else:
                 # previous_value = target_value
                 # break
                 # print('this state is reliable!')
-        else:
-            tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
-            print('tmp value loss', tmp_value_loss_current)
-            ac = policy(ob=ob_dict, goal=goal_dict)
-            ob_dict, r, done, _ = env.step(ac)
+        # else:
+            # tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
+            # print('tmp value loss', tmp_value_loss_current)
+        ac = policy(ob=ob_dict, goal=goal_dict)
+        ob_dict, r, done, _ = env.step(ac)
 
         # rews.append(r)
 
