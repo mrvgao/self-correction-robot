@@ -188,7 +188,12 @@ def run_rollout(
 
     final_step = 0
 
-    for step_i in range(config.experiment.rollout.horizon):
+    previous_states = env.get_state()
+
+    step_i = 0
+
+    while step_i < config.experiment.rollout.horizon:
+
         print('step := {}/{}'.format(step_i, horizon))
 
         final_step = step_i
@@ -200,11 +205,21 @@ def run_rollout(
             tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
             print('tmp value loss', tmp_value_loss_current)
 
-            for i in range(10):
-                if step_i == 0 and tmp_value_loss_current < 0.012:
-                    print(f'trying: {i} more with ', tmp_value_loss_current)
-                    ob_dict = env.reset()
-                    tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
+            loss_threshold = 0.01
+
+            if step_i == 0:
+                for i in range(10):
+                    if tmp_value_loss_current > loss_threshold:
+                        print(f'trying: {i} more with ', tmp_value_loss_current)
+                        ob_dict = env.reset()
+                        tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
+                    else:
+                        step_i += 1
+
+            if step_i > 0 and tmp_value_loss_current > loss_threshold:
+                env.reset_to(previous_states)
+            elif step_i > 0 and tmp_value_loss_current < loss_threshold:
+                step_i += 1
 
             # if not find:
             #     abnormal_states[STATE].append(env.get_state())
@@ -220,7 +235,9 @@ def run_rollout(
         # else:
             # tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
             # print('tmp value loss', tmp_value_loss_current)
+        previous_states = env.get_state()
         ac = policy(ob=ob_dict, goal=goal_dict)
+
         ob_dict, r, done, _ = env.step(ac)
 
         # rews.append(r)
