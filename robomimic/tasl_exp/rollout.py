@@ -200,8 +200,8 @@ def run_rollout(
             tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
             for i in range(10):
-                print('trying more with ', tmp_value_loss_current)
                 if step_i == 0 and tmp_value_loss_current < 0.012:
+                    print(f'trying: {i} more with ', tmp_value_loss_current)
                     ob_dict = env.reset()
                     tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
