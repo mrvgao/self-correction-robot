@@ -199,9 +199,9 @@ def run_rollout(
             # find = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames)
             tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
-            for i in range(5):
+            for i in range(10):
                 print('trying more with ', tmp_value_loss_current)
-                if tmp_value_loss_current < 0.012:
+                if step_i == 0 and tmp_value_loss_current < 0.012:
                     ob_dict = env.reset()
                     tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
