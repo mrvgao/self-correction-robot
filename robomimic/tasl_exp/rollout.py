@@ -23,8 +23,8 @@ from robomimic.utils.tasl_exp import get_current_state_value_loss
 
 
 def adaptive_threshold(i, max_step):
-    start = 0.01
-    end = 0.014
+    start = 0.013
+    end = 0.015
     threshold = start + ((end - start) / max_step) * i
     return threshold
 
