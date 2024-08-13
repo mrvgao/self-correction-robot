@@ -24,14 +24,14 @@ from robomimic.utils.tasl_exp import get_current_state_value_loss
 
 def adaptive_threshold(i, max_step):
     start = 0.01
-    end = 0.013
+    end = 0.014
     threshold = start + ((end - start) / max_step) * i
     return threshold
 
 
 def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
     original_state = env.get_state()
-    TRYING = 20
+    TRYING = 10
 
     tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
@@ -42,7 +42,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
 
     for i in range(TRYING):
 
-        trust_threshold = adaptive_threshold(i, TRYING)
+        trust_threshold = adaptive_threshold(i, TRYING-1)
 
         if step_i == 0:
             tmp_value_loss = tmp_value_loss_current
