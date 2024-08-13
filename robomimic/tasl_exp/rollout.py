@@ -31,7 +31,7 @@ def adaptive_threshold(i, max_step):
 
 def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
     original_state = env.get_state()
-    TRYING = 10
+    TRYING = 5
 
     tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
 
