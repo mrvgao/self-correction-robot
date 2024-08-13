@@ -37,8 +37,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
 
     max_trust = -float('inf')
 
-    sample = ac_dist.sample()
-    max_ac = sample[:, 0, :]
+    max_ac = None
 
     for i in range(TRYING):
 
@@ -82,7 +81,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
 
             if tmp_value_loss < trust_threshold: # get the action that can drive to next state
                 # if tmp_value_loss < trust_threshold and tmp_target_value > previous_value:
-                print(f'success: got tmp loss: {tmp_value_loss} and tmp_value: {tmp_value}')
+                # print(f'success: got tmp loss: {tmp_value_loss} and tmp_value: {tmp_value}')
 
                 print('find NEW action that can drive to TRUST state')
                 max_ac = post_process_ac(tmp_next_ac_dist.sample()[:, 0, :], False, obj=policy)
@@ -186,7 +185,8 @@ def run_rollout(
                 break
             else:
                 # previous_value = target_value
-                pass
+                break
+                print('cannot find reliable forward state!')
                 # print('this state is reliable!')
         else:
             tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
