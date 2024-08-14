@@ -519,6 +519,8 @@ def rollout_with_stats(
             #     os.makedirs(save_frames_dir)
 
             try:
+                previous_policy_parameters = policy.policy.nets['policy'].state_dict()
+
                 rollout_info = run_rollout(
                     policy=policy,
                     env=env,
@@ -534,6 +536,8 @@ def rollout_with_stats(
                     value_model=value_model,
                     with_progress_correct=with_progress_correct
                 )
+
+                policy.policy.nets['policy'].load_state_dict(previous_policy_parameters)
 
                 final_steps.append(rollout_info['final_step'])
                 print('THE FINAL STEPS ARE: ', final_steps)
