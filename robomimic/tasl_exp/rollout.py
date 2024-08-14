@@ -217,7 +217,7 @@ def run_rollout(
     # while step_i < config.experiment.rollout.horizon:
     for step_i in range(config.experiment.rollout.horizon):
 
-        print('step := {}/{}'.format(step_i, horizon))
+        # print('step := {}/{}'.format(step_i, horizon))
 
         final_step = step_i
 
