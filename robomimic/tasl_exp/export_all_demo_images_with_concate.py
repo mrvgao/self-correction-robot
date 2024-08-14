@@ -47,7 +47,7 @@ TASK_PATH_MAPPING = {
     # 'navigate kitchen': '/data2/mgao/robocasa/datasets/v0.1/single_stage/kitchen_navigate/NavigateKitchen/2024-05-09/demo_gentex_im128_randcams.hdf5',
     # 'pick from cabinet and place to counter': '/data2/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCabToCounter/2024-04-24/demo_gentex_im128_randcams.hdf5',
     # 'pick from counter and place to stove' : '/data2/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToStove/2024-04-26/demo_gentex_im128_randcams.hdf5',
-    'pick from counter and place to cabinet': '/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5',
+    'pick from counter and place to cabinet': '/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/mg/2024-05-04-22-12-27_and_2024-05-07-07-39-33/demo_gentex_im128_randcams.hdf5',
     # 'pick from microwave and place to counter': '/data2/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPMicrowaveToCounter/2024-04-26/demo_gentex_im128_randcams.hdf5',
     # 'pick from stove and place to counter': '/data2/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPStoveToCounter/2024-05-01/demo_gentex_im128_randcams.hdf5',
     # 'pick from counter and place to sink': '/data2/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToSink/2024-04-25/demo_gentex_im128_randcams.hdf5',
@@ -141,6 +141,7 @@ def generate_concated_images_from_demo_path(task_name):
     config_path_compsoite = "/data2/mgao/pretrained-models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
     ext_cfg['train']['data'][0]['path'] = TASK_PATH_MAPPING[task_name]
+    print('loading from path ', TASK_PATH_MAPPING[task_name])
     config = config_factory(ext_cfg["algo_name"])
     with config.values_unlocked():
         config.update(ext_cfg)
@@ -160,6 +161,7 @@ def generate_concated_images_from_demo_path(task_name):
     print("\n============= New Training Run with Config =============")
     print(config)
     print("")
+    print(config)
     log_dir, ckpt_dir, video_dir, vis_dir = TrainUtils.get_exp_dir(config)
 
     if config.experiment.logging.terminal_output_to_txt:

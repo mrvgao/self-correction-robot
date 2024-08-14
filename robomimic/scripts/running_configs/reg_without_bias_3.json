@@ -4,10 +4,12 @@
     "progress_model_path": "/data2/mgao/pretrained-models/value-model/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:5",
+    "cuda_mark": "cuda:6",
     "bias": 0,
+    "value_lr": 1e-5,
+    "value_weight_decay": 0,
     "experiment": {
-        "name": "bias_0_seed-666",
+        "name": "bias_0_seed-999-gen-3k",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
@@ -83,7 +85,7 @@
                 "horizon": 500,
                 "do_eval": true,
                 "filter_key": "50_demos",
-                "path": "/data2/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5"
+                "path": "'/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/mg/2024-05-04-22-12-27_and_2024-05-07-07-39-33/demo_gentex_im128_randcams.hdf5"
             }
         ],
         "output_dir": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term",
@@ -269,8 +271,8 @@
             "obsrandargs"
         ],
         "hp_values": [
-            123,
-            "human-50",
+            999,
+            "gen-3k",
             {
                 "crop_height": 116,
                 "crop_width": 116,

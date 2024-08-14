@@ -9,8 +9,7 @@
     "value_lr": 1e-5,
     "value_weight_decay": 0,
     "experiment": {
-        "name": "with_reg_constraint_update_bias_0_seed-0-value-lr-1e-5-weight-decay-0",
-        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240809165846/models/model_epoch_95.pth",
+        "name": "seed-123-gen-3k",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
@@ -108,7 +107,7 @@
         "batch_size": 16,
         "num_epochs": 1000,
         "max_grad_norm": 100.0,
-        "seed": 0,
+        "seed": 123,
         "action_config": {
             "actions": {
                 "normalization": null
@@ -273,7 +272,7 @@
         ],
         "hp_values": [
             123,
-            "human-50",
+            "gen-3k",
             {
                 "crop_height": 116,
                 "crop_width": 116,
