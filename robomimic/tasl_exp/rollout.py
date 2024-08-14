@@ -60,9 +60,9 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
         policy.policy.nets['policy'].train()
         print(f'trying, {trying}/{TRYING_MAX}, loss is {tmp_value_loss_current}')
 
-        policy.policy.optimizers['policy'].zero_grad()
+        policy.policy.value_optimizer.zero_grad()
         tmp_value_loss_current.backward()
-        policy.policy.optimizers['policy'].step()
+        policy.policy.value_optimizer.step()
         tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
         find = tmp_value_loss_current < THRESHOLD
         trying += 1
