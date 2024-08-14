@@ -128,7 +128,7 @@ def extract_and_export_image(demo_dataset, task_name):
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
 
-    for i in range(len(frames_left)):
+    for i in tqdm(range(len(frames_left))):
         whole_image = combine_images_horizen([frames_left[i], frames_hand[i], frames_right[i]])
         whole_image = np.array(whole_image)
         whole_image = whole_image.astype(np.uint8)
