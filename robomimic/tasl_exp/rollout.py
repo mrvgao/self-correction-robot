@@ -64,7 +64,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
         tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
         find = tmp_value_loss_current < THRESHOLD
         trying += 1
-        print(f'trying, {trying}/{TRYING_MAX}, loss is {tmp_value_loss_current}')
+        tqdm.write(f'trying, {trying}/{TRYING_MAX}, loss is {tmp_value_loss_current}')
 
     policy.policy.nets['policy'].eval()
 
@@ -150,7 +150,8 @@ def run_rollout(
         config=None,
         device=None,
         value_model=None,
-        with_progress_correct=False
+        with_progress_correct=False,
+        progress_bar=None
 ):
     """
     Runs a rollout in an environment with the current network parameters.
@@ -261,6 +262,7 @@ def run_rollout(
             previous_states = env.get_state()
         ac = policy(ob=ob_dict, goal=goal_dict)
         ob_dict, r, done, _ = env.step(ac)
+        progress_bar.update(1)
 
         # rews.append(r)
 
@@ -502,6 +504,7 @@ def rollout_with_stats(
             iterator = range(0, num_episodes, len(env))
         else:
             iterator = range(num_episodes)
+
         if not verbose:
             iterator = LogUtils.custom_tqdm(iterator, total=num_episodes)
 
@@ -511,42 +514,43 @@ def rollout_with_stats(
 
         final_steps = []
 
-        for ep_i in iterator:
-            rollout_timestamp = time.time()
+        with tqdm(total=num_episodes*config.experiment.rollout.horizon, desc='rollout progress') as pbar:
+            for ep_i in iterator:
+                rollout_timestamp = time.time()
 
-            save_frames_dir = save_frames_dir_base + '-' + str(ep_i)
-            # if not os.path.exists(save_frames_dir):
-            #     os.makedirs(save_frames_dir)
+                save_frames_dir = save_frames_dir_base + '-' + str(ep_i)
+                # if not os.path.exists(save_frames_dir):
+                #     os.makedirs(save_frames_dir)
 
-            try:
-                previous_policy_parameters = policy.policy.nets['policy'].state_dict()
+                try:
+                    previous_policy_parameters = policy.policy.nets['policy'].state_dict()
 
-                rollout_info = run_rollout(
-                    policy=policy,
-                    env=env,
-                    horizon=horizon,
-                    render=render,
-                    use_goals=use_goals,
-                    video_writer=env_video_writer,
-                    video_skip=video_skip,
-                    terminate_on_success=terminate_on_success,
-                    frame_save_dir=save_frames_dir,
-                    config=config,
-                    device=device,
-                    value_model=value_model,
-                    with_progress_correct=with_progress_correct
-                )
+                    rollout_info = run_rollout(
+                        policy=policy,
+                        env=env,
+                        horizon=horizon,
+                        render=render,
+                        use_goals=use_goals,
+                        video_writer=env_video_writer,
+                        video_skip=video_skip,
+                        terminate_on_success=terminate_on_success,
+                        frame_save_dir=save_frames_dir,
+                        config=config,
+                        device=device,
+                        value_model=value_model,
+                        with_progress_correct=with_progress_correct,
+                        progress_bar=pbar
+                    )
 
-                policy.policy.nets['policy'].load_state_dict(previous_policy_parameters)
+                    policy.policy.nets['policy'].load_state_dict(previous_policy_parameters)
 
-                final_steps.append(rollout_info['final_step'])
-                print('THE FINAL STEPS ARE: ', final_steps)
+                    final_steps.append(rollout_info['final_step'])
+                    print('THE FINAL STEPS ARE: ', final_steps)
 
-            except Exception as e:
-                print("Rollout exception at episode number {}!".format(ep_i))
-                print(traceback.format_exc())
-                break
-
+                except Exception as e:
+                    print("Rollout exception at episode number {}!".format(ep_i))
+                    print(traceback.format_exc())
+                    break
 
             if batched:
                 rollout_info["time"] = [(time.time() - rollout_timestamp) / len(env)] * len(env)
