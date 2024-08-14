@@ -52,7 +52,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
     THRESHOLD = 1e-2
 
     trying = 0
-    TRYING_MAX = 100
+    TRYING_MAX = 50
 
     find = tmp_value_loss_current < THRESHOLD
 
