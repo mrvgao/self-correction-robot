@@ -362,7 +362,7 @@ def run_rollout(
 
     with open(f'abnormal_states_{frame_save_dir}.pkl', 'wb') as f:
         pickle.dump(abnormal_states, f)
-        print('PICKLED abnormal state done!')
+        # print('PICKLED abnormal state done!, LAST STEP IS', final_step)
 
     if video_writer is not None:
         if batched:
@@ -505,8 +505,8 @@ def rollout_with_stats(
         else:
             iterator = range(num_episodes)
 
-        if not verbose:
-            iterator = LogUtils.custom_tqdm(iterator, total=num_episodes)
+        # if not verbose:
+        #     iterator = LogUtils.custom_tqdm(iterator, total=num_episodes)
 
         num_success = 0
 
@@ -545,7 +545,6 @@ def rollout_with_stats(
                     policy.policy.nets['policy'].load_state_dict(previous_policy_parameters)
 
                     final_steps.append(rollout_info['final_step'])
-                    print('THE FINAL STEPS ARE: ', final_steps)
 
                 except Exception as e:
                     print("Rollout exception at episode number {}!".format(ep_i))
