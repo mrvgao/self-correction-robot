@@ -9,7 +9,7 @@
     "value_lr": 1e-5,
     "value_weight_decay": 0,
     "experiment": {
-        "name": "bias_0_seed-0-gen-3k",
+        "name": "bias_998_seed-0-gen-3k",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
@@ -106,7 +106,7 @@
         "batch_size": 16,
         "num_epochs": 1000,
         "max_grad_norm": 100.0,
-        "seed": 0,
+        "seed": 998,
         "action_config": {
             "actions": {
                 "normalization": null
@@ -270,7 +270,7 @@
             "obsrandargs"
         ],
         "hp_values": [
-            0,
+            998,
             "gen-3k",
             {
                 "crop_height": 116,
