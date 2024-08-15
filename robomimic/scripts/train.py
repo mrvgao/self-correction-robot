@@ -216,6 +216,7 @@ def train(config, device):
     )
     trainset, validset = TrainUtils.load_data_for_training(
         config, obs_keys=shape_meta["all_obs_keys"], lang_encoder=lang_encoder)
+    import pdb; pdb.set_trace()
     train_sampler = trainset.get_dataset_sampler()
     print("\n============= Training Dataset =============")
     print(trainset)
