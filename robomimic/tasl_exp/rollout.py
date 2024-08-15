@@ -20,6 +20,7 @@ import cv2
 import pickle
 from tqdm import tqdm
 from robomimic.utils.tasl_exp import get_current_state_value_loss
+import copy
 
 
 def adaptive_threshold(i, max_step):
@@ -523,7 +524,7 @@ def rollout_with_stats(
                 #     os.makedirs(save_frames_dir)
 
                 try:
-                    previous_policy_parameters = policy.policy.nets['policy'].state_dict()
+                    previous_policy_parameters = copy.deepcopy(policy.policy.nets['policy'].state_dict())
 
                     rollout_info = run_rollout(
                         policy=policy,
