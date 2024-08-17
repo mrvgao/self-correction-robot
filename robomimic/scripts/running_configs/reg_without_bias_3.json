@@ -9,7 +9,8 @@
     "value_lr": 1e-5,
     "value_weight_decay": 0,
     "experiment": {
-        "name": "bias_0_seed-999-gen-3k",
+        "name": "bias_0_seed-999-gen-3k-continue",
+        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240814174009/models/model_epoch_1000.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
