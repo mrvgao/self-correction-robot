@@ -157,7 +157,7 @@ def generate_concated_images_from_demo_path(task_name):
     # config_path_compsoite = "/home/minquangao/pretrained_models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
     ext_cfg['train']['data'][0]['path'] = TASK_PATH_MAPPING[task_name]
-    print('loading from path ', TASK_PATH_MAPPING[task_name])
+    # print('loading from path ', TASK_PATH_MAPPING[task_name])
     config = config_factory(ext_cfg["algo_name"])
     with config.values_unlocked():
         config.update(ext_cfg)
@@ -174,10 +174,10 @@ def generate_concated_images_from_demo_path(task_name):
     # set num workers
     torch.set_num_threads(1)
 
-    print("\n============= New Training Run with Config =============")
-    print(config)
-    print("")
-    print(config)
+    # print("\n============= New Training Run with Config =============")
+    # print(config)
+    # print("")
+    # print(config)
     log_dir, ckpt_dir, video_dir, vis_dir = TrainUtils.get_exp_dir(config)
 
     if config.experiment.logging.terminal_output_to_txt:
@@ -199,8 +199,8 @@ def generate_concated_images_from_demo_path(task_name):
             raise Exception("Dataset at provided path {} not found!".format(dataset_path))
 
         # load basic metadata from training file
-        print("\n============= Loaded Environment Metadata =============")
-        print(dataset_path)
+        # print("\n============= Loaded Environment Metadata =============")
+        # print(dataset_path)
         env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=dataset_path, ds_format=ds_format)
 
         # populate language instruction for env in env_meta
@@ -217,7 +217,7 @@ def generate_concated_images_from_demo_path(task_name):
             action_keys=config.train.action_keys,
             all_obs_keys=config.all_obs_keys,
             ds_format=ds_format,
-            verbose=True
+            verbose=False
         )
         shape_meta_list.append(shape_meta)
 
