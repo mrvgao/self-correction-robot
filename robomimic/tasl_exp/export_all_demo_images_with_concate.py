@@ -221,36 +221,36 @@ def generate_concated_images_from_demo_path(task_name):
         )
         shape_meta_list.append(shape_meta)
 
-    if config.experiment.env is not None:
-        env_meta["env_name"] = config.experiment.env
-        print("=" * 30 + "\n" + "Replacing Env to {}\n".format(env_meta["env_name"]) + "=" * 30)
+    # if config.experiment.env is not None:
+    #     env_meta["env_name"] = config.experiment.env
+    #     print("=" * 30 + "\n" + "Replacing Env to {}\n".format(env_meta["env_name"]) + "=" * 30)
 
     eval_env_meta_list = []
     eval_shape_meta_list = []
     eval_env_name_list = []
     eval_env_horizon_list = []
-    for (dataset_i, dataset_cfg) in enumerate(config.train.data):
-        do_eval = dataset_cfg.get("do_eval", True)
-        if do_eval is not True:
-            continue
-        eval_env_meta_list.append(env_meta_list[dataset_i])
-        eval_shape_meta_list.append(shape_meta_list[dataset_i])
-        eval_env_name_list.append(env_meta_list[dataset_i]["env_name"])
-        horizon = dataset_cfg.get("horizon", config.experiment.rollout.horizon)
-        eval_env_horizon_list.append(horizon)
+    # for (dataset_i, dataset_cfg) in enumerate(config.train.data):
+    #     do_eval = dataset_cfg.get("do_eval", True)
+    #     if do_eval is not True:
+    #         continue
+    #     eval_env_meta_list.append(env_meta_list[dataset_i])
+    #     eval_shape_meta_list.append(shape_meta_list[dataset_i])
+    #     eval_env_name_list.append(env_meta_list[dataset_i]["env_name"])
+    #     horizon = dataset_cfg.get("horizon", config.experiment.rollout.horizon)
+    #     eval_env_horizon_list.append(horizon)
 
     # save the config as a json file
-    with open(os.path.join(log_dir, '..', 'config.json'), 'w') as outfile:
-        json.dump(config, outfile, indent=4)
+    # with open(os.path.join(log_dir, '..', 'config.json'), 'w') as outfile:
+    #     json.dump(config, outfile, indent=4)
 
     # if checkpoint is specified, load in model weights
 
     # load training data
-    lang_encoder = LangUtils.LangEncoder(
-        device=device,
-    )
+    # lang_encoder = LangUtils.LangEncoder(
+    #     device=device,
+    # )
     trainset, validset = TrainUtils.load_data_for_training(
-        config, obs_keys=shape_meta["all_obs_keys"], lang_encoder=lang_encoder)
+        config, obs_keys=shape_meta["all_obs_keys"], lang_encoder=None)
 
     # TODO: combine trainset and validset
     demo_dataset = trainset
