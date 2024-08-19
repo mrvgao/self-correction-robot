@@ -99,7 +99,8 @@ def extract_and_export_image(demo_dataset, task_name):
     eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
 
     _tmp_task_name = '-'.join(task_name.split())
-    dir_name = f'/data3/mgao/export-images-from-demo/{_tmp_task_name}'
+    # dir_name = f'/data3/mgao/export-images-from-demo/{_tmp_task_name}'
+    dir_name = f'/data3/mgao/export-multi-tasks/{_tmp_task_name}'
     # dir_name = f'/home/minquangao/export-images-from-demo/{_tmp_task_name}'
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
