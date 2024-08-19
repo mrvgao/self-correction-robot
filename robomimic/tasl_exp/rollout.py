@@ -268,10 +268,14 @@ def run_rollout(
         progress_bar.update(1)
 
         GRIPPER_KEY = 'robot0_gripper_qpos'
-        if ob_dict[GRIPPER_KEY] == previous_gripper_pose:
-            break
-        else:
-            previous_gripper_pose = ob_dict[GRIPPER_KEY]
+
+        if previous_gripper_pose is not None:
+            delta = np.mean(ob_dict[GRIPPER_KEY] - previous_gripper_pose)
+            if delta == 0:
+                print('FINISH THIS TASK!')
+                break
+
+        previous_gripper_pose = ob_dict[GRIPPER_KEY]
 
         # rews.append(r)
 

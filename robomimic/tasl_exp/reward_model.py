@@ -108,9 +108,52 @@ class ValueViTModel(nn.Module):
         x = self.fc(concatenated)
         return x
 
+
 class ValueResNetModel(nn.Module):
     def __init__(self, text_embedding_dim=768):
         super(ValueResNetModel, self).__init__()
+        self.resnet = models.resnet50(pretrained=True)
+        self.resnet_fc_in_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
+
+        # Define additional fully connected layers with dropout
+
+        self.fc1_double = nn.Linear(self.resnet_fc_in_features * 2, 512)
+        # self.fc1_double = nn.Linear(2080, 512)
+        self.fc1_single = nn.Linear(self.resnet_fc_in_features, 512)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(p=0.5)
+        self.fc2 = nn.Linear(512, 128)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(p=0.5)
+        self.fc3 = nn.Linear(128, 1)
+
+    def forward(self, image1, image2):
+        # Pass through fully connected layers with dropout
+        if image1 is not None:
+            outputs1 = self.resnet(image1)
+            outputs2 = self.resnet(image2)
+            concatenated = torch.cat((outputs1, outputs2), dim=1)
+            # Pass through fully connected layers with dropout
+            fc = self.fc1_double
+        else:
+            outputs2 = self.resnet(image2)
+            concatenated = outputs2
+            fc = self.fc1_single
+
+        x = fc(concatenated)
+        x = self.relu1(x)
+        x = self.dropout1(x)
+        x = self.fc2(x)
+        x = self.relu2(x)
+        x = self.dropout2(x)
+        x = self.fc3(x)
+        return x
+
+
+class ValueResNetModelWithText(nn.Module):
+    def __init__(self, text_embedding_dim=768):
+        super(ValueResNetModelWithText, self).__init__()
         self.resnet = models.resnet50(pretrained=True)
         self.resnet_fc_in_features = self.resnet.fc.in_features
         self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
@@ -196,7 +239,7 @@ def main(args):
     elif args.model == 'vit':
         model = ValueViTModel().to(device)
     elif args.model == 'resnet':
-        model = ValueResNetModel().to(device)
+        model = ValueResNetModelWithText().to(device)
     else:
         raise ValueError("unsupported model name, ", args.model)
 
