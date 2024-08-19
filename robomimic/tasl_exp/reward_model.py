@@ -201,11 +201,11 @@ def main(args):
         progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Training]", leave=True)
         batch_loss = 0
 
-        for i, (image1, image2, labels) in enumerate(progress_bar):
-            image1, image2, labels = image1.to(device), image2.to(device), labels.to(device)
+        for i, (images, task_embs, labels) in enumerate(progress_bar):
+            images, task_embs, labels = images.to(device), task_embs.to(device), labels.to(device)
             optimizer.zero_grad()
             # outputs = model(image1, image2)
-            outputs = model(None, image2)
+            outputs = model(images, task_embs, labels)
             loss = criterion(outputs, labels.unsqueeze(1))
             loss.backward()
             optimizer.step()
