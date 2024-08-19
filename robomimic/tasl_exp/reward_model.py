@@ -35,6 +35,7 @@ class CustomImageDataset(Dataset):
         # Prepare a list of all image pairs and corresponding labels
         for task_name_dir in os.listdir(root_dir):
             current_task_name = ' '.join(task_name_dir.split('-'))
+            print('init task: ', current_task_name)
             for task_num in os.listdir(os.path.join(root_dir, task_name_dir)):
                 task_path = os.path.join(root_dir, task_name_dir, task_num) # export/prepare-coffee/1
 
