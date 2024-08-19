@@ -111,7 +111,7 @@ class ValueResNetModel(nn.Module):
         text_out_dim = 32
         self.text_fc = nn.Linear(text_embedding_dim, text_out_dim)
 
-        self.fc1_double = nn.Linear(self.resnet_fc_in_features * 2 + text_out_dim, 512)
+        self.fc1_double = nn.Linear(self.resnet_fc_in_features + text_out_dim, 512)
         # self.fc1_double = nn.Linear(2080, 512)
         # self.fc1_single = nn.Linear(self.resnet_fc_in_features, 512)
         self.relu1 = nn.ReLU()
