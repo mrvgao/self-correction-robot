@@ -217,6 +217,8 @@ def run_rollout(
     step_i = 0
 
     # while step_i < config.experiment.rollout.horizon:
+    previous_gripper_pose = None
+
     for step_i in range(config.experiment.rollout.horizon):
 
         # print('step := {}/{}'.format(step_i, horizon))
@@ -264,6 +266,12 @@ def run_rollout(
         ac = policy(ob=ob_dict, goal=goal_dict)
         ob_dict, r, done, _ = env.step(ac)
         progress_bar.update(1)
+
+        GRIPPER_KEY = 'robot0_gripper_qpos'
+        if ob_dict[GRIPPER_KEY] == previous_gripper_pose:
+            break
+        else:
+            previous_gripper_pose = ob_dict[GRIPPER_KEY]
 
         # rews.append(r)
 
