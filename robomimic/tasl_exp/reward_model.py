@@ -12,9 +12,10 @@ import wandb
 from tqdm import tqdm
 from transformers import DetrModel
 import argparse
+from robomimic.utils.lang_utils import LangEncoder
 
 # Argument Parsing
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
 print(f"Using device: {device}")
 
 class CustomImageDataset(Dataset):
@@ -22,45 +23,47 @@ class CustomImageDataset(Dataset):
         self.root_dir = root_dir
         self.feature_extractor = feature_extractor
         self.image_pairs = []
+        self.lang_encoder = LangEncoder(device=device)
 
         # Prepare a list of all image pairs and corresponding labels
-        for task_dir in os.listdir(root_dir):
-            task_path = os.path.join(root_dir, task_dir)
-            if os.path.isdir(task_path):
-                images = sorted([f for f in os.listdir(task_path) if f.endswith('.png')])
-                # Get the numeric parts of the filenames
-                image_numbers = sorted([int(os.path.splitext(f)[0]) for f in images])
-                M = image_numbers[0]
-                N = image_numbers[-1]
+        for task_name_dir in os.listdir(root_dir):
+            current_task_name = ' '.join(task_name_dir.split('-'))
+            for task_num in os.listdir(task_name_dir):
+                task_path = os.path.join(root_dir, task_name_dir, task_num) # export/prepare-coffee/1
 
-                for i in range(len(image_numbers)):
-                    image1_path = os.path.join(task_path, f'{M}.png')
-                    image2_path = os.path.join(task_path, f'{image_numbers[i]}.png')
+                if os.path.isdir(task_path):
+                    images = sorted([f for f in os.listdir(task_path) if f.endswith('.png')])
+                    # Get the numeric parts of the filenames
+                    image_numbers = sorted([int(os.path.splitext(f)[0]) for f in images])
 
-                    # Calculate the label
-                    label = -1 * (N - image_numbers[i]) + 1
-                    self.image_pairs.append((image1_path, image2_path, label))
+                    N = image_numbers[-1]
+
+                    for i in range(len(image_numbers)):
+                        image_path = os.path.join(task_path, f'{image_numbers[i]}.png')
+
+                        # Calculate the label
+                        label = -1 * (N - image_numbers[i]) + 1
+                        self.image_pairs.append((image_path, current_task_name, label))
 
     def __len__(self):
         return len(self.image_pairs)
 
     def __getitem__(self, idx):
-        image1_path, image2_path, label = self.image_pairs[idx]
+        image_path, task_name, label = self.image_pairs[idx]
 
         # Load the images
-        image1 = Image.open(image1_path).convert('RGB')
-        image2 = Image.open(image2_path).convert('RGB')
+        image = Image.open(image_path).convert('RGB')
 
         # Preprocess the images
-        if args.model != 'resnet':
-            image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
-            image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
-        else:
-            image1 = self.feature_extractor(image1)
-            image2 = self.feature_extractor(image2)
+        # if args.model != 'resnet':
+        #     image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
+        #     image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
+        # else:
+        image = self.feature_extractor(image)
+        task_embedding = self.lang_encoder.get_lang_emb(task_name)
+        import pdb; pdb.set_trace()
 
-
-        return image1, image2, torch.tensor(label, dtype=torch.float32)
+        return image, task_embedding, torch.tensor(label, dtype=torch.float32)
 
 
 class ValueDetrModel(nn.Module):
@@ -92,16 +95,18 @@ class ValueViTModel(nn.Module):
         return x
 
 class ValueResNetModel(nn.Module):
-    def __init__(self, pretrained_model_name='resnet50'):
+    def __init__(self, text_embedding_dim=512):
         super(ValueResNetModel, self).__init__()
         self.resnet = models.resnet50(pretrained=True)
         self.resnet_fc_in_features = self.resnet.fc.in_features
         self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
 
         # Define additional fully connected layers with dropout
+        text_out_dim = 32
+        self.text_fc = nn.Linear(text_embedding_dim, text_out_dim)
 
-        self.fc1_double = nn.Linear(self.resnet_fc_in_features * 2, 512)
-        self.fc1_single = nn.Linear(self.resnet_fc_in_features, 512)
+        self.fc1_double = nn.Linear(self.resnet_fc_in_features * 2 + text_out_dim, 512)
+        # self.fc1_single = nn.Linear(self.resnet_fc_in_features, 512)
         self.relu1 = nn.ReLU()
         self.dropout1 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(512, 128)
@@ -109,26 +114,23 @@ class ValueResNetModel(nn.Module):
         self.dropout2 = nn.Dropout(p=0.5)
         self.fc3 = nn.Linear(128, 1)
 
-    def forward(self, image1, image2):
-        if image1 is not None:
-            outputs1 = self.resnet(image1)
-            outputs2 = self.resnet(image2)
-            concatenated = torch.cat((outputs1, outputs2), dim=1)
-            # Pass through fully connected layers with dropout
-            fc = self.fc1_double
-        else:
-            outputs2 = self.resnet(image2)
-            concatenated = outputs2
-            fc = self.fc1_single
+        self.get_value = nn.Sequential(
+            self.fc1_double,
+            self.relu1,
+            self.dropout1,
+            self.fc2,
+            self.relu2,
+            self.dropout2,
+            self.fc3
+        )
 
-        x = fc(concatenated)
-        x = self.relu1(x)
-        x = self.dropout1(x)
-        x = self.fc2(x)
-        x = self.relu2(x)
-        x = self.dropout2(x)
-        x = self.fc3(x)
+    def forward(self, image, text_embedding):
+        image_features = self.resnet(image)
+        text_features = self.text_fc(text_embedding)
+        concatenated = torch.cat((image_features, text_features), dim=1)
+        x = self.get_value(concatenated)
         return x
+
 
 def main(args):
     # Initialize the feature extractor
@@ -139,11 +141,12 @@ def main(args):
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')
+    # feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')
 
     # Create the dataset
-    root_dir = '/home/minquangao/robocasa/playground/counterToCab-robot-merged-image/'
-    dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
+    root_dir = '/data3/mgao/export-images-from-demo/'
+    # dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
+    dataset = CustomImageDataset(root_dir, resnet_transformer)
 
     train_size = int(0.9 * len(dataset))
     val_size = len(dataset) - train_size
@@ -253,7 +256,7 @@ if __name__ == "__main__":
 
     # set wandb monitor
     run_name = f"{args.name}_model_{args.model}_lr{args.lr}_bs{args.batch_size}_epochs{args.num_epochs}"
-    wandb.init(project="value-model-via-vision-transformer-finetuning", entity="minchiuan", name=run_name, config={
+    wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
         "system_metrics": True  # Enable system metrics logging
     })
     main(args)
