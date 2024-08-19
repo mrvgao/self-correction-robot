@@ -95,7 +95,7 @@ class ValueViTModel(nn.Module):
         return x
 
 class ValueResNetModel(nn.Module):
-    def __init__(self, text_embedding_dim=512):
+    def __init__(self, text_embedding_dim=768):
         super(ValueResNetModel, self).__init__()
         self.resnet = models.resnet50(pretrained=True)
         self.resnet_fc_in_features = self.resnet.fc.in_features
