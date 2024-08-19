@@ -4,7 +4,6 @@ from transformers import ViTFeatureExtractor, ViTModel
 from torchvision import models, transforms
 import os
 from PIL import Image
-import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data import DataLoader, random_split
 from transformers import ViTFeatureExtractor
@@ -13,13 +12,21 @@ from tqdm import tqdm
 from transformers import DetrModel
 import argparse
 from robomimic.utils.lang_utils import LangEncoder
+import random
+import numpy as np
 
-# Argument Parsing
-device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
-print(f"Using device: {device}")
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 
 class CustomImageDataset(Dataset):
-    def __init__(self, root_dir, feature_extractor):
+    def __init__(self, root_dir, feature_extractor, device):
         self.root_dir = root_dir
         self.feature_extractor = feature_extractor
         self.image_pairs = []
@@ -135,6 +142,12 @@ class ValueResNetModel(nn.Module):
 def main(args):
     # Initialize the feature extractor
 
+    # Argument Parsing
+    set_seed(args.seed)
+
+    device = torch.device(f'cuda:{args.cuda}')
+    print(f"Using device: {device}")
+
     resnet_transformer = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -146,7 +159,7 @@ def main(args):
     # Create the dataset
     root_dir = '/data3/mgao/export-images-from-demo/'
     # dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
-    dataset = CustomImageDataset(root_dir, resnet_transformer)
+    dataset = CustomImageDataset(root_dir, resnet_transformer, device)
 
     train_size = int(0.9 * len(dataset))
     val_size = len(dataset) - train_size
@@ -252,6 +265,8 @@ if __name__ == "__main__":
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
     parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
     parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
+    parser.add_argument('--cuda', type=str, required=True, help='the No of cuda')
+    parser.add_argument('--seed', type=int, required=True, help='training random seed')
     args = parser.parse_args()
 
     # set wandb monitor
