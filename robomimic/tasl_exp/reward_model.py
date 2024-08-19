@@ -26,14 +26,17 @@ def set_seed(seed):
 
 
 class CustomImageDataset(Dataset):
-    def __init__(self, root_dir, feature_extractor, device):
+    def __init__(self, root_dir, feature_extractor, device, target_task=None):
         self.root_dir = root_dir
         self.feature_extractor = feature_extractor
         self.image_pairs = []
         self.lang_encoder = LangEncoder(device=device)
+        self.target_task = target_task
 
         # Prepare a list of all image pairs and corresponding labels
         for task_name_dir in os.listdir(root_dir):
+            if target_task is not None and task_name_dir != target_task:
+                continue
             current_task_name = ' '.join(task_name_dir.split('-'))
             print('init task: ', current_task_name)
             for task_num in os.listdir(os.path.join(root_dir, task_name_dir)):
@@ -68,7 +71,11 @@ class CustomImageDataset(Dataset):
         #     image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
         # else:
         image = self.feature_extractor(image)
-        task_embedding = self.lang_encoder.get_lang_emb(task_name)
+
+        if self.target_task is None:
+            task_embedding = self.lang_encoder.get_lang_emb(task_name)
+        else:
+            task_embedding = None
 
         return image, task_embedding, torch.tensor(label, dtype=torch.float32)
 
@@ -114,7 +121,7 @@ class ValueResNetModel(nn.Module):
 
         self.fc1_double = nn.Linear(self.resnet_fc_in_features + text_out_dim, 512)
         # self.fc1_double = nn.Linear(2080, 512)
-        # self.fc1_single = nn.Linear(self.resnet_fc_in_features, 512)
+        self.fc1_single = nn.Linear(self.resnet_fc_in_features, 512)
         self.relu1 = nn.ReLU()
         self.dropout1 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(512, 128)
@@ -134,9 +141,14 @@ class ValueResNetModel(nn.Module):
 
     def forward(self, image, text_embedding):
         image_features = self.resnet(image)
-        text_features = self.text_fc(text_embedding)
-        concatenated = torch.cat((image_features, text_features), dim=1)
-        x = self.fc1_double(concatenated)
+        if text_embedding:
+            text_features = self.text_fc(text_embedding)
+            concatenated = torch.cat((image_features, text_features), dim=1)
+            fc = self.fc1_double
+        else:
+            concatenated = image_features
+            fc = self.fc1_single
+        x = fc(concatenated)
         x = self.relu1(x)
         x = self.dropout1(x)
         x = self.fc2(x)
@@ -274,10 +286,11 @@ if __name__ == "__main__":
     parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
     parser.add_argument('--cuda', type=str, required=True, help='the No of cuda')
     parser.add_argument('--seed', type=int, required=True, help='training random seed')
+    parser.add_argument('--task_filter', type=str, default=None, required=False, help='specify a task')
     args = parser.parse_args()
 
     # set wandb monitor
-    run_name = f"{args.name}_model_{args.model}_lr_{args.lr}_bs_{args.batch_size}_epochs_{args.num_epochs}_seed_{args.seed}"
+    run_name = f"task_{args.task_filter}_{args.name}_model_{args.model}_lr_{args.lr}_bs_{args.batch_size}_epochs_{args.num_epochs}_seed_{args.seed}"
     wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
         "system_metrics": True  # Enable system metrics logging
     })
