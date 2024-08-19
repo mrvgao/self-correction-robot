@@ -178,7 +178,7 @@ def main(args):
     # Create the dataset
     root_dir = '/data3/mgao/export-images-from-demo/'
     # dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
-    dataset = CustomImageDataset(root_dir, resnet_transformer, device)
+    dataset = CustomImageDataset(root_dir, resnet_transformer, device, target_task=args.task_filter)
 
     train_size = int(0.9 * len(dataset))
     val_size = len(dataset) - train_size
