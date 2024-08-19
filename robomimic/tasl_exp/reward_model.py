@@ -68,7 +68,6 @@ class CustomImageDataset(Dataset):
         # else:
         image = self.feature_extractor(image)
         task_embedding = self.lang_encoder.get_lang_emb(task_name)
-        import pdb; pdb.set_trace()
 
         return image, task_embedding, torch.tensor(label, dtype=torch.float32)
 
