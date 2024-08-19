@@ -277,7 +277,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # set wandb monitor
-    run_name = f"{args.name}_model_{args.model}_lr{args.lr}_bs{args.batch_size}_epochs{args.num_epochs}"
+    run_name = f"{args.name}_model_{args.model}_lr_{args.lr}_bs_{args.batch_size}_epochs_{args.num_epochs}_seed_{args.seed}"
     wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
         "system_metrics": True  # Enable system metrics logging
     })
