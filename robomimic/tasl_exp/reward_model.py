@@ -205,7 +205,7 @@ def main(args):
             images, task_embs, labels = images.to(device), task_embs.to(device), labels.to(device)
             optimizer.zero_grad()
             # outputs = model(image1, image2)
-            outputs = model(images, task_embs, labels)
+            outputs = model(images, task_embs)
             loss = criterion(outputs, labels.unsqueeze(1))
             loss.backward()
             optimizer.step()
