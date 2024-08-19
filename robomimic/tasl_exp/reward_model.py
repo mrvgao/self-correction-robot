@@ -112,6 +112,7 @@ class ValueResNetModel(nn.Module):
         self.text_fc = nn.Linear(text_embedding_dim, text_out_dim)
 
         self.fc1_double = nn.Linear(self.resnet_fc_in_features * 2 + text_out_dim, 512)
+        # self.fc1_double = nn.Linear(2080, 512)
         # self.fc1_single = nn.Linear(self.resnet_fc_in_features, 512)
         self.relu1 = nn.ReLU()
         self.dropout1 = nn.Dropout(p=0.5)
@@ -133,6 +134,7 @@ class ValueResNetModel(nn.Module):
     def forward(self, image, text_embedding):
         image_features = self.resnet(image)
         text_features = self.text_fc(text_embedding)
+        import pdb; pdb.set_trace()
         concatenated = torch.cat((image_features, text_features), dim=1)
         x = self.fc1_double(concatenated)
         x = self.relu1(x)
