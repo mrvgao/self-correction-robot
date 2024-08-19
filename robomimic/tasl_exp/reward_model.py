@@ -134,7 +134,13 @@ class ValueResNetModel(nn.Module):
         image_features = self.resnet(image)
         text_features = self.text_fc(text_embedding)
         concatenated = torch.cat((image_features, text_features), dim=1)
-        x = self.get_value(concatenated)
+        x = self.fc1_double(concatenated)
+        x = self.relu1(x)
+        x = self.dropout1(x)
+        x = self.fc2(x)
+        x = self.relu2(x)
+        x = self.dropout2(x)
+        x = self.fc3(x)
         return x
 
 
