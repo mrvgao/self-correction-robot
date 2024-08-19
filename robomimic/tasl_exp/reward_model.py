@@ -141,7 +141,6 @@ class ValueResNetModel(nn.Module):
 
     def forward(self, image, text_embedding):
         image_features = self.resnet(image)
-        import pdb; pdb.set_trace()
         if text_embedding:
             text_features = self.text_fc(text_embedding)
             concatenated = torch.cat((image_features, text_features), dim=1)
