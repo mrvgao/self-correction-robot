@@ -75,7 +75,7 @@ class CustomImageDataset(Dataset):
         if self.target_task is None:
             task_embedding = self.lang_encoder.get_lang_emb(task_name)
         else:
-            task_embedding = None
+            task_embedding = torch.tensor(0, dtype=torch.float32)
 
         return image, task_embedding, torch.tensor(label, dtype=torch.float32)
 
@@ -141,6 +141,7 @@ class ValueResNetModel(nn.Module):
 
     def forward(self, image, text_embedding):
         image_features = self.resnet(image)
+        import pdb; pdb.set_trace()
         if text_embedding:
             text_features = self.text_fc(text_embedding)
             concatenated = torch.cat((image_features, text_features), dim=1)
@@ -223,6 +224,8 @@ def main(args):
 
         for i, (images, task_embs, labels) in enumerate(progress_bar):
             images, task_embs, labels = images.to(device), task_embs.to(device), labels.to(device)
+            if args.task_filter:
+                task_embs = None
             optimizer.zero_grad()
             # outputs = model(image1, image2)
             outputs = model(images, task_embs)
@@ -248,11 +251,11 @@ def main(args):
             val_loss = 0.0
             with torch.no_grad():
                 progress_bar = tqdm(val_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Validation]", leave=True)
-                for image1, image2, labels in progress_bar:
-                    # Move data to GPU
-                    image1, image2, labels = image1.to(device), image2.to(device), labels.to(device)
-
-                    outputs = model(None, image2)
+                for i, (images, task_embs, labels) in enumerate(progress_bar):
+                    images, task_embs, labels = images.to(device), task_embs.to(device), labels.to(device)
+                    if args.task_filter:
+                        task_embs = None
+                    outputs = model(images, task_embs)
                     loss = criterion(outputs, labels.unsqueeze(1))
                     val_loss += loss.item()
 
