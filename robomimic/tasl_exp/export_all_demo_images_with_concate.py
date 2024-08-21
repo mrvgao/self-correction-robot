@@ -137,6 +137,7 @@ def extract_and_export_image(demo_dataset, task_name):
         task_ds = exporting_dataset[i]['task_ds']
 
         task_ds_dir = '_'.join(task_ds.split())
+        import pdb; pdb.set_trace()
 
         while task_ds_dir in already_exported_sub_tasks:
             task_ds_dir += '_id_' + str(uuid.uuid4())
