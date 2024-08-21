@@ -1,3 +1,4 @@
+import uuid
 
 import robomimic.utils.train_utils as TrainUtils
 import robomimic.utils.torch_utils as TorchUtils
@@ -126,7 +127,7 @@ def extract_and_export_image(demo_dataset, task_name):
     # MAX_TRY = 10
     previous_delta = None
 
-    already_exported_sub_tasks = []
+    already_exported_sub_tasks = set()
 
     for i in tqdm(range(len(exporting_dataset))):
         left_db = exporting_dataset[i]['obs'][eye_names[0]]
@@ -137,9 +138,8 @@ def extract_and_export_image(demo_dataset, task_name):
 
         task_ds_dir = '_'.join(task_ds.split())
 
-        if task_ds_dir in set(already_exported_sub_tasks):
-            sub_exists_num = Counter(already_exported_sub_tasks)[task_ds_dir]
-            task_ds_dir += '_' + str(sub_exists_num+1)
+        while task_ds_dir in already_exported_sub_tasks:
+            task_ds_dir += '_id_' + str(uuid.uuid4())
 
         already_exported_sub_tasks.append(task_ds_dir)
 
