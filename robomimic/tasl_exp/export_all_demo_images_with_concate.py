@@ -141,7 +141,7 @@ def extract_and_export_image(demo_dataset, task_name):
         while task_ds_dir in already_exported_sub_tasks:
             task_ds_dir += '_id_' + str(uuid.uuid4())
 
-        already_exported_sub_tasks.append(task_ds_dir)
+        already_exported_sub_tasks.add(task_ds_dir)
 
         # dir_name = f'/home/minquangao/export-images-from-demo/{task_ds_dir}'
 
