@@ -30,6 +30,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import cv2
 from tqdm import tqdm
+from collections import Counter
 
 TASK_PATH_MAPPING = {
     # 'test-task':'/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCabToCounter/2024-04-24/demo_gentex_im128_randcams.hdf5'
@@ -125,6 +126,8 @@ def extract_and_export_image(demo_dataset, task_name):
     # MAX_TRY = 10
     previous_delta = None
 
+    already_exported_sub_tasks = []
+
     for i in tqdm(range(len(exporting_dataset))):
         left_db = exporting_dataset[i]['obs'][eye_names[0]]
         hand_db = exporting_dataset[i]['obs'][eye_names[1]]
@@ -133,6 +136,13 @@ def extract_and_export_image(demo_dataset, task_name):
         task_ds = exporting_dataset[i]['task_ds']
 
         task_ds_dir = '_'.join(task_ds.split())
+
+        if task_ds_dir in set(already_exported_sub_tasks):
+            sub_exists_num = Counter(already_exported_sub_tasks)[task_ds_dir]
+            task_ds_dir += '_' + str(sub_exists_num+1)
+
+        already_exported_sub_tasks.append(task_ds_dir)
+
         # dir_name = f'/home/minquangao/export-images-from-demo/{task_ds_dir}'
 
         dir_name = f'/data3/mgao/export-images-from-demo/{task_ds_dir}'
