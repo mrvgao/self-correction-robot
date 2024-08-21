@@ -104,6 +104,11 @@ def extract_and_export_image(demo_dataset, task_name):
     # dir_name = f'/data3/mgao/export-images-from-demo/{_tmp_task_name}'
     # dir_name = f'/data3/mgao/export-multi-tasks/{_tmp_task_name}'
 
+    dir_name = f'/data3/mgao/export-images-from-demo/{task_name}'
+
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
+
     PNG_ID = 1
     TASK_ID = 1
 
@@ -127,8 +132,6 @@ def extract_and_export_image(demo_dataset, task_name):
     # MAX_TRY = 10
     previous_delta = None
 
-    already_exported_sub_tasks = set()
-
     for i in tqdm(range(len(exporting_dataset))):
         left_db = exporting_dataset[i]['obs'][eye_names[0]]
         hand_db = exporting_dataset[i]['obs'][eye_names[1]]
@@ -136,27 +139,18 @@ def extract_and_export_image(demo_dataset, task_name):
         gripper_db = exporting_dataset[i]['obs']['robot0_gripper_qpos']
         task_ds = exporting_dataset[i]['task_ds']
 
-        task_ds_dir = '_'.join(task_ds.split())
-        import pdb; pdb.set_trace()
-
-        while task_ds_dir in already_exported_sub_tasks:
-            task_ds_dir += '_id_' + str(uuid.uuid4())
-
-        already_exported_sub_tasks.add(task_ds_dir)
-
         # dir_name = f'/home/minquangao/export-images-from-demo/{task_ds_dir}'
-
-        dir_name = f'/data3/mgao/export-images-from-demo/{task_ds_dir}'
-
-        if not os.path.exists(dir_name):
-            os.mkdir(dir_name)
 
         delta = np.mean(gripper_db[-1] - gripper_db[-2])
 
-        if previous_delta == 0 and delta != 0:
+        change_task = (previous_delta == 0 and delta != 0)
+        if i == 0 or change_task:
+            task_ds_dir = '_'.join(task_ds.split()) + '_ID_' + str(TASK_ID)
+
+        if change_task:
             TASK_ID += 1
-            print(f'task name: {task_name}: NEW sub-TASK: {task_ds_dir}')
             PNG_ID = 1
+            print(f'task name: {task_name}: NEW sub-TASK: {task_ds_dir}')
 
         previous_delta = delta
 
