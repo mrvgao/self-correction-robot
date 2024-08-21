@@ -186,6 +186,8 @@ def run_rollout(
     ob_dict = env.reset()
     policy.start_episode(lang=env._ep_lang_str)
 
+    environment_name = env._env_name
+
     goal_dict = None
     if use_goals:
         # retrieve goal from the environment

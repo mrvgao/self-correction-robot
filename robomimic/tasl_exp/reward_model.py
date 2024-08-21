@@ -14,6 +14,7 @@ import argparse
 from robomimic.utils.lang_utils import LangEncoder
 import random
 import numpy as np
+from collections import namedtuple
 
 
 def set_seed(seed):
@@ -323,20 +324,48 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
-    parser.add_argument('--name', type=str, required=False, help='Name for the training task.')
-    parser.add_argument('--model', type=str, required=False, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
-    parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
-    parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
-    parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
-    parser.add_argument('--cuda', type=str, required=True, help='the No of cuda')
-    parser.add_argument('--seed', type=int, required=True, help='training random seed')
-    parser.add_argument('--task_dir', type=str, default=None, required=False, help='specify a task')
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
+    # parser.add_argument('--name', type=str, required=False, help='Name for the training task.')
+    # parser.add_argument('--model', type=str, required=False, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
+    # parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
+    # parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
+    # parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
+    # parser.add_argument('--cuda', type=str, required=True, help='the No of cuda')
+    # parser.add_argument('--seed', type=int, required=True, help='training random seed')
+    # parser.add_argument('--task_dir', type=str, default=None, required=False, help='specify a task')
+    # args = parser.parse_args()
 
-    # set wandb monitor
-    run_name = f"task_{args.task_dir}_{args.name}_model_{args.model}_lr_{args.lr}_bs_{args.batch_size}_epochs_{args.num_epochs}_seed_{args.seed}"
-    wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
-        "system_metrics": True  # Enable system metrics logging
-    })
-    main(args)
+    name = 'single-tasks'
+    model = 'resnet'
+    lr = 1e-5
+    bs = 100
+    num_epochs = 1000
+    cuda = 0
+    seed = 999
+    batch_size = 100
+
+    sub_tasks = [
+        'close-double-door', 'close-single-door', 'close-single-door',  'open-double-door',
+        'open-drawer', 'open-single-door', 'pick-from-counter-and-place-to-microwave',
+        'pick-from-counter-and-place-to-sink', 'pick-from-counter-and-place-to-stove',
+        'pick-from-microwave-and-place-to-counter', 'pick-from-sink-and-place-to-counter',
+        'pick-from-stove-and-place-to-counter', 'press-coffee-maker-button',
+        'serving-coffee-in-a-mug', 'setup-a-coffee-mug', 'turn-off-microwave',
+        'turn-off-sink-faucet', 'turn-off-stove', 'turn-on-microwave', 'turn-on-sink-faucent',
+        'turn-on-stove', 'turn-sink-spout'
+    ]
+
+    assert len(sub_tasks) == 22
+
+    Args = namedtuple(
+        'Args',
+        ['name', 'model', 'lr',  'batch_size', 'num_epochs', 'cuda', 'seed', 'task_dir']
+    )
+
+    for i, task_dir in enumerate(sub_tasks):
+        args = Args(name, model, lr, bs, num_epochs, cuda, seed, task_dir)
+        run_name = f"{i}/{len(sub_tasks)}_task_{task_dir}_{name}_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{seed}"
+        wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
+            "system_metrics": True  # Enable system metrics logging
+        })
+        main(args)

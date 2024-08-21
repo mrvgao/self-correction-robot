@@ -349,6 +349,10 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
         timing_stats["Process_Batch"].append(time.time() - t)
 
         # forward and backward pass
+        TASK_DS, HDF_PATH = 'task_ds', 'hdf5_path'
+        input_batch[TASK_DS] = batch[TASK_DS]
+        input_batch[HDF_PATH] = batch[HDF_PATH]
+
         t = time.time()
         info = model.train_on_batch(input_batch, epoch, validate=validate, config=config)
         timing_stats["Train_Batch"].append(time.time() - t)

@@ -583,6 +583,8 @@ class SequenceDataset(torch.utils.data.Dataset):
                 self._demo_id_to_demo_lang_emb[demo_id],
                 (T, 1)
             )
+            meta['task_ds'] = self._demo_id_to_demo_lang_str[demo_id]
+            meta['hdf5_path'] = self.hdf5_path
 
         return meta
 

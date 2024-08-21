@@ -20,13 +20,13 @@
         "save": {
             "enabled": true,
             "every_n_seconds": null,
-            "every_n_epochs": 5,
+            "every_n_epochs": 1,
             "epochs": [],
             "on_best_validation": false,
             "on_best_rollout_return": false,
             "on_best_rollout_success_rate": false
         },
-        "epoch_every_n_steps": 500,
+        "epoch_every_n_steps": 5,
         "validation_epoch_every_n_steps": 100,
         "env": null,
         "additional_envs": null,
@@ -83,6 +83,12 @@
                 "do_eval": true,
                 "filter_key": "50_demos",
                 "path": "/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5"
+            },
+            {
+                "horizon": 500,
+                "do_eval": true,
+                "filter_key": "50_demos",
+                "path": "/home/minquangao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToSink/2024-04-25/demo_gentex_im128_randcams.hdf5"
             }
         ],
         "output_dir": "~/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term",
