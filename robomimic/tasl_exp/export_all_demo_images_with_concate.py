@@ -104,6 +104,8 @@ def extract_and_export_image(demo_dataset, task_name):
     # dir_name = f'/data3/mgao/export-images-from-demo/{_tmp_task_name}'
     # dir_name = f'/data3/mgao/export-multi-tasks/{_tmp_task_name}'
 
+    task_name = '_'.join(task_name.split())
+
     dir_name = f'/data3/mgao/export-images-from-demo/{task_name}'
 
     if not os.path.exists(dir_name):
