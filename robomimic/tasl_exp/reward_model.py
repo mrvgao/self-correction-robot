@@ -36,13 +36,17 @@ class CustomImageDataset(Dataset):
 
         # Prepare a list of all image pairs and corresponding labels
         for task_name_dir in os.listdir(root_dir):
-            if target_task is not None and task_name_dir != target_task:
-                continue
-            current_task_name = ' '.join(task_name_dir.split('-'))
-            print('init task: ', current_task_name)
-            for task_num in os.listdir(os.path.join(root_dir, task_name_dir)):
-                task_path = os.path.join(root_dir, task_name_dir, task_num) # export/prepare-coffee/1
+            if target_task is not None and task_name_dir != target_task: continue
 
+            for task_ds_str in os.listdir(os.path.join(root_dir, task_name_dir)):
+
+                task_path = os.path.join(root_dir, task_name_dir, task_ds_str) # export/prepare-coffee/1
+
+                rm_index = task_ds_str.find('_ID_')
+                task_ds_str = task_ds_str[:rm_index]
+
+                current_task_name = ' '.join(task_ds_str.split('_'))
+                print('init task: ', current_task_name)
                 if os.path.isdir(task_path):
                     images = sorted([f for f in os.listdir(task_path) if f.endswith('.png')])
                     # Get the numeric parts of the filenames
@@ -159,9 +163,19 @@ class ValueResNetModelWithText(nn.Module):
         self.resnet_fc_in_features = self.resnet.fc.in_features
         self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
 
-        # Define additional fully connected layers with dropout
-        text_out_dim = 32
-        self.text_fc = nn.Linear(text_embedding_dim, text_out_dim)
+        # Define a more complex text processing network
+        text_out_dim = 128  # Increased output dimension for more capacity
+        self.text_fc = nn.Sequential(
+            nn.Linear(text_embedding_dim, 512),
+            nn.ReLU(),
+            nn.Dropout(p=0.5),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.5),
+            nn.Linear(256, text_out_dim),
+            nn.ReLU(),
+            nn.Dropout(p=0.5)
+        )
 
         self.fc1_double = nn.Linear(self.resnet_fc_in_features + text_out_dim, 512)
         # self.fc1_double = nn.Linear(2080, 512)
@@ -335,7 +349,7 @@ if __name__ == "__main__":
     # parser.add_argument('--task_dir', type=str, default=None, required=False, help='specify a task')
     # args = parser.parse_args()
 
-    name = 'single-tasks'
+    name = 'all-tasks-in-one'
     model = 'resnet'
     lr = 1e-5
     bs = 100
@@ -344,28 +358,28 @@ if __name__ == "__main__":
     seed = 999
     batch_size = 100
 
-    sub_tasks = [
-        'close-double-door', 'close-single-door', 'close-single-door',  'open-double-door',
-        'open-drawer', 'open-single-door', 'pick-from-counter-and-place-to-microwave',
-        'pick-from-counter-and-place-to-sink', 'pick-from-counter-and-place-to-stove',
-        'pick-from-microwave-and-place-to-counter', 'pick-from-sink-and-place-to-counter',
-        'pick-from-stove-and-place-to-counter', 'press-coffee-maker-button',
-        'serving-coffee-in-a-mug', 'setup-a-coffee-mug', 'turn-off-microwave',
-        'turn-off-sink-faucet', 'turn-off-stove', 'turn-on-microwave', 'turn-on-sink-faucent',
-        'turn-on-stove', 'turn-sink-spout'
-    ]
-
-    assert len(sub_tasks) == 22
-
+    # sub_tasks = [
+    #     'close-double-door', 'close-single-door', 'close-single-door',  'open-double-door',
+    #     'open-drawer', 'open-single-door', 'pick-from-counter-and-place-to-microwave',
+    #     'pick-from-counter-and-place-to-sink', 'pick-from-counter-and-place-to-stove',
+    #     'pick-from-microwave-and-place-to-counter', 'pick-from-sink-and-place-to-counter',
+    #     'pick-from-stove-and-place-to-counter', 'press-coffee-maker-button',
+    #     'serving-coffee-in-a-mug', 'setup-a-coffee-mug', 'turn-off-microwave',
+    #     'turn-off-sink-faucet', 'turn-off-stove', 'turn-on-microwave', 'turn-on-sink-faucent',
+    #     'turn-on-stove', 'turn-sink-spout'
+    # ]
+    #
+    # assert len(sub_tasks) == 22
+    #
     Args = namedtuple(
         'Args',
         ['name', 'model', 'lr',  'batch_size', 'num_epochs', 'cuda', 'seed', 'task_dir']
     )
-
-    for i, task_dir in enumerate(sub_tasks):
-        args = Args(name, model, lr, bs, num_epochs, cuda, seed, task_dir)
-        run_name = f"{i}/{len(sub_tasks)}_task_{task_dir}_{name}_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{seed}"
-        wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
-            "system_metrics": True  # Enable system metrics logging
-        })
-        main(args)
+    #
+    # for i, task_dir in enumerate(sub_tasks):
+    args = Args(name, model, lr, bs, num_epochs, cuda, seed, None)
+    run_name = f"all_task_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{seed}"
+    wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
+        "system_metrics": True  # Enable system metrics logging
+    })
+    main(args)
