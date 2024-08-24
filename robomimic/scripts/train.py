@@ -43,7 +43,7 @@ from robomimic.config import config_factory
 from robomimic.algo import algo_factory, RolloutPolicy
 from robomimic.utils.log_utils import PrintLogger, DataLogger, flush_warnings
 from robomimic.tasl_exp.progress_model_with_resnet import ProgressResNetModel
-from robomimic.tasl_exp.reward_model import ValueResNetModel
+from robomimic.tasl_exp.reward_model import ValueResNetModelWithText
 
 
 def train(config, device):
@@ -64,12 +64,11 @@ def train(config, device):
     log_dir, ckpt_dir, video_dir, vis_dir = TrainUtils.get_exp_dir(config)
 
     if config.value_model_path:
-        # main_value_model = ValueResNetModel()
         main_value_model = None
         # main_value_model.load_state_dict(torch.load(config.value_model_path))
         # main_value_model.to(device)
 
-        target_value_model = ValueResNetModel()
+        target_value_model = ValueResNetModelWithText()
         target_value_model.load_state_dict(torch.load(config.value_model_path))
         target_value_model.to(device)
     else:

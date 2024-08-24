@@ -9,7 +9,7 @@ import numpy as np
 import torch.distributions as D
 import torch.nn.functional as F
 import cma
-
+from robomimic.utils.lang_utils import LangEncoder
 
 
 def concatenate_images(batch, direct_obs=False):
@@ -39,7 +39,7 @@ def get_value_target(batch, config, obj, device):
     direct_obs = False
     if 'obs' not in batch and 'robot0_eye_in_hand_image' in batch:
         for key in batch:
-            if 'image' in key:
+            if 'image' in key or 'lang':
                 batch[key] = torch.tensor(batch[key]).to(device)
 
         batch['obs'] = batch.copy()
@@ -84,7 +84,11 @@ def get_value_target(batch, config, obj, device):
     target_value_model.eval()
 
     # value_y_hats = main_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
-    value_y_target = target_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
+    # value_y_target = target_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
+    task_embeddings = batch['obs']['lang_emb']
+    task_embeddings = task_embeddings.view(-1, task_embeddings.shape[-1])
+
+    value_y_target = target_value_model(reshaped_concatenated_images, task_embeddings).view(batch_size, 10, -1)
 
     # value_y = torch.zeros_like(value_y_target, device=device)
     # value_y[:, 0, :] = value_y_target[:, 0, :]
