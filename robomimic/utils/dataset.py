@@ -264,7 +264,7 @@ class SequenceDataset(torch.utils.data.Dataset):
             device=device,
         )
         
-        if len(self._demo_id_to_demo_lang_str) > 0:
+        if len(self._demo_id_to_demo_lang_str) > 0 and not config.experiment.only_rollout:
             print("getting language embeddings...")
             for ep_batch in tqdm(np.array_split(self.demos, int(math.ceil(len(self.demos) / 64)))):
                 # get language embedding
