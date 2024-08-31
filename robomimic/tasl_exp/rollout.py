@@ -4,7 +4,7 @@ from robomimic.algo import RolloutPolicy
 from tianshou.env import SubprocVectorEnv
 from robomimic.utils.exp_utils import StateManager
 from robomimic.utils.tasl_exp import  normalize, get_deployment_action_and_value_from_obs, concatenate_images, get_value_target
-from robomimic.utils.tasl_exp import find_new_ac, post_process_ac
+from robomimic.utils.tasl_exp import post_process_ac
 import json
 import imageio
 from collections import OrderedDict
