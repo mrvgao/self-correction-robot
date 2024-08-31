@@ -208,7 +208,7 @@ def get_shape_metadata_from_dataset(dataset_path, action_keys, all_obs_keys=None
     return shape_meta
 
 
-def load_dict_from_checkpoint(ckpt_path):
+def load_dict_from_checkpoint(ckpt_path, device):
     """
     Load checkpoint dictionary from a checkpoint file.
     
@@ -222,11 +222,11 @@ def load_dict_from_checkpoint(ckpt_path):
     if not torch.cuda.is_available():
         ckpt_dict = torch.load(ckpt_path, map_location=lambda storage, loc: storage)
     else:
-        ckpt_dict = torch.load(ckpt_path)
+        ckpt_dict = torch.load(ckpt_path, map_location=device)
     return ckpt_dict
 
 
-def maybe_dict_from_checkpoint(ckpt_path=None, ckpt_dict=None):
+def maybe_dict_from_checkpoint(ckpt_path=None, ckpt_dict=None, device='cpu'):
     """
     Utility function for the common use case where either an ckpt path
     or a ckpt_dict is provided. This is a no-op if ckpt_dict is not
@@ -242,7 +242,7 @@ def maybe_dict_from_checkpoint(ckpt_path=None, ckpt_dict=None):
     """
     assert (ckpt_path is not None) or (ckpt_dict is not None)
     if ckpt_dict is None:
-        ckpt_dict = load_dict_from_checkpoint(ckpt_path)
+        ckpt_dict = load_dict_from_checkpoint(ckpt_path, device)
     return ckpt_dict
 
 

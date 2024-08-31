@@ -202,7 +202,7 @@ def train(config, device):
     if ckpt_path is not None:
         print("LOADING MODEL WEIGHTS FROM " + ckpt_path)
         from robomimic.utils.file_utils import maybe_dict_from_checkpoint
-        ckpt_dict = maybe_dict_from_checkpoint(ckpt_path=ckpt_path)
+        ckpt_dict = maybe_dict_from_checkpoint(ckpt_path=ckpt_path, device=device)
         model.deserialize(ckpt_dict["model"])
 
     print("\n============= Model Summary =============")
