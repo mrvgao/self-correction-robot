@@ -50,7 +50,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
 
     # CONSTRAINT_FORWARD = False
 
-    THRESHOLD = 1e-3
+    THRESHOLD = 5e-2
 
     trying = 0
     TRYING_MAX = 50
