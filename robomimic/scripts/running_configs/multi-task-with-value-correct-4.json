@@ -1,13 +1,13 @@
 {
     "algo_name": "bc",
-    "value_model_path": "/data2/mgao/pretrained-models/mul-task-value-model/best_model.pth",
+    "value_model_path": "/home/ubuntu/value-model/multi-task-reward-model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
     "cuda_mark": "cuda:3",
     "bias": 0,
     "experiment": {
         "name": "multask-999",
-        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/multi-task/20240823205211/models/model_epoch_1000.pth",
+        "ckpt_path": "/home/ubuntu/ckpt-for-policy/seed_999_epoch_1000.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
