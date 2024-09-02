@@ -101,7 +101,7 @@ def train(config, device):
             raise Exception("Dataset at provided path {} not found!".format(dataset_path))
 
         # load basic metadata from training file
-        print("\n============= Loaded Environment Metadata =============")
+        print("\n============= Loaded Environment Metadata =============: dataset_path: ", dataset_path + "\n")
         env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=dataset_path, ds_format=ds_format)
 
         # populate language instruction for env in env_meta
