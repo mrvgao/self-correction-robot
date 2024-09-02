@@ -5,8 +5,8 @@
     "progress_weight": 0.3,
     "cuda_mark": "cuda:4",
     "experiment": {
-        "name": "reg-constraint-seed-999",
-        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/joint-loss-with-regularization-term/20240810091647/models/model_epoch_505.pth",
+        "name": "rollout-reg-constraint-seed-222",
+        "ckpt_path": "/data2/mgao/expdata/robocasa/im/bc_xfmr/multi-task/20240830143638/models/model_epoch_660.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": true,
@@ -79,11 +79,16 @@
     },
     "train": {
         "data": [
-            {
+             {
                 "horizon": 500,
                 "do_eval": true,
                 "filter_key": "50_demos",
-                "path": "/data2/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5"
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_doors/CloseDoubleDoor/2024-04-29/demo_gentex_im128_randcams.hdf5"
+            },
+            {
+                "horizon": 500,
+                "do_eval": true,
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_coffee/CoffeePressButton/2024-04-25/demo_gentex_im128_randcams.hdf5"
             }
         ],
         "output_dir": "/data2/mgao/expdata/robocasa/im/bc_xfmr/predict-action-without-value-threshold",
