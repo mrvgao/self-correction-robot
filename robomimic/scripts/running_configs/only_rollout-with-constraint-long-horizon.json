@@ -1,6 +1,6 @@
 {
     "algo_name": "bc",
-    "value_model_path": "/data2/mgao/pretrained-models/progress-model/best_model.pth",
+    "value_model_path": "/data2/mgao/pretrained-models/mul-task-value-model/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
     "cuda_mark": "cuda:7",
