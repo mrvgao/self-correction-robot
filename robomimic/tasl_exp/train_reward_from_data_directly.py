@@ -1,4 +1,5 @@
 from torch import nn
+import sys
 import robomimic.utils.train_utils as TrainUtils
 import robomimic.utils.torch_utils as TorchUtils
 from torch.utils.data import DataLoader, random_split
@@ -17,6 +18,11 @@ import wandb
 from robomimic.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetModelWithText
 from robomimic.tasl_exp.task_mapping import TASK_PATH_MAPPING
 from collections import namedtuple
+import robomimic.utils.train_utils as TrainUtils
+import robomimic.utils.torch_utils as TorchUtils
+from robomimic.utils.log_utils import PrintLogger
+import robomimic.utils.obs_utils as ObsUtils
+import robomimic.utils.file_utils as FileUtils
 # Mapping task names to file paths
 
 def set_seed(seed):
@@ -105,11 +111,91 @@ def generate_concated_images_from_demo_path():
     np.random.seed(config.train.seed)
     torch.manual_seed(config.train.seed)
     torch.set_num_threads(1)
+    np.random.seed(config.train.seed)
+    torch.manual_seed(config.train.seed)
 
-    # Load data
-    demo_dataset = TrainUtils.load_data_for_training(
-        config, obs_keys=None, lang_encoder=None
-    )[0]  # only use the train set
+    # set num workers
+    torch.set_num_threads(1)
+
+    # print("\n============= New Training Run with Config =============")
+    # print(config)
+    # print("")
+    # print(config)
+    log_dir, ckpt_dir, video_dir, vis_dir = TrainUtils.get_exp_dir(config)
+
+    if config.experiment.logging.terminal_output_to_txt:
+        # log stdout and stderr to a text file
+        logger = PrintLogger(os.path.join(log_dir, 'log.txt'))
+        sys.stdout = logger
+        sys.stderr = logger
+
+    # read config to set up metadata for observation modalities (e.g. detecting rgb observations)
+    ObsUtils.initialize_obs_utils_with_config(config)
+
+    # extract the metadata and shape metadata across all datasets
+    env_meta_list = []
+    shape_meta_list = []
+    for dataset_cfg in config.train.data:
+        dataset_path = os.path.expanduser(dataset_cfg["path"])
+        ds_format = config.train.data_format
+        if not os.path.exists(dataset_path):
+            raise Exception("Dataset at provided path {} not found!".format(dataset_path))
+
+        # load basic metadata from training file
+        # print("\n============= Loaded Environment Metadata =============")
+        # print(dataset_path)
+        env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=dataset_path, ds_format=ds_format)
+
+        # populate language instruction for env in env_meta
+        env_meta["env_lang"] = dataset_cfg.get("lang", None)
+
+        # update env meta if applicable
+        from robomimic.utils.script_utils import deep_update
+        deep_update(env_meta, dataset_cfg.get("env_meta_update_dict", {}))
+        deep_update(env_meta, config.experiment.env_meta_update_dict)
+        env_meta_list.append(env_meta)
+
+        shape_meta = FileUtils.get_shape_metadata_from_dataset(
+            dataset_path=dataset_path,
+            action_keys=config.train.action_keys,
+            all_obs_keys=config.all_obs_keys,
+            ds_format=ds_format,
+            verbose=False
+        )
+        shape_meta_list.append(shape_meta)
+
+    # if config.experiment.env is not None:
+    #     env_meta["env_name"] = config.experiment.env
+    #     print("=" * 30 + "\n" + "Replacing Env to {}\n".format(env_meta["env_name"]) + "=" * 30)
+
+    eval_env_meta_list = []
+    eval_shape_meta_list = []
+    eval_env_name_list = []
+    eval_env_horizon_list = []
+    # for (dataset_i, dataset_cfg) in enumerate(config.train.data):
+    #     do_eval = dataset_cfg.get("do_eval", True)
+    #     if do_eval is not True:
+    #         continue
+    #     eval_env_meta_list.append(env_meta_list[dataset_i])
+    #     eval_shape_meta_list.append(shape_meta_list[dataset_i])
+    #     eval_env_name_list.append(env_meta_list[dataset_i]["env_name"])
+    #     horizon = dataset_cfg.get("horizon", config.experiment.rollout.horizon)
+    #     eval_env_horizon_list.append(horizon)
+
+    # save the config as a json file
+    # with open(os.path.join(log_dir, '..', 'config.json'), 'w') as outfile:
+    #     json.dump(config, outfile, indent=4)
+
+    # if checkpoint is specified, load in model weights
+
+    # load training data
+    # lang_encoder = LangUtils.LangEncoder(
+    #     device=device,
+    # )
+    trainset, validset = TrainUtils.load_data_for_training(
+        config, obs_keys=shape_meta["all_obs_keys"], lang_encoder=None)
+
+    demo_dataset = trainset
 
     return demo_dataset
 
