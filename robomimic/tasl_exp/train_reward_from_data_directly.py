@@ -98,6 +98,7 @@ def generate_concated_images_from_demo_path():
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
 
     for i, task_name in enumerate(TASK_PATH_MAPPING):
+        if i > 1: break
         if i + 1 > len(ext_cfg['train']['data']):
             ext_cfg['train']['data'].append(ext_cfg['train']['data'][0].copy())
         ext_cfg['train']['data'][i]['path'] = TASK_PATH_MAPPING[task_name]
