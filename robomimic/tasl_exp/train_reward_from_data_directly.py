@@ -312,7 +312,7 @@ if __name__ == "__main__":
     name = 'all-tasks-in-one-with-full-batch'
     model = 'resnet'
     lr = 1e-5
-    bs = 2048
+    bs = 200000
     num_epochs = 1000
     cuda = 0
     seed = 999
