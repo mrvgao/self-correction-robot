@@ -19,8 +19,6 @@ from robomimic.tasl_exp.task_mapping import TASK_PATH_MAPPING
 from collections import namedtuple
 # Mapping task names to file paths
 
-wandb.login(key=['35d1a81cbb586687c791d7bf01689700d3d06991'])
-
 def set_seed(seed):
     random.seed(seed)
     np.random
