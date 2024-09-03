@@ -161,7 +161,7 @@ def extract_and_export_image(demo_dataset, task_name):
 
 
 def generate_concated_images_from_demo_path(task_name):
-    config_path_compsoite = "/data2/mgao/pretrained-models/configs/seed_123_ds_human-50.json"
+    config_path_compsoite = "/home/ubuntu/robocasa-statics/configs/seed_123_ds_human-50.json"
     # config_path_compsoite = "/home/minquangao/pretrained_models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
     ext_cfg['train']['data'][0]['path'] = TASK_PATH_MAPPING[task_name]
