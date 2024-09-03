@@ -98,7 +98,6 @@ def generate_concated_images_from_demo_path():
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
 
     for i, task_name in enumerate(TASK_PATH_MAPPING):
-        if i > 1: break
         if i + 1 > len(ext_cfg['train']['data']):
             ext_cfg['train']['data'].append(ext_cfg['train']['data'][0].copy())
         ext_cfg['train']['data'][i]['path'] = TASK_PATH_MAPPING[task_name]
@@ -240,6 +239,8 @@ def main(args):
     best_val_loss = float('inf')
     early_stopping_counter = 0
 
+    total_steps = 0
+
     for epoch in range(args.num_epochs):
         model.train()
         running_loss = 0.0
@@ -255,6 +256,11 @@ def main(args):
 
             running_loss += loss.item()
             progress_bar.set_postfix(loss=loss.item())
+
+            total_steps += 1
+
+            if total_steps % 100 == 0:
+                wandb.log({"total-steps": total_steps, "train_loss": loss.item()})
 
         print(f"Epoch [{epoch + 1}/{args.num_epochs}], Training Loss: {running_loss / len(train_dataloader):.4f}")
 
@@ -306,11 +312,10 @@ if __name__ == "__main__":
     name = 'all-tasks-in-one-with-full-batch'
     model = 'resnet'
     lr = 1e-5
-    bs = 100
+    bs = 1024
     num_epochs = 1000
     cuda = 0
     seed = 999
-    batch_size = 100
 
     # sub_tasks = [
     #     'close-double-door', 'close-single-door', 'close-single-door',  'open-double-door',
@@ -332,7 +337,7 @@ if __name__ == "__main__":
     #
     # for i, task_dir in enumerate(sub_tasks):
     args = Args(name, model, lr, bs, num_epochs, cuda, seed)
-    run_name = f"all_task_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{seed}"
+    run_name = f"all_task_model_{model}_lr_{lr}_bs_{bs}_epochs_{num_epochs}_seed_{seed}"
     wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
         "system_metrics": True  # Enable system metrics logging
     })
