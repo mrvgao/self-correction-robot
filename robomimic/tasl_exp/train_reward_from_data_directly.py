@@ -74,10 +74,10 @@ class CustomImageDataset(Dataset):
             hand_db = self.demo_dataset[i]['obs'][eye_names[1]]
             right_db = self.demo_dataset[i]['obs'][eye_names[2]]
             task_ds = self.demo_dataset[i]['task_ds']
-            task_name = '_'.join(task_ds.split())
+            # task_name = '_'.join(task_ds.split())
             concatenated_image = combine_images_horizen([left_db[-1], hand_db[-1], right_db[-1]])
 
-            task_embedding = self.lang_encoder.get_lang_emb(task_name)
+            task_embedding = self.demo_dataset[i]['obs']['lang_emb']
             self.image_pairs.append((concatenated_image, task_embedding, i))
 
     def __len__(self):
