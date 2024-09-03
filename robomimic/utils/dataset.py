@@ -260,6 +260,7 @@ class SequenceDataset(torch.utils.data.Dataset):
                 self.total_num_sequences += 1
 
         device = TorchUtils.get_torch_device(try_to_use_cuda=config.experiment.cuda, cuda_mark=config.cuda_mark)
+        print('DEVICE is === ', device)
         lang_encoder = LangUtils.LangEncoder(
             device=device,
         )
