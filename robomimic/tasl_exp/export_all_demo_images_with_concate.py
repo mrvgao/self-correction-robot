@@ -131,10 +131,7 @@ def generate_concated_images_from_demo_path(task_name):
     # config_path_compsoite = "/home/minquangao/pretrained_models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
 
-    for i, task_name in enumerate(TASK_MAPPING_50_DEMO):
-        if i + 1 > len(ext_cfg['train']['data']):
-            ext_cfg['train']['data'].append(ext_cfg['train']['data'][0].copy())
-        ext_cfg['train']['data'][0]['path'] = TASK_MAPPING_50_DEMO[task_name]
+    ext_cfg['train']['data'][0]['path'] = TASK_MAPPING_50_DEMO[task_name]
     # print('loading from path ', TASK_PATH_MAPPING[task_name])
     config = config_factory(ext_cfg["algo_name"])
     with config.values_unlocked():
