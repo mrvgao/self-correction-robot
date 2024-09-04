@@ -134,3 +134,71 @@ class ValueResNetModelWithText(nn.Module):
         x = self.dropout2(x)
         x = self.fc3(x)
         return x
+
+
+class ValueResNetWithTextAndImagesConcatenateWithModel(nn.Module):
+    def __init__(self, text_embedding_dim=768):
+        super(ValueResNetWithTextAndImagesConcatenateWithModel, self).__init__()
+        self.resnet = models.resnet50(pretrained=True)
+        self.resnet_fc_in_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
+
+        # Define a more complex text processing network
+        text_out_dim = 128
+        self.text_fc = nn.Sequential(
+            nn.Linear(text_embedding_dim, 512),
+            nn.ReLU(),
+            nn.Dropout(p=0.5),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.5),
+            nn.Linear(256, text_out_dim),
+            nn.ReLU(),
+            nn.Dropout(p=0.5)
+        )
+
+        self.fc1_double = nn.Linear(self.resnet_fc_in_features * 3 + text_out_dim, 512)
+        self.fc1_single = nn.Linear(self.resnet_fc_in_features, 512)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(p=0.5)
+        self.fc2 = nn.Linear(512, 128)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(p=0.5)
+        self.fc3 = nn.Linear(128, 1)
+
+        self.get_value = nn.Sequential(
+            self.fc1_double,
+            self.relu1,
+            self.dropout1,
+            self.fc2,
+            self.relu2,
+            self.dropout2,
+            self.fc3
+        )
+
+    def forward(self, left_image, hand_image, right_image, text_embedding):
+
+        # Extract features for each image
+        left_features = self.resnet(left_image)
+        hand_features = self.resnet(hand_image)
+        right_features = self.resnet(right_image)
+
+        # Concatenate the features
+        image_features = torch.cat((left_features, hand_features, right_features), dim=1)
+
+        if text_embedding is not None:
+            text_features = self.text_fc(text_embedding)
+            concatenated = torch.cat((image_features, text_features), dim=1)
+            fc = self.fc1_double
+        else:
+            concatenated = image_features
+            fc = self.fc1_single
+
+        x = fc(concatenated)
+        x = self.relu1(x)
+        x = self.dropout1(x)
+        x = self.fc2(x)
+        x = self.relu2(x)
+        x = self.dropout2(x)
+        x = self.fc3(x)
+        return x

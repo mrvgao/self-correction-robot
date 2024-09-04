@@ -22,7 +22,7 @@ from PIL import Image
 import cv2
 from tqdm import tqdm
 from collections import Counter
-from robomimic.tasl_exp.task_mapping import TASK_PATH_MAPPING
+from robomimic.tasl_exp.task_mapping import TASK_MAPPING_50_DEMO
 
 
 def find_overlap_length(list1, list2, max_length):
@@ -118,7 +118,7 @@ def extract_and_export_image(demo_dataset, task_name):
         if i == 0:
             write_several_images(left_db, hand_db, right_db, task_ds_dir, start_id=1)
         else:
-            write_image_with_name(left_db[-1], right_db[-1], hand_db[-1], task_ds_dir, png_id=PNG_ID)
+            write_image_with_name(left_db[0], right_db[0], hand_db[0], task_ds_dir, png_id=PNG_ID)
             PNG_ID += 1
 
     if TASK_ID != 50:
@@ -129,7 +129,11 @@ def generate_concated_images_from_demo_path(task_name):
     config_path_compsoite = "/home/ubuntu/robocasa-statics/configs/seed_123_ds_human-50.json"
     # config_path_compsoite = "/home/minquangao/pretrained_models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
-    ext_cfg['train']['data'][0]['path'] = TASK_PATH_MAPPING[task_name]
+
+    for i, task_name in enumerate(TASK_MAPPING_50_DEMO):
+        if i + 1 > len(ext_cfg['train']['data']):
+            ext_cfg['train']['data'].append(ext_cfg['train']['data'][0].copy())
+        ext_cfg['train']['data'][0]['path'] = TASK_MAPPING_50_DEMO[task_name]
     # print('loading from path ', TASK_PATH_MAPPING[task_name])
     config = config_factory(ext_cfg["algo_name"])
     with config.values_unlocked():
@@ -232,7 +236,7 @@ def generate_concated_images_from_demo_path(task_name):
 
 
 if __name__ == '__main__':
-    for key, value in TASK_PATH_MAPPING.items():
+    for key, value in TASK_MAPPING_50_DEMO.items():
         print('processing.... ', key)
         generate_concated_images_from_demo_path(task_name=key)
 

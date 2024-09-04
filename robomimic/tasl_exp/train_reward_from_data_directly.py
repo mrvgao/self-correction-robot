@@ -15,7 +15,7 @@ from tqdm import tqdm
 from torchvision import transforms
 import random
 import wandb
-from robomimic.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetModelWithText
+from robomimic.tasl_exp.reward_basic_models import ValueResNetWithTextAndImagesConcatenateWithModel
 from robomimic.tasl_exp.task_mapping import TASK_PATH_MAPPING
 from collections import namedtuple
 import robomimic.utils.train_utils as TrainUtils
@@ -59,37 +59,29 @@ def combine_images_horizen(images):
 
 # Custom dataset that loads images directly from the demo dataset
 class CustomImageDataset(Dataset):
-    def __init__(self, demo_dataset, feature_extractor, device):
+    def __init__(self, demo_dataset, feature_extractor):
         self.feature_extractor = feature_extractor
         self.demo_dataset = demo_dataset
-        self.lang_encoder = LangUtils.LangEncoder(device=device)
-        self.image_pairs = []
-        self._process_demo_dataset()
-
-    def _process_demo_dataset(self):
-        eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
-
-        for i in tqdm(range(len(self.demo_dataset))):
-            left_db = self.demo_dataset[i]['obs'][eye_names[0]]
-            hand_db = self.demo_dataset[i]['obs'][eye_names[1]]
-            right_db = self.demo_dataset[i]['obs'][eye_names[2]]
-            # task_ds = self.demo_dataset[i]['task_ds']
-            # task_name = '_'.join(task_ds.split())
-            concatenated_image = combine_images_horizen([left_db[-1], hand_db[-1], right_db[-1]])
-
-            task_embedding = self.demo_dataset[i]['obs']['lang_emb']
-            self.image_pairs.append((concatenated_image, task_embedding, i))
 
     def __len__(self):
-        return len(self.image_pairs)
+        return len(self.demo_dataset)
 
     def __getitem__(self, idx):
-        image, task_embedding, label = self.image_pairs[idx]
+        # Extract individual images
+        eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
+        left_db = self.demo_dataset[idx]['obs'][eye_names[0]][0]
+        hand_db = self.demo_dataset[idx]['obs'][eye_names[1]][0]
+        right_db = self.demo_dataset[idx]['obs'][eye_names[2]][0]
 
-        # Preprocess the image
-        image = self.feature_extractor(image)
+        # Extract task embedding
+        task_embedding = self.demo_dataset[idx]['obs']['lang_emb']
 
-        return image, task_embedding, torch.tensor(label, dtype=torch.float32)
+        # Preprocess each image
+        left_image = self.feature_extractor(left_db)
+        hand_image = self.feature_extractor(hand_db)
+        right_image = self.feature_extractor(right_db)
+
+        return (left_image, hand_image, right_image), task_embedding, torch.tensor(idx, dtype=torch.float32)
 
 
 # Function to generate the demo dataset
@@ -215,7 +207,8 @@ def main(args):
     demo_dataset = generate_concated_images_from_demo_path()
 
     # Create the dataset
-    dataset = CustomImageDataset(demo_dataset, resnet_transformer, device)
+    dataset = CustomImageDataset(demo_dataset, resnet_transformer)
+
     train_size = int(0.9 * len(dataset))
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
@@ -223,7 +216,7 @@ def main(args):
     train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
 
-    model = ValueResNetModelWithText().to(device)
+    model = ValueResNetWithTextAndImagesConcatenateWithModel().to(device)
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
@@ -247,9 +240,14 @@ def main(args):
         progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{args.num_epochs} [Training]", leave=True)
 
         for i, (images, task_embs, labels) in enumerate(progress_bar):
-            images, task_embs, labels = images.to(device), task_embs.to(device), labels.to(device)
+            (left_image, hand_image, right_image) = images
+            left_image = left_image.to(device)
+            hand_image = hand_image.to(device)
+            right_image = right_image.to(device)
+
+            task_embs, labels = task_embs.to(device), labels.to(device)
             optimizer.zero_grad()
-            outputs = model(images, task_embs)
+            outputs = model(left_image, hand_image, right_image, task_embs)
             loss = criterion(outputs, labels.unsqueeze(1))
             loss.backward()
             optimizer.step()
