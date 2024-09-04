@@ -117,8 +117,9 @@ def extract_and_export_image(demo_dataset, task_name):
 
         if i == 0:
             write_several_images(left_db, hand_db, right_db, task_ds_dir, start_id=1)
+            PNG_ID += len(left_db)
         else:
-            write_image_with_name(left_db[0], right_db[0], hand_db[0], task_ds_dir, png_id=PNG_ID)
+            write_image_with_name(left_db[-1], right_db[-1], hand_db[-1], task_ds_dir, png_id=PNG_ID)
             PNG_ID += 1
 
     if TASK_ID != 50:
