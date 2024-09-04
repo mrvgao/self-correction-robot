@@ -55,7 +55,8 @@ class CustomImageDataset(Dataset):
                         image_path = os.path.join(task_path, f'{image_numbers[i]}.png')
 
                         # Calculate the label
-                        label = -1 * (N - image_numbers[i]) + 1
+                        # label = -1 * (N - image_numbers[i]) + 1
+                        label = image_numbers[i] / N
                         self.image_pairs.append((image_path, current_task_name, label))
 
     def __len__(self):

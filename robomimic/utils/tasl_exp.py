@@ -168,7 +168,7 @@ def get_current_state_value_loss(rollout_policy, config, obs_dict):
     ac_dist, value_predict = rollout_policy.policy.nets['policy'].forward_train(obs_dict=obs_dict)
     # execute_value_predict = value_predict[:, 0, :][0][0]
     # tmp_target_value = tmp_target_value[0][0][0]
-    tmp_target_value = normalize(tmp_target_value)
+    # tmp_target_value = normalize(tmp_target_value)
 
     tmp_value_loss = torch.mean((value_predict - tmp_target_value) ** 2)
 
