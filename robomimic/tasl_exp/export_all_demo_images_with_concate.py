@@ -105,10 +105,9 @@ def extract_and_export_image(demo_dataset, task_name):
         delta = np.mean(gripper_db[-1] - gripper_db[-2])
 
         change_task = (previous_delta == 0 and delta != 0)
+
         if i == 0 or change_task:
             task_ds_dir = '_'.join(task_ds.split()) + '_ID_' + str(TASK_ID)
-
-        if change_task:
             TASK_ID += 1
             PNG_ID = 1
             print(f'task name: {task_name}: NEW sub-TASK: {task_ds_dir}')
@@ -121,9 +120,6 @@ def extract_and_export_image(demo_dataset, task_name):
         else:
             write_image_with_name(left_db[-1], right_db[-1], hand_db[-1], task_ds_dir, png_id=PNG_ID)
             PNG_ID += 1
-
-    if TASK_ID != 50:
-        print(f'WARNING!!! task: {task_name} did not get 50 tasks, it got : {TASK_ID} tasks')
 
 
 def generate_concated_images_from_demo_path(task_name):
