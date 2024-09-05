@@ -221,7 +221,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     name = 'all-tasks-in-one-predicate-progress'
-    model = 'resnet'
+    model = args.model
     lr = 1e-5
     bs = 100
     num_epochs = 1000
