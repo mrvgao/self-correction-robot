@@ -11,7 +11,8 @@ from robomimic.utils.lang_utils import LangEncoder
 import random
 import numpy as np
 from collections import namedtuple
-from robomimic.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetModelWithText
+from robomimic.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetModelWithText, ValueResNetModelWithTextWithAttnAndResidual
+import argparse
 
 
 def set_seed(seed):
@@ -102,7 +103,7 @@ def main(args):
     # feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')
 
     # Create the dataset
-    root_dir = '/home/minquangao/export-images-from-demo'
+    root_dir = '/home/ubuntu/robocasa-statics/export-images-from-demo'
     # dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
     dataset = CustomImageDataset(root_dir, resnet_transformer, device, target_task=args.task_dir)
 
@@ -123,6 +124,8 @@ def main(args):
         model = ValueViTModel().to(device)
     elif args.model == 'resnet':
         model = ValueResNetModelWithText().to(device)
+    elif args.model == 'attn':
+        model = ValueResNetModelWithTextWithAttnAndResidual().to(device)
     else:
         raise ValueError("unsupported model name, ", args.model)
 
@@ -206,24 +209,24 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
+    parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
     # parser.add_argument('--name', type=str, required=False, help='Name for the training task.')
-    # parser.add_argument('--model', type=str, required=False, choices=['detr', 'vit', 'resnet'], help='Name for the selection model')
+    parser.add_argument('--model', type=str, required=False, choices=['attn', 'resnet'], help='Name for the selection model')
     # parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
     # parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
     # parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
     # parser.add_argument('--cuda', type=str, required=True, help='the No of cuda')
-    # parser.add_argument('--seed', type=int, required=True, help='training random seed')
+    parser.add_argument('--seed', type=int, required=True, help='training random seed')
     # parser.add_argument('--task_dir', type=str, default=None, required=False, help='specify a task')
-    # args = parser.parse_args()
+    args = parser.parse_args()
 
-    name = 'all-tasks-in-one'
+    name = 'all-tasks-in-one-predicate-progress'
     model = 'resnet'
     lr = 1e-5
     bs = 100
     num_epochs = 1000
     cuda = 0
-    seed = 999
+    # seed = 999
     batch_size = 100
 
     # sub_tasks = [
@@ -245,8 +248,8 @@ if __name__ == "__main__":
     )
     #
     # for i, task_dir in enumerate(sub_tasks):
-    args = Args(name, model, lr, bs, num_epochs, cuda, seed, None)
-    run_name = f"all_task_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{seed}"
+    args = Args(name, model, lr, bs, num_epochs, cuda, args.seed, None)
+    run_name = f"all_task_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
     wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
         "system_metrics": True  # Enable system metrics logging
     })

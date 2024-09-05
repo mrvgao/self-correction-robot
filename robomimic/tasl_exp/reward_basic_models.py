@@ -107,15 +107,6 @@ class ValueResNetModelWithText(nn.Module):
         self.dropout2 = nn.Dropout(p=0.5)
         self.fc3 = nn.Linear(128, 1)
 
-        self.get_value = nn.Sequential(
-            self.fc1_double,
-            self.relu1,
-            self.dropout1,
-            self.fc2,
-            self.relu2,
-            self.dropout2,
-            self.fc3
-        )
 
     def forward(self, image, text_embedding):
         image_features = self.resnet(image)
@@ -133,6 +124,88 @@ class ValueResNetModelWithText(nn.Module):
         x = self.relu2(x)
         x = self.dropout2(x)
         x = self.fc3(x)
+        return x
+
+
+class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
+    def __init__(self, text_embedding_dim=768):
+        super(ValueResNetModelWithTextWithAttnAndResidual, self).__init__()
+        self.resnet = models.resnet50(pretrained=True)
+        self.resnet_fc_in_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
+
+        # Text processing network with additional layers and normalization
+        text_out_dim = 256  # Increased output dimension for text embedding
+        self.text_fc = nn.Sequential(
+            nn.Linear(text_embedding_dim, 1024),
+            nn.ReLU(),
+            nn.LayerNorm(1024),  # Adding layer normalization
+            nn.Dropout(p=0.5),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.LayerNorm(512),  # Normalizing after ReLU
+            nn.Dropout(p=0.5),
+            nn.Linear(512, text_out_dim),
+            nn.ReLU(),
+            nn.LayerNorm(text_out_dim),
+            nn.Dropout(p=0.5)
+        )
+
+        # Add attention mechanism for text and image fusion
+        self.multihead_attn = nn.MultiheadAttention(embed_dim=text_out_dim, num_heads=4)
+
+        # Expanded fully connected layers with residual connections
+        combined_dim = self.resnet_fc_in_features + text_out_dim
+        self.fc1_double = nn.Sequential(
+            nn.Linear(combined_dim, 1024),
+            nn.ReLU(),
+            nn.LayerNorm(1024),
+            nn.Dropout(p=0.5)
+        )
+
+        self.fc1_single = nn.Sequential(
+            nn.Linear(self.resnet_fc_in_features, 1024),
+            nn.ReLU(),
+            nn.LayerNorm(1024),
+            nn.Dropout(p=0.5)
+        )
+
+        # Residual blocks in fully connected layers
+        self.fc2 = nn.Sequential(
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.LayerNorm(512),
+            nn.Dropout(p=0.5)
+        )
+
+        self.fc3 = nn.Sequential(
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.LayerNorm(256),
+            nn.Dropout(p=0.5)
+        )
+
+        self.fc4 = nn.Linear(256, 1)
+
+    def forward(self, image, text_embedding):
+        image_features = self.resnet(image)
+
+        if text_embedding is not None:
+            text_features = self.text_fc(text_embedding)
+            # Apply multi-head attention for better text-image feature interaction
+            attn_output, _ = self.multihead_attn(text_features.unsqueeze(0), image_features.unsqueeze(0),
+                                                 image_features.unsqueeze(0))
+            text_features = attn_output.squeeze(0)
+            concatenated = torch.cat((image_features, text_features), dim=1)
+            x = self.fc1_double(concatenated)
+        else:
+            x = self.fc1_single(image_features)
+
+        # Passing through the rest of the fully connected layers with residual connections
+        x = self.fc2(x) + x  # Residual connection
+        x = self.fc3(x) + x  # Another residual connection
+        x = self.fc4(x)
+
         return x
 
 
