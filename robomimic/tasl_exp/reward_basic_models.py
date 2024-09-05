@@ -198,7 +198,7 @@ class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
             image_features_proj = self.image_projector(image_features)
 
             attn_output, _ = self.multihead_attn(text_features.unsqueeze(0), image_features_proj.unsqueeze(0),
-                                                 image_features.unsqueeze(0))
+                                                 image_features_proj.unsqueeze(0))
             text_features = attn_output.squeeze(0)
             concatenated = torch.cat((image_features, text_features), dim=1)
             x = self.fc1_double(concatenated)
