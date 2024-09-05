@@ -151,6 +151,8 @@ class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
             nn.Dropout(p=0.5)
         )
 
+        # Project image features to match the dimension of text features
+        self.image_projector = nn.Linear(self.resnet_fc_in_features, text_out_dim)
         # Add attention mechanism for text and image fusion
         self.multihead_attn = nn.MultiheadAttention(embed_dim=text_out_dim, num_heads=4)
 
@@ -193,7 +195,9 @@ class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
         if text_embedding is not None:
             text_features = self.text_fc(text_embedding)
             # Apply multi-head attention for better text-image feature interaction
-            attn_output, _ = self.multihead_attn(text_features.unsqueeze(0), image_features.unsqueeze(0),
+            image_features_proj = self.image_projector(image_features)
+
+            attn_output, _ = self.multihead_attn(text_features.unsqueeze(0), image_features_proj.unsqueeze(0),
                                                  image_features.unsqueeze(0))
             text_features = attn_output.squeeze(0)
             concatenated = torch.cat((image_features, text_features), dim=1)
