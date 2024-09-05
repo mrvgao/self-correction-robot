@@ -181,7 +181,7 @@ class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
             nn.Dropout(p=0.5)
         )
 
-        # Projection layer to match dimensions for residual connection
+        # Projection layer to match dimensions for residual connection after fc2
         self.fc2_residual_projection = nn.Linear(1024, 512)
 
         self.fc3 = nn.Sequential(
@@ -190,6 +190,9 @@ class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
             nn.LayerNorm(256),
             nn.Dropout(p=0.5)
         )
+
+        # Projection layer to match dimensions for residual connection after fc3
+        self.fc3_residual_projection = nn.Linear(512, 256)
 
         self.fc4 = nn.Linear(256, 1)
 
@@ -214,7 +217,11 @@ class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
         x = self.fc2(x)
         x = x + x_residual  # Residual connection with projection
 
-        x = self.fc3(x) + x  # Residual connection
+        # Project residual x to match the dimension of fc3 output
+        x_residual = self.fc3_residual_projection(x)
+        x = self.fc3(x)
+        x = x + x_residual  # Residual connection with projection
+
         x = self.fc4(x)
 
         return x
