@@ -129,7 +129,7 @@ class ValueResNetModelWithText(nn.Module):
 
 class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
     def __init__(self, text_embedding_dim=768):
-        super(ValueResNetModelWithTextWithAttnAndResidual, self).__init__()
+        super(ValueResNetModelWithText, self).__init__()
         self.resnet = models.resnet50(pretrained=True)
         self.resnet_fc_in_features = self.resnet.fc.in_features
         self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
@@ -153,11 +153,12 @@ class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
 
         # Project image features to match the dimension of text features
         self.image_projector = nn.Linear(self.resnet_fc_in_features, text_out_dim)
+
         # Add attention mechanism for text and image fusion
         self.multihead_attn = nn.MultiheadAttention(embed_dim=text_out_dim, num_heads=4)
 
         # Expanded fully connected layers with residual connections
-        combined_dim = self.resnet_fc_in_features + text_out_dim
+        combined_dim = text_out_dim + text_out_dim  # Both image and text now have the same dimension
         self.fc1_double = nn.Sequential(
             nn.Linear(combined_dim, 1024),
             nn.ReLU(),
@@ -194,13 +195,13 @@ class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
 
         if text_embedding is not None:
             text_features = self.text_fc(text_embedding)
-            # Apply multi-head attention for better text-image feature interaction
+            # Project image features to match the dimension of text features
             image_features_proj = self.image_projector(image_features)
-
+            # Apply multi-head attention for both key and value being image features
             attn_output, _ = self.multihead_attn(text_features.unsqueeze(0), image_features_proj.unsqueeze(0),
                                                  image_features_proj.unsqueeze(0))
-            text_features = attn_output.squeeze(0)
-            concatenated = torch.cat((image_features, text_features), dim=1)
+            attn_output = attn_output.squeeze(0)
+            concatenated = torch.cat((image_features_proj, attn_output), dim=1)
             x = self.fc1_double(concatenated)
         else:
             x = self.fc1_single(image_features)
