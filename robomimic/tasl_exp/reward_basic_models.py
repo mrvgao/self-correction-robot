@@ -129,7 +129,7 @@ class ValueResNetModelWithText(nn.Module):
 
 class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
     def __init__(self, text_embedding_dim=768):
-        super(ValueResNetModelWithText, self).__init__()
+        super(ValueResNetModelWithTextWithAttnAndResidual, self).__init__()
         self.resnet = models.resnet50(pretrained=True)
         self.resnet_fc_in_features = self.resnet.fc.in_features
         self.resnet.fc = nn.Identity()  # Remove the last fully connected layer
