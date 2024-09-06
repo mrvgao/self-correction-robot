@@ -14,6 +14,8 @@ from collections import namedtuple
 from robomimic.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetModelWithText, ValueResNetModelWithTextWithAttnAndResidual
 import argparse
 from torch.cuda.amp import autocast, GradScaler
+import torch.multiprocessing as mp
+
 
 torch.backends.cudnn.benchmark = True
 
@@ -218,6 +220,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    mp.set_start_method('spawn', force=True)  # Set multiprocessing to use 'spawn'
+
     parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
     # parser.add_argument('--name', type=str, required=False, help='Name for the training task.')
     parser.add_argument('--model', type=str, required=False, choices=['attn', 'resnet'], help='Name for the selection model')
