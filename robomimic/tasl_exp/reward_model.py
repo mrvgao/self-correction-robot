@@ -34,7 +34,7 @@ def set_seed(seed):
 
 
 class CustomImageDataset(Dataset):
-    def __init__(self, root_dir, feature_extractor, device, target_task=None, batch_size=64):
+    def __init__(self, root_dir, feature_extractor, device, target_task=None, batch_size=1024):
         self.root_dir = root_dir
         self.feature_extractor = feature_extractor
         self.image_pairs = []
