@@ -235,11 +235,11 @@ if __name__ == "__main__":
 
     name = 'all-tasks-in-one-predicate-progress'
     model = args.model
-    lr = 1e-5
+    lr = 1e-4
     num_epochs = 1000
     cuda = 0
     # seed = 999
-    batch_size = 100
+    batch_size = 500
 
     # sub_tasks = [
     #     'close-double-door', 'close-single-door', 'close-single-door',  'open-double-door',
