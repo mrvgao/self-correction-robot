@@ -191,9 +191,10 @@ def main(args):
 
             progress_bar.set_postfix(loss=loss.item())
 
+            scheduler.step()
+
         print(f'Epoch [{epoch + 1}/{num_epochs}], Training Loss: {batch_loss / len(train_dataloader)}, LR: {scheduler.get_last_lr()}')
 
-        scheduler.step()
         # Save the model
 
         if epoch % 2 == 0:
