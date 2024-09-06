@@ -15,7 +15,7 @@ from robomimic.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel
 import argparse
 from torch.cuda.amp import autocast
 import torch.multiprocessing as mp
-from torch.optim.lr_scheduler import LambdaLR
+from torchvision.transforms.functional import resize, normalize
 
 
 
@@ -44,6 +44,7 @@ class CustomImageDataset(Dataset):
         self.task_embeddings = []
         self.labels = []
         self.batch_size = batch_size  # Batch size for vectorization
+        self.device = device
 
         image_paths = []
         task_names = []
@@ -79,14 +80,26 @@ class CustomImageDataset(Dataset):
 
     def _batch_process_images(self, image_paths):
         """
-        Batch process image feature extraction for all images.
+        Batch process image preprocessing (resize, normalize, etc.) for all images.
         """
-        # Batch processing images to optimize feature extraction
-        print("Batch processing images...")
-        for i in tqdm(range(0, len(image_paths), self.batch_size)):
+        for i in range(0, len(image_paths), self.batch_size):
             batch_image_paths = image_paths[i:i + self.batch_size]
-            images = [Image.open(p).convert('RGB') for p in batch_image_paths]  # Load batch of images
-            images = torch.stack([self.feature_extractor(image) for image in images])  # Apply feature extraction in batch
+
+            # Load the batch of images
+            images = [Image.open(p).convert('RGB') for p in batch_image_paths]
+
+            # Convert list of images to a single batch tensor by stacking them
+            images = torch.stack([transforms.ToTensor()(image) for image in images])  # Apply ToTensor to each image
+
+            # Apply batch-level resizing and normalization using torchvision's functional transforms
+            images = resize(images, [224, 224])  # Resizing all images in the batch at once
+            images = normalize(images, mean=[0.485, 0.456, 0.406],
+                               std=[0.229, 0.224, 0.225])  # Normalize all images in the batch
+
+            # Move the batch to GPU after preprocessing
+            images = images.to(self.device)
+
+            # Store the preprocessed images (now on GPU)
             self.images.extend(images)
 
     def _batch_process_tasks(self, task_names):
