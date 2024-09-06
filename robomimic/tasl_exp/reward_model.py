@@ -186,7 +186,7 @@ def main(args):
             batch_loss += loss.item()
             if i % 10 == 9:  # Log every 10 batches
                 avg_loss = running_loss / 10
-                wandb.log({"epoch": epoch + 1, "batch": i + 1, "train_loss": avg_loss, "lr": scheduler.get_last_lr()})
+                wandb.log({"epoch": epoch + 1, "batch": i + 1, "train_loss": avg_loss, "lr": scheduler.get_last_lr()[0]})
                 running_loss = 0.0
 
             progress_bar.set_postfix(loss=loss.item())
