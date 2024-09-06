@@ -34,7 +34,7 @@ def set_seed(seed):
 
 
 class CustomImageDataset(Dataset):
-    def __init__(self, root_dir, feature_extractor, device, target_task=None, batch_size=32):
+    def __init__(self, root_dir, feature_extractor, device, target_task=None, batch_size=512):
         self.root_dir = root_dir
         self.feature_extractor = feature_extractor
         self.image_pairs = []
@@ -82,7 +82,8 @@ class CustomImageDataset(Dataset):
         Batch process image feature extraction for all images.
         """
         # Batch processing images to optimize feature extraction
-        for i in range(0, len(image_paths), self.batch_size):
+        print("Batch processing images...")
+        for i in tqdm(range(0, len(image_paths), self.batch_size)):
             batch_image_paths = image_paths[i:i + self.batch_size]
             images = [Image.open(p).convert('RGB') for p in batch_image_paths]  # Load batch of images
             images = torch.stack([self.feature_extractor(image) for image in images])  # Apply feature extraction in batch
@@ -93,7 +94,8 @@ class CustomImageDataset(Dataset):
         Batch process task embeddings for all task names.
         """
         # Batch process task embeddings using the language encoder
-        for i in range(0, len(task_names), self.batch_size):
+        print("Batch processing task embeddings...")
+        for i in tqdm(range(0, len(task_names), self.batch_size)):
             batch_task_names = task_names[i:i + self.batch_size]
             task_embeddings = self.lang_encoder.get_lang_emb(batch_task_names)  # Assuming get_lang_emb supports batch processing
             self.task_embeddings.extend(task_embeddings)
