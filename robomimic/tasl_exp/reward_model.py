@@ -15,6 +15,8 @@ from robomimic.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel
 import argparse
 from torch.cuda.amp import autocast
 import torch.multiprocessing as mp
+from torch.optim.lr_scheduler import LambdaLR
+
 
 
 torch.backends.cudnn.benchmark = True
@@ -91,6 +93,11 @@ class CustomImageDataset(Dataset):
         return image, task_embedding, torch.tensor(label, dtype=torch.float32)
 
 
+def combined_lr_lambda(step: int, warmup_steps: int, decay_fn):
+    if step < warmup_steps:
+        return step / warmup_steps
+    return decay_fn(step - warmup_steps)
+
 
 def main(args):
     # Initialize the feature extractor
@@ -137,9 +144,15 @@ def main(args):
         raise ValueError("unsupported model name, ", args.model)
 
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+    warmup_steps = 100
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+    cosine_decay_fn = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
+    scheduler = LambdaLR(optimizer,
+                         lr_lambda=lambda step: combined_lr_lambda(step, warmup_steps, cosine_decay_fn))
+
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
     task_name = wandb.run.name
     wandb.watch(model)
@@ -182,6 +195,7 @@ def main(args):
 
         print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {batch_loss / len(train_dataloader):.4f}")
 
+        scheduler.step()
         # Save the model
 
         if epoch % 2 == 0:
@@ -200,7 +214,6 @@ def main(args):
                     val_loss += loss.item()
 
                 avg_val_loss = val_loss / len(val_dataloader)
-                scheduler.step(avg_val_loss)
                 wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss})
                 print(f"Epoch [{epoch + 1}/{num_epochs}], Validation Loss: {avg_val_loss:.4f}")
 
