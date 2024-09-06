@@ -148,9 +148,7 @@ def main(args):
     warmup_steps = 100
 
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    cosine_decay_fn = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
-    scheduler = LambdaLR(optimizer,
-                         lr_lambda=lambda step: combined_lr_lambda(step, warmup_steps, cosine_decay_fn))
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)  # T_max is the number of epochs (or iterations) until the learning rate reaches its minimum
 
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
