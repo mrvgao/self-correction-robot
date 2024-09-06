@@ -82,7 +82,8 @@ class CustomImageDataset(Dataset):
         """
         Batch process image preprocessing (resize, normalize, etc.) for all images.
         """
-        for i in range(0, len(image_paths), self.batch_size):
+        print("Batch processing images...")
+        for i in tqdm(range(0, len(image_paths), self.batch_size)):
             batch_image_paths = image_paths[i:i + self.batch_size]
 
             # Load the batch of images
