@@ -13,6 +13,11 @@ import numpy as np
 from collections import namedtuple
 from robomimic.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetModelWithText, ValueResNetModelWithTextWithAttnAndResidual
 import argparse
+from torch.cuda.amp import autocast, GradScaler
+
+torch.backends.cudnn.benchmark = True
+
+scaler = GradScaler()
 
 
 def set_seed(seed):
@@ -111,8 +116,8 @@ def main(args):
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=10)
+    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=10)
 
     # Create the dataloader
     # Example training loop
@@ -156,10 +161,13 @@ def main(args):
                 task_embs = None
             optimizer.zero_grad()
             # outputs = model(image1, image2)
-            outputs = model(images, task_embs)
-            loss = criterion(outputs, labels.unsqueeze(1))
-            loss.backward()
-            optimizer.step()
+            with autocast():
+                outputs = model(images, task_embs)
+                loss = criterion(outputs, labels.unsqueeze(1))
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            # optimizer.step()
+            scaler.update()
 
             running_loss += loss.item()
             batch_loss += loss.item()
@@ -183,7 +191,9 @@ def main(args):
                     images, task_embs, labels = images.to(device), task_embs.to(device), labels.to(device)
                     if args.task_dir:
                         task_embs = None
-                    outputs = model(images, task_embs)
+
+                    with autocast():
+                        outputs = model(images, task_embs)
                     loss = criterion(outputs, labels.unsqueeze(1))
                     val_loss += loss.item()
 
