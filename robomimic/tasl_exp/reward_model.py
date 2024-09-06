@@ -13,13 +13,13 @@ import numpy as np
 from collections import namedtuple
 from robomimic.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetModelWithText, ValueResNetModelWithTextWithAttnAndResidual
 import argparse
-from torch.cuda.amp import autocast, GradScaler
+from torch.cuda.amp import autocast
 import torch.multiprocessing as mp
 
 
 torch.backends.cudnn.benchmark = True
 
-scaler = GradScaler()
+scaler = torch.amp.GradScaler()
 
 
 def set_seed(seed):
@@ -27,8 +27,8 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    # torch.backends.cudnn.deterministic = True
+    # torch.backends.cudnn.benchmark = False
 
 
 class CustomImageDataset(Dataset):
@@ -118,8 +118,8 @@ def main(args):
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=10)
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=10)
+    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=10)
+    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10)
 
     # Create the dataloader
     # Example training loop
@@ -166,7 +166,7 @@ def main(args):
             with autocast():
                 outputs = model(images, task_embs)
                 loss = criterion(outputs, labels.unsqueeze(1))
-            scaler.scale(loss).backward()
+            scaler.scale('cuda', loss).backward()
             scaler.step(optimizer)
             # optimizer.step()
             scaler.update()
