@@ -166,7 +166,7 @@ def main(args):
             with autocast():
                 outputs = model(images, task_embs)
                 loss = criterion(outputs, labels.unsqueeze(1))
-            scaler.scale('cuda', loss).backward()
+            scaler.scale(loss).backward()
             scaler.step(optimizer)
             # optimizer.step()
             scaler.update()
