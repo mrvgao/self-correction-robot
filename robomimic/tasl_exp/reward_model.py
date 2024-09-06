@@ -43,7 +43,7 @@ class CustomImageDataset(Dataset):
         self.images = []
 
         # Prepare a list of all image pairs and corresponding labels
-        for task_name_dir in os.listdir(root_dir):
+        for ti, task_name_dir in enumerate(os.listdir(root_dir)):
             if target_task is not None and task_name_dir != target_task: continue
 
             for task_ds_str in os.listdir(os.path.join(root_dir, task_name_dir)):
@@ -54,7 +54,7 @@ class CustomImageDataset(Dataset):
                 task_ds_str = task_ds_str[:rm_index]
 
                 current_task_name = ' '.join(task_ds_str.split('_'))
-                print('init task: ', current_task_name)
+                print('{ti}/24 init task: ', current_task_name)
                 if os.path.isdir(task_path):
                     images = sorted([f for f in os.listdir(task_path) if f.endswith('.png')])
                     # Get the numeric parts of the filenames
