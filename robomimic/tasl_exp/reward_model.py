@@ -43,7 +43,7 @@ class CustomImageDataset(Dataset):
         self.images = []
         self.task_embeddings = []
         self.labels = []
-        self.batch_size = batch_size  # Batch size for vectorization
+        self.batch_size = batch_size
         self.device = device
 
         image_paths = []
@@ -54,7 +54,7 @@ class CustomImageDataset(Dataset):
             if target_task is not None and task_name_dir != target_task: continue
 
             for task_ds_str in os.listdir(os.path.join(root_dir, task_name_dir)):
-                task_path = os.path.join(root_dir, task_name_dir, task_ds_str)  # export/prepare-coffee/1
+                task_path = os.path.join(root_dir, task_name_dir, task_ds_str)
                 rm_index = task_ds_str.find('_ID_')
                 task_ds_str = task_ds_str[:rm_index]
                 current_task_name = ' '.join(task_ds_str.split('_'))
@@ -80,7 +80,7 @@ class CustomImageDataset(Dataset):
 
     def _batch_process_images(self, image_paths):
         """
-        Batch process image preprocessing (resize, normalize, etc.) for all images.
+        Batch process image preprocessing (resize, normalize, etc.) for all images and save them on CPU.
         """
         print("Batch processing images...")
         for i in tqdm(range(0, len(image_paths), self.batch_size)):
@@ -97,30 +97,27 @@ class CustomImageDataset(Dataset):
             images = normalize(images, mean=[0.485, 0.456, 0.406],
                                std=[0.229, 0.224, 0.225])  # Normalize all images in the batch
 
-            # Move the batch to GPU after preprocessing
-            images = images.to(self.device)
-
-            # Store the preprocessed images (now on GPU)
-            self.images.extend(images)
+            # Store the preprocessed images on CPU
+            self.images.extend(images.cpu())  # Ensure the images stay on the CPU
 
     def _batch_process_tasks(self, task_names):
         """
         Batch process task embeddings for all task names.
         """
-        # Batch process task embeddings using the language encoder
         print("Batch processing task embeddings...")
         for i in tqdm(range(0, len(task_names), self.batch_size)):
             batch_task_names = task_names[i:i + self.batch_size]
-            task_embeddings = self.lang_encoder.get_lang_emb(batch_task_names)  # Assuming get_lang_emb supports batch processing
+            task_embeddings = self.lang_encoder.get_lang_emb(batch_task_names)
             self.task_embeddings.extend(task_embeddings)
 
     def __len__(self):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        image = self.images[idx]
-        task_embedding = self.task_embeddings[idx]
-        label = torch.tensor(self.labels[idx], dtype=torch.float32)
+        # Move data to GPU only when accessing it during training
+        image = self.images[idx].to(self.device)  # Move the image to GPU only when needed
+        task_embedding = self.task_embeddings[idx].to(self.device)  # Move task embedding to GPU
+        label = torch.tensor(self.labels[idx], dtype=torch.float32).to(self.device)  # Move label to GPU
 
         return image, task_embedding, label
 
@@ -157,8 +154,8 @@ def main(args):
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=10)
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10)
+    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=10, pin_memory=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10, pin_memory=True)
 
     # Create the dataloader
     # Example training loop
