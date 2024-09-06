@@ -174,7 +174,7 @@ def main(args):
 
         # Save the model
 
-        if epoch % 5 == 0:
+        if epoch % 2 == 0:
             model.eval()
             val_loss = 0.0
             with torch.no_grad():
@@ -202,8 +202,7 @@ def main(args):
                     print("Early stopping triggered")
                     break
 
-        if epoch % 10 == 0:
-            torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch + 1}.pth'))
+        torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch + 1}.pth'))
 
     wandb.finish()
 
