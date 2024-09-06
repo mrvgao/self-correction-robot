@@ -246,6 +246,7 @@ if __name__ == "__main__":
     # parser.add_argument('--task_dir', type=str, default=None, required=False, help='specify a task')
     args = parser.parse_args()
 
+    tag = args.tag
     name = 'all-tasks-in-one-predicate-progress'
     model = args.model
     lr = 1e-4
@@ -274,7 +275,7 @@ if __name__ == "__main__":
     #
     # for i, task_dir in enumerate(sub_tasks):
     args = Args(name, model, lr, batch_size, num_epochs, cuda, args.seed, None)
-    run_name = f"{args.tag}_all_task_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
+    run_name = f"{tag}_all_task_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
     wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
         "system_metrics": True  # Enable system metrics logging
     })
