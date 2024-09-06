@@ -54,7 +54,7 @@ class CustomImageDataset(Dataset):
                 task_ds_str = task_ds_str[:rm_index]
 
                 current_task_name = ' '.join(task_ds_str.split('_'))
-                print('{ti}/{len(os.listdir(root_dir)} init task: ', current_task_name)
+                print(f'{ti}/{len(os.listdir(root_dir))} init task: {current_task_name}')
                 if os.path.isdir(task_path):
                     images = sorted([f for f in os.listdir(task_path) if f.endswith('.png')])
                     # Get the numeric parts of the filenames
