@@ -40,6 +40,7 @@ class CustomImageDataset(Dataset):
         self.image_pairs = []
         self.lang_encoder = LangEncoder(device=device)
         self.target_task = target_task
+        self.images = []
 
         # Prepare a list of all image pairs and corresponding labels
         for task_name_dir in os.listdir(root_dir):
@@ -68,6 +69,9 @@ class CustomImageDataset(Dataset):
                         # label = -1 * (N - image_numbers[i]) + 1
                         label = image_numbers[i] / N
                         self.image_pairs.append((image_path, current_task_name, label))
+                        image = Image.open(image_path).convert('RGB')
+                        image = self.feature_extractor(image)
+                        self.images.append(image)
 
     def __len__(self):
         return len(self.image_pairs)
@@ -76,14 +80,15 @@ class CustomImageDataset(Dataset):
         image_path, task_name, label = self.image_pairs[idx]
 
         # Load the images
-        image = Image.open(image_path).convert('RGB')
+        # image = Image.open(image_path).convert('RGB')
+        image = self.images[idx]
 
         # Preprocess the images
         # if args.model != 'resnet':
         #     image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
         #     image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
         # else:
-        image = self.feature_extractor(image)
+        # image = self.feature_extractor(image)
 
         if self.target_task is None:
             task_embedding = self.lang_encoder.get_lang_emb(task_name)
