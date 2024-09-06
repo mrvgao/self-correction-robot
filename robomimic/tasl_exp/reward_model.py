@@ -223,11 +223,10 @@ if __name__ == "__main__":
     name = 'all-tasks-in-one-predicate-progress'
     model = args.model
     lr = 1e-5
-    bs = 100
     num_epochs = 1000
     cuda = 0
     # seed = 999
-    batch_size = 100
+    batch_size = 500
 
     # sub_tasks = [
     #     'close-double-door', 'close-single-door', 'close-single-door',  'open-double-door',
@@ -248,7 +247,7 @@ if __name__ == "__main__":
     )
     #
     # for i, task_dir in enumerate(sub_tasks):
-    args = Args(name, model, lr, bs, num_epochs, cuda, args.seed, None)
+    args = Args(name, model, lr, batch_size, num_epochs, cuda, args.seed, None)
     run_name = f"all_task_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
     wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
         "system_metrics": True  # Enable system metrics logging
