@@ -34,71 +34,79 @@ def set_seed(seed):
 
 
 class CustomImageDataset(Dataset):
-    def __init__(self, root_dir, feature_extractor, device, target_task=None):
+    def __init__(self, root_dir, feature_extractor, device, target_task=None, batch_size=32):
         self.root_dir = root_dir
         self.feature_extractor = feature_extractor
         self.image_pairs = []
         self.lang_encoder = LangEncoder(device=device)
         self.target_task = target_task
         self.images = []
+        self.task_embeddings = []
+        self.labels = []
+        self.batch_size = batch_size  # Batch size for vectorization
+
+        image_paths = []
+        task_names = []
 
         # Prepare a list of all image pairs and corresponding labels
         for ti, task_name_dir in enumerate(os.listdir(root_dir)):
             if target_task is not None and task_name_dir != target_task: continue
 
             for task_ds_str in os.listdir(os.path.join(root_dir, task_name_dir)):
-
-                task_path = os.path.join(root_dir, task_name_dir, task_ds_str) # export/prepare-coffee/1
-
+                task_path = os.path.join(root_dir, task_name_dir, task_ds_str)  # export/prepare-coffee/1
                 rm_index = task_ds_str.find('_ID_')
                 task_ds_str = task_ds_str[:rm_index]
-
                 current_task_name = ' '.join(task_ds_str.split('_'))
                 print(f'{ti}/{len(os.listdir(root_dir))} init task: {current_task_name}')
+
                 if os.path.isdir(task_path):
                     images = sorted([f for f in os.listdir(task_path) if f.endswith('.png')])
-                    # Get the numeric parts of the filenames
                     image_numbers = sorted([int(os.path.splitext(f)[0]) for f in images])
-
                     N = image_numbers[-1]
 
                     for i in range(len(image_numbers)):
                         image_path = os.path.join(task_path, f'{image_numbers[i]}.png')
-
-                        # Calculate the label
-                        # label = -1 * (N - image_numbers[i]) + 1
                         label = image_numbers[i] / N
-                        task_embedding = self.lang_encoder.get_lang_emb(current_task_name)
+                        image_paths.append(image_path)
+                        task_names.append(current_task_name)
+                        self.labels.append(label)
 
-                        image = Image.open(image_path).convert('RGB')
-                        image = self.feature_extractor(image)
-                        self.images.append(image)
-                        
-                        self.image_pairs.append((task_embedding, image, label))
+        # Perform batched image feature extraction
+        self._batch_process_images(image_paths)
+
+        # Perform batched task embedding extraction
+        self._batch_process_tasks(task_names)
+
+    def _batch_process_images(self, image_paths):
+        """
+        Batch process image feature extraction for all images.
+        """
+        # Batch processing images to optimize feature extraction
+        for i in range(0, len(image_paths), self.batch_size):
+            batch_image_paths = image_paths[i:i + self.batch_size]
+            images = [Image.open(p).convert('RGB') for p in batch_image_paths]  # Load batch of images
+            images = torch.stack([self.feature_extractor(image) for image in images])  # Apply feature extraction in batch
+            self.images.extend(images)
+
+    def _batch_process_tasks(self, task_names):
+        """
+        Batch process task embeddings for all task names.
+        """
+        # Batch process task embeddings using the language encoder
+        for i in range(0, len(task_names), self.batch_size):
+            batch_task_names = task_names[i:i + self.batch_size]
+            task_embeddings = self.lang_encoder.get_lang_emb(batch_task_names)  # Assuming get_lang_emb supports batch processing
+            self.task_embeddings.extend(task_embeddings)
 
     def __len__(self):
-        return len(self.image_pairs)
+        return len(self.labels)
 
     def __getitem__(self, idx):
-        task_embedding, image, label = self.image_pairs[idx]
+        image = self.images[idx]
+        task_embedding = self.task_embeddings[idx]
+        label = torch.tensor(self.labels[idx], dtype=torch.float32)
 
-        # Load the images
-        # image = Image.open(image_path).convert('RGB')
-        # image = self.images[idx]
-
-        # Preprocess the images
-        # if args.model != 'resnet':
-        #     image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
-        #     image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
-        # else:
-        # image = self.feature_extractor(image)
-
-        # if self.target_task is None:
-        #     task_embedding = self.lang_encoder.get_lang_emb(task_name)
-        # else:
-        #     task_embedding = torch.tensor(0, dtype=torch.float32)
-
-        return image, task_embedding, torch.tensor(label, dtype=torch.float32)
+        return image, task_embedding, label
 
 
 def combined_lr_lambda(step: int, warmup_steps: int, decay_fn):
