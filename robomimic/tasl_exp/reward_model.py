@@ -51,6 +51,7 @@ class CustomImageDataset(Dataset):
 
         # Prepare a list of all image pairs and corresponding labels
         for ti, task_name_dir in enumerate(os.listdir(root_dir)):
+            if ti > 2: break
             if target_task is not None and task_name_dir != target_task: continue
 
             for task_ds_str in os.listdir(os.path.join(root_dir, task_name_dir)):
@@ -154,8 +155,8 @@ def main(args):
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=10, pin_memory=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10, pin_memory=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=10)
+    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10)
 
     # Create the dataloader
     # Example training loop
