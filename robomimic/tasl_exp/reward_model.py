@@ -68,20 +68,23 @@ class CustomImageDataset(Dataset):
                         # Calculate the label
                         # label = -1 * (N - image_numbers[i]) + 1
                         label = image_numbers[i] / N
-                        self.image_pairs.append((image_path, current_task_name, label))
+                        task_embedding = self.lang_encoder.get_lang_emb(current_task_name)
+
                         image = Image.open(image_path).convert('RGB')
                         image = self.feature_extractor(image)
                         self.images.append(image)
+                        
+                        self.image_pairs.append((task_embedding, image, label))
 
     def __len__(self):
         return len(self.image_pairs)
 
     def __getitem__(self, idx):
-        image_path, task_name, label = self.image_pairs[idx]
+        task_embedding, image, label = self.image_pairs[idx]
 
         # Load the images
         # image = Image.open(image_path).convert('RGB')
-        image = self.images[idx]
+        # image = self.images[idx]
 
         # Preprocess the images
         # if args.model != 'resnet':
@@ -90,10 +93,10 @@ class CustomImageDataset(Dataset):
         # else:
         # image = self.feature_extractor(image)
 
-        if self.target_task is None:
-            task_embedding = self.lang_encoder.get_lang_emb(task_name)
-        else:
-            task_embedding = torch.tensor(0, dtype=torch.float32)
+        # if self.target_task is None:
+        #     task_embedding = self.lang_encoder.get_lang_emb(task_name)
+        # else:
+        #     task_embedding = torch.tensor(0, dtype=torch.float32)
 
         return image, task_embedding, torch.tensor(label, dtype=torch.float32)
 
