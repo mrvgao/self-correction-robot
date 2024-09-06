@@ -235,7 +235,7 @@ if __name__ == "__main__":
     num_epochs = 1000
     cuda = 0
     # seed = 999
-    batch_size = 500
+    batch_size = 100
 
     # sub_tasks = [
     #     'close-double-door', 'close-single-door', 'close-single-door',  'open-double-door',
