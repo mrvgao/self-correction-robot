@@ -139,7 +139,7 @@ def main(args):
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, min_lr=1e-8)
 
     task_name = wandb.run.name
     wandb.watch(model)
@@ -147,7 +147,7 @@ def main(args):
     save_dir = f'value_models/{task_name}'
     os.makedirs(save_dir, exist_ok=True)
 
-    early_stopping_patience = 3
+    early_stopping_patience = 5
     best_val_loss = float('inf')
     early_stopping_counter = 0
 
