@@ -120,8 +120,8 @@ First, we define a function `make_generator` that creates a `ConfigGenerator` ob
 After this, our next step will be to set hyperparameter values.
 
 ```python
-import robomimic
-import robomimic.utils.hyperparam_utils as HyperparamUtils
+import self_correct_robot
+import self_correct_robot.utils.hyperparam_utils as HyperparamUtils
 
 
 def make_generator(config_file, script_file):
@@ -131,25 +131,27 @@ def make_generator(config_file, script_file):
     generator = HyperparamUtils.ConfigGenerator(
         base_config_file=config_file, script_file=script_file
     )
-    
+
     # next: set and sweep over hyperparameters
-    generator.add_param(...) # set / sweep hp1
-    generator.add_param(...) # set / sweep hp2
-    generator.add_param(...) # set / sweep hp3
+    generator.add_param(...)  # set / sweep hp1
+    generator.add_param(...)  # set / sweep hp2
+    generator.add_param(...)  # set / sweep hp3
     ...
-    
+
     return generator
 
-def main(args):
 
+def main(args):
     # make config generator
     generator = make_generator(
-      config_file=args.config, # base config file from step 1
-      script_file=args.script  # explained later in step 4
+        config_file=args.config,  # base config file from step 1
+        script_file=args.script  # explained later in step 4
     )
 
     # generate jsons and script
     generator.generate()
+
+
 ...
 ```
 

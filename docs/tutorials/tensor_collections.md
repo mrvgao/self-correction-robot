@@ -22,10 +22,10 @@ For example, we can use `robomimic.utils.tensor_utils` to convert them to pytorc
 
 ```python
 import torch
-import robomimic.utils.tensor_utils as TensorUtils
+import self_correct_robot.utils.tensor_utils as TensorUtils
 
 # Converts all numpy arrays in nested dictionary or list or tuple to torch tensors
-x = TensorUtils.to_tensor(x)  
+x = TensorUtils.to_tensor(x)
 
 # add a batch dimension to all tensors in the dict
 x = TensorUtils.to_batch(x)

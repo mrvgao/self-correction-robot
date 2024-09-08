@@ -9,14 +9,14 @@ We begin with a quick tutorial on downloading datasets and running experiments.
 
 Before beginning, make sure you are at the base repo path:
 ```sh
-$ cd {/path/to/robomimic}
+$ cd {/path/to/self_correct_robot}
 ```
 
 ### Step 1: Download dataset
 
 Download the robosuite **Lift (PH)** dataset (see [this link](../datasets/robomimic_v0.1.html#proficient-human-ph) for more information on this dataset):
 ```sh
-$ python robomimic/scripts/download_datasets.py --tasks lift --dataset_types ph
+$ python self_correct_robot/scripts/download_datasets.py --tasks lift --dataset_types ph
 ```
 
 The dataset can be found at `datasets/lift/ph/low_dim_v141.hdf5`
@@ -26,7 +26,7 @@ The dataset can be found at `datasets/lift/ph/low_dim_v141.hdf5`
 Now, we will run an experiment using `train.py`. In this case we would like to run behavior cloning (BC) for the lift dataset we just downloaded.
 
 ```sh
-$ python robomimic/scripts/train.py --config robomimic/exps/templates/bc.json --dataset datasets/lift/ph/low_dim_v141.hdf5 --debug
+$ python self_correct_robot/scripts/train.py --config self_correct_robot/exps/templates/bc.json --dataset datasets/lift/ph/low_dim_v141.hdf5 --debug
 ```
 
 <div class="admonition note">
@@ -63,7 +63,7 @@ $ tensorboard --logdir bc_trained_models/test --bind_all
 
 ## Next steps
 <!--
-High-level overview of the `robomimic` directory (highlighting selected files):
+High-level overview of the `self_correct_robot` directory (highlighting selected files):
 ```
 algo/                     # algorithms
   bc.py                      # bc implementation
@@ -81,7 +81,7 @@ models/                   # network architectures
   ...
 scripts/                  # scripts
   train.py                   # main script for running experiments
-  download_datasets.py       # downloading robomimic v0.1 datasets
+  download_datasets.py       # downloading self_correct_robot v0.1 datasets
   playback_dataset.py        # visualizing dataset trajectories
   ...
 utils/                    # utils for training, evaluation, visualization, hp sweeps, etc

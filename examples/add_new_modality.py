@@ -7,11 +7,11 @@ your environment's observations
 
 import numpy as np
 import torch
-import robomimic
-from robomimic.models import EncoderCore, Randomizer
-from robomimic.utils.obs_utils import Modality, ScanModality
-from robomimic.config.bc_config import BCConfig
-import robomimic.utils.tensor_utils as TensorUtils
+import self_correct_robot
+from self_correct_robot.models import EncoderCore, Randomizer
+from self_correct_robot.utils.obs_utils import Modality, ScanModality
+from self_correct_robot.config.bc_config import BCConfig
+import self_correct_robot.utils.tensor_utils as TensorUtils
 
 
 # Let's create a new modality to handle observation modalities, which will be interpreted as
@@ -210,5 +210,5 @@ if __name__ == "__main__":
     # Let's view our config
     print(config)
 
-    # That's it! Now we can pass this config into our training script, and robomimic will directly use our
+    # That's it! Now we can pass this config into our training script, and self_correct_robot will directly use our
     # custom modality + encoder network

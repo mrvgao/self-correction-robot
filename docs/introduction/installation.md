@@ -62,7 +62,7 @@ $ conda install pytorch==2.0.0 torchvision==0.15.1 -c pytorch
 ```sh
 $ cd <PATH_TO_YOUR_INSTALL_DIRECTORY>
 $ git clone https://github.com/ARISE-Initiative/robomimic.git
-$ cd robomimic
+$ cd self_correct_robot
 $ pip install -e .
 ```
 
@@ -74,7 +74,7 @@ $ pip install -e .
 <p>
 
 ```sh
-$ pip install robomimic
+$ pip install self_correct_robot
 ```
 
 </p>

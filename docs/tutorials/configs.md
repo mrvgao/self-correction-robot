@@ -29,10 +29,10 @@ Please see the [hyperparameter helper docs](./advanced.html#using-the-hyperparam
 Another way to launch a training run is to make a default config (with a line like `config = config_factory(algo_name="bc")`), modify the config in python code, and then call the train function, like in the `examples/train_bc_rnn.py` script.
 
 ```python
-import robomimic
-import robomimic.utils.torch_utils as TorchUtils
-from robomimic.config import config_factory
-from robomimic.scripts.train import train
+import self_correct_robot
+import self_correct_robot.utils.torch_utils as TorchUtils
+from self_correct_robot.config import config_factory
+from self_correct_robot.scripts.train import train
 
 # make default BC config
 config = config_factory(algo_name="bc")

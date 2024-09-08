@@ -8,7 +8,7 @@ The [D4RL](https://arxiv.org/abs/2004.07219) benchmark provides a set of locomot
 Use `convert_d4rl.py` in the `scripts/conversion` folder to automatically download and postprocess the D4RL dataset in a single step. For example:
 
 ```sh
-# by default, download to robomimic/datasets
+# by default, download to self_correct_robot/datasets
 $ python convert_d4rl.py --env walker2d-medium-expert-v2
 # download to specific folder
 $ python convert_d4rl.py --env walker2d-medium-expert-v2 --folder /path/to/output/folder/
