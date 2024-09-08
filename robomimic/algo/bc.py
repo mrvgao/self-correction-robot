@@ -148,9 +148,6 @@ class BC(PolicyAlgo):
             # calculate accumulated difference, if this value is greater than some threshold, re-train this model.
             losses = self._compute_losses(predictions, batch)
 
-            # normalized_value_y = normalize(value_y)
-
-            # value_y_delta = value_y - value_hat
             value_y_delta = value_y - value_hat
 
             value_loss = torch.mean(value_y_delta ** 2)
@@ -176,6 +173,7 @@ class BC(PolicyAlgo):
 
             epsilon_LVM = 0.1
             vloss_threshold = 0.01
+            vloss_threshod_min = 0.02**2
 
             log_prob = info["losses"]["log_probs"]
             threshold_value = tau * (config.bias + value_loss + epsilon_LVM + self.epsilon_train)
@@ -215,7 +213,8 @@ class BC(PolicyAlgo):
                     step_info = self._train_step(losses)
                     info.update(step_info)
 
-                self.value_optimizer.step()
+                if value_loss > vloss_threshod_min:
+                    self.value_optimizer.step()
 
         return info
 
