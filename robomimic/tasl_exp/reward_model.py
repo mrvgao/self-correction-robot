@@ -15,6 +15,8 @@ from robomimic.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel
 import argparse
 from torch.cuda.amp import autocast
 import torch.multiprocessing as mp
+import time
+import hashlib
 
 
 torch.backends.cudnn.benchmark = True
@@ -38,6 +40,8 @@ class CustomImageDataset(Dataset):
         self.image_pairs = []
         self.lang_encoder = LangEncoder(device=device)
         self.target_task = target_task
+        self.tasks = []
+        self.task_embeddings = []
 
         # Prepare a list of all image pairs and corresponding labels
         for task_name_dir in os.listdir(root_dir):
@@ -65,31 +69,35 @@ class CustomImageDataset(Dataset):
                         # Calculate the label
                         # label = -1 * (N - image_numbers[i]) + 1
                         label = image_numbers[i] / N
-                        self.image_pairs.append((image_path, current_task_name, label))
+                        self.image_pairs.append((image_path, label))
+                        self.tasks.append(current_task_name)
+
+        self._batch_process_tasks()
+
+    def _batch_process_tasks(self):
+        """
+        Batch process task embeddings for all task names.
+        """
+        print("Batch processing task embeddings...")
+        feature_batch_size = 1024
+        for i in tqdm(range(0, len(self.tasks), feature_batch_size)):
+            batch_task_names = self.tasks[i:i + feature_batch_size]
+            task_embeddings = self.lang_encoder.get_lang_emb(batch_task_names)
+            self.task_embeddings.extend(task_embeddings)
 
     def __len__(self):
         return len(self.image_pairs)
 
     def __getitem__(self, idx):
-        image_path, task_name, label = self.image_pairs[idx]
+        image_path, label = self.image_pairs[idx]
 
         # Load the images
         image = Image.open(image_path).convert('RGB')
-
-        # Preprocess the images
-        # if args.model != 'resnet':
-        #     image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
-        #     image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
-        # else:
         image = self.feature_extractor(image)
 
-        if self.target_task is None:
-            task_embedding = self.lang_encoder.get_lang_emb(task_name)
-        else:
-            task_embedding = torch.tensor(0, dtype=torch.float32)
+        task_embedding = self.task_embeddings[idx]
 
         return image, task_embedding, torch.tensor(label, dtype=torch.float32)
-
 
 
 def main(args):
@@ -114,7 +122,7 @@ def main(args):
     # dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
     dataset = CustomImageDataset(root_dir, resnet_transformer, device, target_task=args.task_dir)
 
-    train_size = int(0.9 * len(dataset))
+    train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
@@ -139,7 +147,7 @@ def main(args):
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, min_lr=1e-8)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3)
 
     task_name = wandb.run.name
     wandb.watch(model)
@@ -168,7 +176,6 @@ def main(args):
                 loss = criterion(outputs, labels.unsqueeze(1))
             scaler.scale(loss).backward()
             scaler.step(optimizer)
-            # optimizer.step()
             scaler.update()
 
             running_loss += loss.item()
@@ -200,9 +207,10 @@ def main(args):
                     val_loss += loss.item()
 
                 avg_val_loss = val_loss / len(val_dataloader)
-                scheduler.step(avg_val_loss)
-                wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss})
+                wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss, 'loss': scheduler.get_lr()[0]})
                 print(f"Epoch [{epoch + 1}/{num_epochs}], Validation Loss: {avg_val_loss:.4f}")
+
+            scheduler.step(avg_val_loss)
 
             if avg_val_loss < best_val_loss:
                 best_val_loss = avg_val_loss
@@ -233,7 +241,10 @@ if __name__ == "__main__":
     # parser.add_argument('--task_dir', type=str, default=None, required=False, help='specify a task')
     args = parser.parse_args()
 
-    name = f'{args.tag}_all-tasks-in-one-predicate-progress'
+    timestamp = str(int(time.time()))
+    signature = hashlib.sha256(timestamp.encode()).hexdigest()
+
+    name = f'{args.tag}_{str(signature)}_all-tasks-in-one-predicate-progress'
     model = args.model
     lr = 1e-4
     num_epochs = 1000
@@ -241,19 +252,6 @@ if __name__ == "__main__":
     # seed = 999
     batch_size = 500
 
-    # sub_tasks = [
-    #     'close-double-door', 'close-single-door', 'close-single-door',  'open-double-door',
-    #     'open-drawer', 'open-single-door', 'pick-from-counter-and-place-to-microwave',
-    #     'pick-from-counter-and-place-to-sink', 'pick-from-counter-and-place-to-stove',
-    #     'pick-from-microwave-and-place-to-counter', 'pick-from-sink-and-place-to-counter',
-    #     'pick-from-stove-and-place-to-counter', 'press-coffee-maker-button',
-    #     'serving-coffee-in-a-mug', 'setup-a-coffee-mug', 'turn-off-microwave',
-    #     'turn-off-sink-faucet', 'turn-off-stove', 'turn-on-microwave', 'turn-on-sink-faucent',
-    #     'turn-on-stove', 'turn-sink-spout'
-    # ]
-    #
-    # assert len(sub_tasks) == 22
-    #
     Args = namedtuple(
         'Args',
         ['name', 'model', 'lr',  'batch_size', 'num_epochs', 'cuda', 'seed', 'task_dir']
@@ -261,7 +259,7 @@ if __name__ == "__main__":
     #
     # for i, task_dir in enumerate(sub_tasks):
     args = Args(name, model, lr, batch_size, num_epochs, cuda, args.seed, None)
-    run_name = f"all_task_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
+    run_name = f"{name}_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
     wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
         ""
         "system_metrics": True  # Enable system metrics logging
