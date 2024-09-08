@@ -1,13 +1,13 @@
 {
     "algo_name": "bc",
-    "value_model_path": "/home/ubuntu/robocasa-statics/pretrained-models/best_model_mini_batch_multask_reward.pth",
+    "value_model_path": "/home/ubuntu/self-correction-robot/value_models/add_more_stable_schedule_a2d5f4e7c557a4eec4042311ba0eadb714be07e899e128e9d33411717fba8924_all-tasks-in-one-predicate-progress_attn_lr_0.0001_bs_500_epochs_1000_seed_999/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
     "cuda_mark": "cuda:0",
     "bias": 0,
     "experiment": {
         "name": "full-tasks-999",
-        "validate": false,
+        "validate": true,
         "tau": 30,
         "only_rollout": false,
         "logging": {
@@ -177,7 +177,7 @@
                 "do_eval": true,
                 "path": "/home/ubuntu/robocasa-statics/robocasa/datasets/v0.1/single_stage/kitchen_stove/TurnOnStove/mg/2024-05-08-09-20-31/demo_gentex_im128_randcams.hdf5"
             }],
-        "output_dir": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/multi-task",
+        "output_dir": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/multi-task-with-atten-value-model",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,

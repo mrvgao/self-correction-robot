@@ -79,9 +79,6 @@ def get_value_target(batch, config, obj, device):
     # progresses = progress_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
     # p_threshold = config.progress_threshold
     # rewards = torch.where(progresses > p_threshold, torch.tensor(1.0, device=device), torch.tensor(-1.0, device=device))
-
-    target_value_model.eval()
-
     # value_y_hats = main_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
     # value_y_target = target_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
     task_embeddings = batch['obs']['lang_emb']

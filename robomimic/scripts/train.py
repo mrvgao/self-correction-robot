@@ -70,6 +70,7 @@ def train(config, device):
         target_value_model = ValueResNetModelWithTextWithAttnAndResidual()
         target_value_model.load_state_dict(torch.load(config.value_model_path))
         target_value_model.to(device)
+        target_value_model.eval()
     else:
         main_value_model = None
         target_value_model = None

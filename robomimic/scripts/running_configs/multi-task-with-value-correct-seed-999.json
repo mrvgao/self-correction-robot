@@ -1,6 +1,6 @@
 {
     "algo_name": "bc",
-    "value_model_path": "/data2/mgao/pretrained-models/mul-task-value-model/best_model.pth",
+    "value_model_path": "/home/ubuntu/self-correction-robot/value_models/add_more_stable_schedule_a2d5f4e7c557a4eec4042311ba0eadb714be07e899e128e9d33411717fba8924_all-tasks-in-one-predicate-progress_attn_lr_0.0001_bs_500_epochs_1000_seed_999/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
     "cuda_mark": "cuda:0",
