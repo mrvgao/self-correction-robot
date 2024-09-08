@@ -16,7 +16,8 @@ import argparse
 from torch.cuda.amp import autocast
 import torch.multiprocessing as mp
 from torch.optim.lr_scheduler import LambdaLR
-
+import time
+import hashlib
 
 
 torch.backends.cudnn.benchmark = True
@@ -40,9 +41,12 @@ class CustomImageDataset(Dataset):
         self.image_pairs = []
         self.lang_encoder = LangEncoder(device=device)
         self.target_task = target_task
+        self.tasks = []
+        self.text_features = []
 
         # Prepare a list of all image pairs and corresponding labels
-        for task_name_dir in os.listdir(root_dir):
+        for ti, task_name_dir in enumerate(os.listdir(root_dir)):
+            if ti > 1: break
             if target_task is not None and task_name_dir != target_task: continue
 
             for task_ds_str in os.listdir(os.path.join(root_dir, task_name_dir)):
@@ -67,30 +71,24 @@ class CustomImageDataset(Dataset):
                         # Calculate the label
                         # label = -1 * (N - image_numbers[i]) + 1
                         label = image_numbers[i] / N
-                        self.image_pairs.append((image_path, current_task_name, label))
+                        self.image_pairs.append((image_path, label))
+                        self.tasks.append(current_task_name)
+
+        feature_bath_size = 1024
+        for i in range(0, len(self.tasks), feature_bath_size):
+            self.text_features.extend(self.lang_encoder.get_lang_emb(self.tasks[i:i+feature_bath_size]))
 
     def __len__(self):
         return len(self.image_pairs)
 
     def __getitem__(self, idx):
-        image_path, task_name, label = self.image_pairs[idx]
+        image_path, label = self.image_pairs[idx]
+        task_emb = self.text_features[idx]
 
         # Load the images
         image = Image.open(image_path).convert('RGB')
 
-        # Preprocess the images
-        # if args.model != 'resnet':
-        #     image1 = self.feature_extractor(images=image1, return_tensors="pt")['pixel_values'].squeeze()
-        #     image2 = self.feature_extractor(images=image2, return_tensors="pt")['pixel_values'].squeeze()
-        # else:
-        image = self.feature_extractor(image)
-
-        if self.target_task is None:
-            task_embedding = self.lang_encoder.get_lang_emb(task_name)
-        else:
-            task_embedding = torch.tensor(0, dtype=torch.float32)
-
-        return image, task_embedding, torch.tensor(label, dtype=torch.float32)
+        return image, task_emb, torch.tensor(label, dtype=torch.float32)
 
 
 def combined_lr_lambda(step: int, warmup_steps: int, decay_fn):
@@ -121,7 +119,7 @@ def main(args):
     # dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
     dataset = CustomImageDataset(root_dir, resnet_transformer, device, target_task=args.task_dir)
 
-    train_size = int(0.9 * len(dataset))
+    train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
@@ -145,12 +143,8 @@ def main(args):
 
     criterion = nn.MSELoss()
 
-    warmup_steps = 100
-
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)  # T_max is the number of epochs (or iterations) until the learning rate reaches its minimum
-
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3, factor=0.75)
 
     task_name = wandb.run.name
     wandb.watch(model)
@@ -191,7 +185,6 @@ def main(args):
 
             progress_bar.set_postfix(loss=loss.item())
 
-            scheduler.step()
 
         print(f'Epoch [{epoch + 1}/{num_epochs}], Training Loss: {batch_loss / len(train_dataloader)}, LR: {scheduler.get_last_lr()}')
 
@@ -213,6 +206,7 @@ def main(args):
                     val_loss += loss.item()
 
                 avg_val_loss = val_loss / len(val_dataloader)
+                scheduler.step(avg_val_loss)
                 wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss})
                 print(f"Epoch [{epoch + 1}/{num_epochs}], Validation Loss: {avg_val_loss:.4f}")
 
@@ -254,27 +248,17 @@ if __name__ == "__main__":
     # seed = 999
     batch_size = 500
 
-    # sub_tasks = [
-    #     'close-double-door', 'close-single-door', 'close-single-door',  'open-double-door',
-    #     'open-drawer', 'open-single-door', 'pick-from-counter-and-place-to-microwave',
-    #     'pick-from-counter-and-place-to-sink', 'pick-from-counter-and-place-to-stove',
-    #     'pick-from-microwave-and-place-to-counter', 'pick-from-sink-and-place-to-counter',
-    #     'pick-from-stove-and-place-to-counter', 'press-coffee-maker-button',
-    #     'serving-coffee-in-a-mug', 'setup-a-coffee-mug', 'turn-off-microwave',
-    #     'turn-off-sink-faucet', 'turn-off-stove', 'turn-on-microwave', 'turn-on-sink-faucent',
-    #     'turn-on-stove', 'turn-sink-spout'
-    # ]
-    #
-    # assert len(sub_tasks) == 22
-    #
     Args = namedtuple(
         'Args',
         ['name', 'model', 'lr',  'batch_size', 'num_epochs', 'cuda', 'seed', 'task_dir']
     )
+
+    timestamp = str(int(time.time()))
+    signature = hashlib.sha256(timestamp.encode()).hexdigest()
     #
     # for i, task_dir in enumerate(sub_tasks):
     args = Args(name, model, lr, batch_size, num_epochs, cuda, args.seed, None)
-    run_name = f"{tag}_all_task_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
+    run_name = f"{tag}_{signature}_all_task_model_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
     wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
         "system_metrics": True  # Enable system metrics logging
     })
