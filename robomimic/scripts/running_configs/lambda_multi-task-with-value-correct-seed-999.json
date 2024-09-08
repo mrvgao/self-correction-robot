@@ -7,7 +7,7 @@
     "bias": 0,
     "experiment": {
         "name": "full-tasks-999",
-        "validate": true,
+        "validate": false,
         "tau": 30,
         "only_rollout": false,
         "logging": {
@@ -20,9 +20,9 @@
         "save": {
             "enabled": true,
             "every_n_seconds": null,
-            "every_n_epochs": 10,
+            "every_n_epochs": 5,
             "epochs": [],
-            "on_best_validation": true,
+            "on_best_validation": false,
             "on_best_rollout_return": false,
             "on_best_rollout_success_rate": false
         },
