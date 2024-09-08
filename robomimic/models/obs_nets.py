@@ -1003,7 +1003,7 @@ class MIMO_Transformer(Module):
         self.transformer_nn_parameter_for_timesteps = transformer_nn_parameter_for_timesteps
 
         # self.nets["value_embedding"] = nn.Linear(1, transformer_embed_dim)
-        self.nets["value_decoder"] = self.nets["value_decoder"] = nn.Sequential(
+        self.nets["value_decoder"] = nn.Sequential(
             nn.Linear(transformer_embed_dim, transformer_embed_dim // 2),
             nn.ReLU(),
             nn.Linear(transformer_embed_dim // 2, transformer_embed_dim // 4),
