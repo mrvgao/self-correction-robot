@@ -126,15 +126,6 @@ def custom_init(m, lower, upper):
             nn.init.constant_(m.bias, 0)
 
 
-# Example of normalization function
-def normalize(value, min_val=-500, max_val=1):
-    return (value - min_val) / (max_val - min_val)
-
-
-def denormalize(value, min_val=-500, max_val=1):
-    return value * (max_val - min_val) + min_val
-
-
 def post_process_ac(ac, batched, obj):
     if not batched:
         ac = ac[0]

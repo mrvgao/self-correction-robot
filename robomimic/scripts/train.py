@@ -42,8 +42,7 @@ import robomimic.utils.lang_utils as LangUtils
 from robomimic.config import config_factory
 from robomimic.algo import algo_factory, RolloutPolicy
 from robomimic.utils.log_utils import PrintLogger, DataLogger, flush_warnings
-from robomimic.tasl_exp.progress_model_with_resnet import ProgressResNetModel
-from robomimic.tasl_exp.reward_model import ValueResNetModelWithText
+from robomimic.tasl_exp.reward_model import ValueResNetModelWithTextWithAttnAndResidual
 
 
 def train(config, device):
@@ -68,7 +67,7 @@ def train(config, device):
         # main_value_model.load_state_dict(torch.load(config.value_model_path))
         # main_value_model.to(device)
 
-        target_value_model = ValueResNetModelWithText()
+        target_value_model = ValueResNetModelWithTextWithAttnAndResidual()
         target_value_model.load_state_dict(torch.load(config.value_model_path))
         target_value_model.to(device)
     else:
