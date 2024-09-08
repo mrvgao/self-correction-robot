@@ -44,7 +44,9 @@ class CustomImageDataset(Dataset):
         self.task_embeddings = []
 
         # Prepare a list of all image pairs and corresponding labels
-        for task_name_dir in os.listdir(root_dir):
+        for ti, task_name_dir in enumerate(os.listdir(root_dir)):
+            if ti > 1:
+                break
             if target_task is not None and task_name_dir != target_task: continue
 
             for task_ds_str in os.listdir(os.path.join(root_dir, task_name_dir)):
@@ -207,7 +209,8 @@ def main(args):
                     val_loss += loss.item()
 
                 avg_val_loss = val_loss / len(val_dataloader)
-                wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss, 'loss': scheduler.get_lr()[0]})
+                current_lr = optimizer.param_groups[0]['lr']
+                wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss, 'loss': current_lr})
                 print(f"Epoch [{epoch + 1}/{num_epochs}], Validation Loss: {avg_val_loss:.4f}")
 
             scheduler.step(avg_val_loss)
