@@ -45,8 +45,6 @@ class CustomImageDataset(Dataset):
 
         # Prepare a list of all image pairs and corresponding labels
         for ti, task_name_dir in enumerate(os.listdir(root_dir)):
-            if ti > 1:
-                break
             if target_task is not None and task_name_dir != target_task: continue
 
             for task_ds_str in os.listdir(os.path.join(root_dir, task_name_dir)):
