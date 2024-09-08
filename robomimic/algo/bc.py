@@ -5,22 +5,18 @@ from collections import OrderedDict
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.distributions as D
 
 import robomimic.models.base_nets as BaseNets
-import robomimic.models.obs_nets as ObsNets
 import robomimic.models.policy_nets as PolicyNets
 import robomimic.models.vae_nets as VAENets
 import robomimic.utils.loss_utils as LossUtils
 import robomimic.utils.tensor_utils as TensorUtils
 import robomimic.utils.torch_utils as TorchUtils
 import robomimic.utils.obs_utils as ObsUtils
-from robomimic.macros import LANG_EMB_KEY
 
 from robomimic.algo import register_algo_factory_func, PolicyAlgo
-from robomimic.utils.tasl_exp import concatenate_images, get_value_target
-from robomimic.utils.tasl_exp import get_diff_percentage, normalize, denormalize
+from robomimic.utils.tasl_exp import get_value_target
 
 
 @register_algo_factory_func("bc")
