@@ -21,7 +21,10 @@ import hashlib
 
 torch.backends.cudnn.benchmark = True
 
-scaler = torch.amp.GradScaler()
+try:
+    scaler = torch.amp.GradScaler()
+except AttributeError:
+    scaler = torch.cuda.amp.GradScaler()
 
 
 def set_seed(seed):
