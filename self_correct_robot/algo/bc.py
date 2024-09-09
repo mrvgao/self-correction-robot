@@ -157,6 +157,7 @@ class BC(PolicyAlgo):
 
             # trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
             # info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
+            self.value_optimizer.zero_grad()
 
             info["value_lr"] = self.value_optimizer.param_groups[0]['lr']
 
@@ -166,7 +167,7 @@ class BC(PolicyAlgo):
             if value_loss < self.epsilon_train:
                 self.epsilon_train = value_loss.clone().detach()
 
-            epsilon_LVM = 0.0004
+            epsilon_LVM = 0.1
             vloss_threshold = 0.01
             vloss_threshod_min = 0.02**2
 
@@ -181,16 +182,28 @@ class BC(PolicyAlgo):
             info['threshold_value'] = TensorUtils.detach(threshold_value)
             info['threshold_term'] = TensorUtils.detach(regularization_term)
 
+            # print('regularization term: ', regularization_term.item())
+
+            # value_loss += _lambda * regularization_term
+
+            beta = 5
+            value_reg_loss = beta * value_loss + _lambda * regularization_term
+
+            # value_loss.backward(retain_graph=True)
+
             if not validate:
-                self.value_optimizer.zero_grad()
-                value_loss.backward(retain_graph=True)
+                value_reg_loss.backward(retain_graph=True)
+
+                # trust_threshold = 0.80
+                # value_loss_threshold = 0.01 # MSE error 10%
+                # value_loss_lambda = 0.1
+
                 torch.cuda.synchronize()  # Synchronize before moving to CPU
 
                 if torch.isnan(value_loss).any() or torch.isinf(value_loss).any():
                     print("value_loss contains NaN or Inf values.")
-                # elif value_loss.item() < vloss_threshold:
-                elif regularization_term == 0:
-                    # print('update policy')
+                elif value_loss.item() < vloss_threshold:
+                    print('update policy')
                     # value_loss_cpu = value_loss.detach().cpu().item()
                     # if value_loss_cpu < value_loss_threshold:
                     # losses['action_loss'] *= trust
