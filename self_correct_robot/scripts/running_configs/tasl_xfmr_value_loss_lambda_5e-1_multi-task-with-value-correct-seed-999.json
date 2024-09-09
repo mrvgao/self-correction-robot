@@ -6,7 +6,7 @@
     "cuda_mark": "cuda:6",
     "bias": 0,
     "experiment": {
-        "name": "update-action-and-value-at-the-same-time-full-tasks-999",
+        "name": "lambda-vloss-5e-1-at-the-same-time-full-tasks-999",
         "validate": false,
         "tau": 30,
         "value_loss_lambda": 0.5,
