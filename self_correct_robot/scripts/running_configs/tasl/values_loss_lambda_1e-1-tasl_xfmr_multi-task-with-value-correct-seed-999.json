@@ -6,7 +6,7 @@
     "cuda_mark": "cuda:1",
     "bias": 0,
     "experiment": {
-        "name": "vloss-lambda-1-dot-5-full-tasks-999",
+        "name": "vloss-lambda-1e-1-full-tasks-999",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
