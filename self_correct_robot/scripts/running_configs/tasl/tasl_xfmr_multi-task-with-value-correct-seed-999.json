@@ -3,10 +3,10 @@
     "value_model_path": "/data2/mgao/self-correction-robot/pretrained-model/value-model-with-atten/best_reward_model_with_atten.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:7",
+    "cuda_mark": "cuda:5",
     "bias": 0,
     "experiment": {
-        "name": "update-action-and-value-at-the-same-time-full-tasks-999",
+        "name": "vloss-lambda-5-full-tasks-999",
         "validate": false,
         "tau": 30,
         "only_rollout": false,

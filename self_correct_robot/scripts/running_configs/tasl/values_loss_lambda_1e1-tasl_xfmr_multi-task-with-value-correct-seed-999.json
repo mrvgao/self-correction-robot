@@ -3,14 +3,14 @@
     "value_model_path": "/data2/mgao/self-correction-robot/pretrained-model/value-model-with-atten/best_reward_model_with_atten.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:6",
+    "cuda_mark": "cuda:7",
     "bias": 0,
     "experiment": {
-        "name": "lambda-vloss-5e-1-full-tasks-999",
+        "name": "vloss-lambda-1-dot-5-full-tasks-999",
         "validate": false,
         "tau": 30,
-        "value_loss_lambda": 0.5,
         "only_rollout": false,
+        "value_loss_lambda": 1.5,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,
