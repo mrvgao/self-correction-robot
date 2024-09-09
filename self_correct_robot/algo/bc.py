@@ -917,7 +917,7 @@ class BC_Transformer_GMM(BC_Transformer):
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             self.value_optimizer,
             mode='min',
-            factor=0.1,
+            factor=0.75,
             patience=2,
             verbose=False
         )
