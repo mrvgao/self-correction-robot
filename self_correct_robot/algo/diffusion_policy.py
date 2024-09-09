@@ -47,6 +47,13 @@ def algo_config_to_class(algo_config):
         raise RuntimeError()
 
 class DiffusionPolicyUNet(PolicyAlgo):
+
+    def __init__(self, main_value_model, target_value_model, *args, **kwargs):
+        super(DiffusionPolicyUNet, self).__init__(*args, **kwargs)
+        self.main_value_model = main_value_model
+        self.target_value_model = target_value_model
+        # self.progress_model = progress_model
+
     def _create_networks(self):
         """
         Creates networks and places them into @self.nets.
@@ -116,6 +123,20 @@ class DiffusionPolicyUNet(PolicyAlgo):
         self.action_check_done = False
         self.obs_queue = None
         self.action_queue = None
+
+        self.value_optimizer = torch.optim.Adam(
+            self.nets['policy'].parameters(),
+            lr=self.global_config.value_lr,
+            weight_decay=self.global_config.value_weight_decay
+        )
+
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            self.value_optimizer,
+            mode='min',
+            factor=0.1,
+            patience=2,
+            verbose=False
+        )
     
     def process_batch_for_training(self, batch):
         """
