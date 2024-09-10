@@ -6,5 +6,6 @@ nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/lambda-1-point-5.json > tasl-logs/lambda-1-point-5.log &
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/lambda_5.json > tasl-logs/lambda_5.log &
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/lambda_50.json > tasl-logs/lambda_50.log &
+nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/lambda_50.json > tasl-logs/lambda_50.log &
 
 wait
