@@ -3,7 +3,7 @@
     "value_model_path": "/data2/mgao/self-correction-robot/pretrained-model/value-model-with-atten/best_reward_model_with_atten.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:5",
+    "cuda_mark": "cuda:7",
     "bias": 0,
     "experiment": {
         "name": "vloss-lambda-5-full-tasks-999",
@@ -178,7 +178,7 @@
                 "do_eval": true,
                 "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_stove/TurnOnStove/mg/2024-05-08-09-20-31/demo_gentex_im128_randcams.hdf5"
             }],
-        "output_dir": "/home/ubuntu/robocasa-statics/expdata/robocasa/im/bc_xfmr/multi-task",
+        "output_dir": "/data2/mgao/expdata/robocasa/im/bc_xfmr/multi-task",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
