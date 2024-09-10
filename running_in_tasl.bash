@@ -1,9 +1,10 @@
 #!/bin/bash
 
-
-nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/tasl_xfmr_value_loss_lambda_5e-1_multi-task-with-value-correct-seed-999.json > tasl-logs/vloss-lambda-5e-1.log &
-nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/tasl_xfmr_multi-task-with-value-correct-seed-999.json > tasl-logs/vloss-lambda-5.log &
-nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/values_loss_lambda_1e1-tasl_xfmr_multi-task-with-value-correct-seed-999.json > tasl-logs/vloss-lambda-1.log &
-nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/values_loss_lambda_1e-1-tasl_xfmr_multi-task-with-value-correct-seed-999.json> tasl-logs/vloss-lambda-1e-1.log &
+tasl_xfmr_value_loss_lambda_5e-1_multi-task-with-value-
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/lambda-0-point-1.json > tasl-logs/lambda-0-point-1.log &
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/lambda-0-point-5.json > tasl-logs/lambda-0-point-5.log &
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/lambda-1-point-5.json > tasl-logs/lambda-1-point-5.log &
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/lambda_5.json > tasl-logs/lambda_5.log &
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/lambda_50.json > tasl-logs/lambda_50.log &
 
 wait
