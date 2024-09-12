@@ -179,7 +179,7 @@
                 "do_eval": true,
                 "path": "/home/ubuntu/robocasa-statics/robocasa/datasets/v0.1/single_stage/kitchen_stove/TurnOnStove/mg/2024-05-08-09-20-31/demo_gentex_im128_randcams.hdf5"
             }],
-        "output_dir": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/atten-value-model-rollout",
+        "output_dir": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/atten-value-model-rollout-epoch-1k",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
