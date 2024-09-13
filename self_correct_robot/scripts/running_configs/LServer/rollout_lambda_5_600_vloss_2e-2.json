@@ -7,7 +7,7 @@
     "bias": 0,
     "experiment": {
         "name": "rollout_LServer-lambda-5-full-tasks-999",
-        "ckpt_path": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/multi-task-with-atten-value-model/20240910122307/models/model_epoch_545.pth",
+        "ckpt_path": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/multi-task-with-atten-value-model/20240910122307/models/model_epoch_545_v0.02.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": true,

@@ -70,6 +70,8 @@ class BaseConfig(Config):
         self.experiment.value_loss_lambda = 1
         self.bias = 0
 
+        self.experiment.rollout.vloss_threshold = 0.05
+
         self.experiment_config()
         self.train_config()
         self.algo_config()
@@ -80,7 +82,6 @@ class BaseConfig(Config):
         # attributes that have called @do_not_lock_keys
         self.lock_keys()
 
-        self.experiment.rollout.vloss_threshold = 0.05
 
     @property
     @classmethod
