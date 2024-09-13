@@ -7,7 +7,7 @@
     "bias": 0,
     "experiment": {
         "name": "rollout_LServer-lambda-5-full-tasks-999",
-        "ckpt_path": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/multi-task-with-atten-value-model/20240910122307/models/model_epoch_545.pth",
+        "ckpt_path": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/multi-task-with-atten-value-model/20240910122307/models/model_epoch_800.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": true,
@@ -44,7 +44,7 @@
             "warmstart": 0,
             "terminate_on_success": true,
             "with_progress_correct": true,
-            "vloss_threshold": 0.0205
+            "vloss_threshold": 0.04
         },
         "env_meta_update_dict": {
             "env_kwargs": {
