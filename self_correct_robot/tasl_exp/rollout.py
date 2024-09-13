@@ -44,7 +44,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
 
     # CONSTRAINT_FORWARD = False
 
-    THRESHOLD = config.rollout.vloss_threshold
+    THRESHOLD = config.experiment.rollout.vloss_threshold
 
     trying = 0
     TRYING_MAX = 500
