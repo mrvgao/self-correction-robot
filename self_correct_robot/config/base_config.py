@@ -80,6 +80,8 @@ class BaseConfig(Config):
         # attributes that have called @do_not_lock_keys
         self.lock_keys()
 
+        self.rollout.vloss_threshold = 0.05
+
     @property
     @classmethod
     def ALGO_NAME(cls):
