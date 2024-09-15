@@ -7,7 +7,7 @@
     "bias": 0,
     "experiment": {
         "name": "rollout_LServer-lambda-5-full-tasks-999",
-        "ckpt_path": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/multi-task-with-atten-value-model/20240913012134/models/model_epoch_1000.pth",
+        "ckpt_path": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/multi-task-with-atten-value-model/20240913012134/models/model_epoch_450.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": true,
@@ -180,7 +180,7 @@
                 "filter_key": "3000_demos",
                 "path": "/home/ubuntu/robocasa-statics/robocasa/datasets/v0.1/single_stage/kitchen_stove/TurnOnStove/mg/2024-05-08-09-20-31/demo_gentex_im128_randcams.hdf5"
             }],
-        "output_dir": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/atten-value-model-rollout-epoch-1k-vloss-threshold-4e-2",
+        "output_dir": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/atten-value-model-rollout-epoch-450-vloss-threshold-4e-2",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
