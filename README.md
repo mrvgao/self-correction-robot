@@ -6,6 +6,7 @@ This is the official policy learning repo accompanying the [RoboCasa](https://ro
 ## Installation
 After installing the [RoboCasa codebase](https://github.com/robocasa/robocasa), follow the instructions below:
 ```
+git checkout predicate_value_from_transformer_without_value_input
 git clone https://github.com/mrvgao/self-correction-robot
 cd self-correct-robot
 pip install -e .
