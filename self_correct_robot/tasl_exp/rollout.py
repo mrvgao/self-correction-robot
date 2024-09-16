@@ -244,13 +244,13 @@ def run_rollout(
             # elif step_i > 0 and tmp_value_loss_current < loss_threshold:
             #     step_i += 1
 
-            if not find:
-                abnormal_states[STATE].append(env.get_state())
-                print('cannot find reliable forward state!')
+            # if not find:
+            #     abnormal_states[STATE].append(env.get_state())
+            #     print('cannot find reliable forward state!')
                 # abnormal_states[LOSS].append(current_value_loss)
                 # print('we cannot find a new action that can drive to trust state')
                 # print('re-start a new task')
-                break
+                # break
             # else:
                 # previous_value = target_value
                 # break

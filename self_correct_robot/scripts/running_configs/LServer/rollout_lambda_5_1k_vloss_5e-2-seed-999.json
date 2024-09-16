@@ -38,13 +38,12 @@
         "video_skip": 5,
         "rollout": {
             "enabled": true,
-            "n": 10,
-            "horizon": 2000,
+            "n": 33,
             "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
             "with_progress_correct": true,
-            "vloss_threshold": 0.0205
+            "vloss_threshold": 0.05
         },
         "env_meta_update_dict": {
             "env_kwargs": {
@@ -180,7 +179,7 @@
                 "filter_key": "3000_demos",
                 "path": "/home/ubuntu/robocasa-statics/robocasa/datasets/v0.1/single_stage/kitchen_stove/TurnOnStove/mg/2024-05-08-09-20-31/demo_gentex_im128_randcams.hdf5"
             }],
-        "output_dir": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/atten-value-model-rollout-epoch-1k-vloss-2e-2",
+        "output_dir": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/atten-value-model-rollout-epoch-1k-vloss-5e-2-seed-999",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,

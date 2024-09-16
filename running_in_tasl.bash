@@ -20,7 +20,7 @@ nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scri
 nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/LServer/rollout_lambda_5_450_vloss_2e-2.json > tasl-logs/rollout_lambda_5_epoch_450_vloss_2e.log &
 nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/LServer/rollout_lambda_5_450_vloss_2e-2-running-2.json > tasl-logs/rollout_lambda_5_epoch_450_vloss_2e_running_2.log &
 
-nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/LServer/rollout_lambda_5_450_vloss_4e-2.json > tasl-logs/lambdrollout_lambda_5_epoch_450_vloss_4e.log &
-nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/LServer/rollout_lambda_5_450_vloss_4e-2-running-2.json > tasl-logs/lambdrollout_lambda_5_epoch_450_vloss_4e_running_2.log &
+nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/LServer/rollout_lambda_5_450_vloss_4e-2.json > tasl-logs/rollout_lambda_5_epoch_450_vloss_4e.log &
+nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/LServer/rollout_lambda_5_450_vloss_4e-2-running-2.json > tasl-logs/rollout_lambda_5_epoch_450_vloss_4e_running_2.log &
 
 wait
