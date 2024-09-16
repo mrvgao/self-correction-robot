@@ -486,45 +486,47 @@ def rollout_with_stats(
     else:
         horizon_list = [horizon]
 
-    for env, horizon in zip(envs, horizon_list):
-        batched = isinstance(env, SubprocVectorEnv)
+    with tqdm(total=num_episodes * config.experiment.rollout.horizon*len(envs), desc='rollout progress') as pbar:
+        for env_i, (env, horizon) in enumerate(zip(envs, horizon_list)):
+            batched = isinstance(env, SubprocVectorEnv)
 
-        if batched:
-            env_name = env.get_env_attr(key="name", id=0)[0]
-        else:
-            env_name = env.name
+            if batched:
+                env_name = env.get_env_attr(key="name", id=0)[0]
+            else:
+                env_name = env.name
 
-        if video_dir is not None:
-            # video is written per env
-            video_str = "_epoch_{}.mp4".format(epoch) if epoch is not None else ".mp4"
-            video_path = os.path.join(video_dir, "{}{}".format(env_name, video_str))
-            video_writer = imageio.get_writer(video_path, fps=20)
+            if video_dir is not None:
+                # video is written per env
+                video_str = "_epoch_{}.mp4".format(epoch) if epoch is not None else ".mp4"
+                video_path = os.path.join(video_dir, "{}{}".format(env_name, video_str))
+                video_writer = imageio.get_writer(video_path, fps=20)
 
-        env_video_writer = None
-        if write_video:
-            print("video writes to " + video_path)
-            env_video_writer = imageio.get_writer(video_path, fps=20)
+            env_video_writer = None
+            if write_video:
+                print("video writes to " + video_path)
+                env_video_writer = imageio.get_writer(video_path, fps=20)
 
-        print("rollout: env={}, horizon={}, use_goals={}, num_episodes={}".format(
-            env_name, horizon, use_goals, num_episodes,
-        ))
-        rollout_logs = []
-        if batched:
-            iterator = range(0, num_episodes, len(env))
-        else:
-            iterator = range(num_episodes)
+            print("rollout: env={}, horizon={}, use_goals={}, num_episodes={}".format(
+                env_name, horizon, use_goals, num_episodes,
+            ))
+            rollout_logs = []
+            if batched:
+                iterator = range(0, num_episodes, len(env))
+            else:
+                iterator = range(num_episodes)
 
-        # if not verbose:
-        #     iterator = LogUtils.custom_tqdm(iterator, total=num_episodes)
+            # if not verbose:
+            #     iterator = LogUtils.custom_tqdm(iterator, total=num_episodes)
 
-        num_success = 0
+            num_success = 0
 
-        save_frames_dir_base = 'roll_out_saved_frames'
+            save_frames_dir_base = 'roll_out_saved_frames'
 
-        final_steps = []
+            final_steps = []
 
-        with tqdm(total=num_episodes*config.experiment.rollout.horizon, desc='rollout progress') as pbar:
             for ep_i in iterator:
+                pbar.set_description(f'rollout progress: env {env.name}, of {env_i + 1}/{len(envs)}, episode {ep_i}/{num_episodes}')
+
                 rollout_timestamp = time.time()
 
                 save_frames_dir = save_frames_dir_base + '-' + str(ep_i)
@@ -578,36 +580,36 @@ def rollout_with_stats(
                 print("Episode {}, horizon={}, num_success={}".format(ep_i + 1, horizon, num_success))
                 print(json.dumps(rollout_info, sort_keys=True, indent=4))
 
-        if video_dir is not None:
-            # close this env's video writer (next env has it's own)
-            env_video_writer.close()
+            if video_dir is not None:
+                # close this env's video writer (next env has it's own)
+                env_video_writer.close()
 
-        # average metric across all episodes
-        if len(rollout_logs) > 0:
-            rollout_logs = dict((k, [rollout_logs[i][k] for i in range(len(rollout_logs))]) for k in rollout_logs[0])
-            rollout_logs_mean = dict((k, np.mean(v)) for k, v in rollout_logs.items())
-            rollout_logs_mean["Time_Episode"] = np.sum(
-                rollout_logs["time"]) / 60.  # total time taken for rollouts in minutes
-            all_rollout_logs[env_name] = rollout_logs_mean
-        else:
-            all_rollout_logs[env_name] = {"Time_Episode": -1, "Return": -1, "Success_Rate": -1, "time": -1}
+            # average metric across all episodes
+            if len(rollout_logs) > 0:
+                rollout_logs = dict((k, [rollout_logs[i][k] for i in range(len(rollout_logs))]) for k in rollout_logs[0])
+                rollout_logs_mean = dict((k, np.mean(v)) for k, v in rollout_logs.items())
+                rollout_logs_mean["Time_Episode"] = np.sum(
+                    rollout_logs["time"]) / 60.  # total time taken for rollouts in minutes
+                all_rollout_logs[env_name] = rollout_logs_mean
+            else:
+                all_rollout_logs[env_name] = {"Time_Episode": -1, "Return": -1, "Success_Rate": -1, "time": -1}
 
-        if del_envs_after_rollouts:
-            # delete the environment after use
-            del env
+            if del_envs_after_rollouts:
+                # delete the environment after use
+                del env
 
-        if data_logger is not None:
-            # summarize results from rollouts to tensorboard and terminal
-            rollout_logs = all_rollout_logs[env_name]
-            for k, v in rollout_logs.items():
-                if k.startswith("Time_"):
-                    data_logger.record("Timing_Stats/Rollout_{}_{}".format(env_name, k[5:]), v, epoch)
-                else:
-                    data_logger.record("Rollout/{}/{}".format(k, env_name), v, epoch, log_stats=True)
+            if data_logger is not None:
+                # summarize results from rollouts to tensorboard and terminal
+                rollout_logs = all_rollout_logs[env_name]
+                for k, v in rollout_logs.items():
+                    if k.startswith("Time_"):
+                        data_logger.record("Timing_Stats/Rollout_{}_{}".format(env_name, k[5:]), v, epoch)
+                    else:
+                        data_logger.record("Rollout/{}/{}".format(k, env_name), v, epoch, log_stats=True)
 
-            print("\nEpoch {} Rollouts took {}s (avg) with results:".format(epoch, rollout_logs["time"]))
-            print('Env: {}'.format(env_name))
-            print(json.dumps(rollout_logs, sort_keys=True, indent=4))
+                print("\nEpoch {} Rollouts took {}s (avg) with results:".format(epoch, rollout_logs["time"]))
+                print('Env: {}'.format(env_name))
+                print(json.dumps(rollout_logs, sort_keys=True, indent=4))
 
     if video_path is not None:
         # close video writer that was used for all envs
