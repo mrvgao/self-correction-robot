@@ -24,7 +24,7 @@ def adaptive_threshold(i, max_step):
     return threshold
 
 
-def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
+def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pbar):
     original_state = env.get_state()
     TRYING = 10
 
@@ -59,7 +59,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames):
         tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
         find = tmp_value_loss_current < THRESHOLD
         trying += 1
-        tqdm.write(f'trying, {trying}/{TRYING_MAX}, loss is {tmp_value_loss_current}')
+        print(f'trying, {trying}/{TRYING_MAX}, loss is {tmp_value_loss_current}')
 
     policy.policy.nets['policy'].eval()
 
@@ -224,7 +224,7 @@ def run_rollout(
         if with_progress_correct:
             # original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
             #     rollout_policy=policy, obs_dict=ob_dict)
-            find = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames)
+            find = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, progress_bar)
             # tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
             # print('tmp value loss', tmp_value_loss_current)
 
@@ -486,7 +486,7 @@ def rollout_with_stats(
     else:
         horizon_list = [horizon]
 
-    with tqdm(total=num_episodes * config.experiment.rollout.horizon*len(envs), desc='rollout progress') as pbar:
+    with tqdm(total=num_episodes * config.experiment.rollout.horizon*len(horizon_list), desc='rollout progress') as pbar:
         for env_i, (env, horizon) in enumerate(zip(envs, horizon_list)):
             batched = isinstance(env, SubprocVectorEnv)
 
@@ -525,7 +525,7 @@ def rollout_with_stats(
             final_steps = []
 
             for ep_i in iterator:
-                pbar.set_description(f'rollout progress: env {env.name}, of {env_i + 1}/{len(envs)}, episode {ep_i}/{num_episodes}')
+                pbar.set_description(f'epoch:{epoch} env {env.name}, of {env_i + 1}/{len(horizon_list)}, episode {ep_i+1}/{num_episodes}')
 
                 rollout_timestamp = time.time()
 
