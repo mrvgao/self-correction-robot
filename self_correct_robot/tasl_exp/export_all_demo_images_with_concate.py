@@ -22,7 +22,7 @@ from PIL import Image
 import cv2
 from tqdm import tqdm
 from collections import Counter
-from self_correct_robot.tasl_exp.task_mapping import TASK_MAPPING_50_DEMO
+from self_correct_robot.tasl_exp.task_mapping import TASK_MAPPING_50_DEMO,TASK_PATH_MAPPING
 
 
 def find_overlap_length(list1, list2, max_length):
@@ -229,8 +229,26 @@ def generate_concated_images_from_demo_path(task_name):
     extract_and_export_image(demo_dataset, task_name=task_name)
 
 
-if __name__ == '__main__':
-    for key, value in TASK_MAPPING_50_DEMO.items():
-        print('processing.... ', key)
-        generate_concated_images_from_demo_path(task_name=key)
+def process_task(task_name):
+    print(f'Processing... {task_name}')
+    generate_concated_images_from_demo_path(task_name=task_name)
 
+
+if __name__ == '__main__':
+    import concurrent.futures
+
+    max_workers = min(30, len(TASK_PATH_MAPPING))  # Assuming 30 CPUs available
+
+    # Use ProcessPoolExecutor for parallel execution
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+        # Submit tasks to the pool
+        futures = {executor.submit(process_task, task_name): task_name for task_name in TASK_PATH_MAPPING}
+
+        # Ensure all tasks are completed
+        for future in concurrent.futures.as_completed(futures):
+            task_name = futures[future]
+            try:
+                future.result()
+                print(f'{task_name} processed successfully.')
+            except Exception as e:
+                print(f'Error processing {task_name}: {e}')
