@@ -152,7 +152,7 @@ class RoboCustomDataset(Dataset):
 
 def split_valid_test_from_robo_config_dataset(config, batch_size):
 
-    my_dataloader = load_dataloader(config, device='cuda:0')[0]
+    my_dataloader = load_dataloader(config, device='cuda')[0]
 
     dataset = my_dataloader.dataset  # Retrieve the dataset from the existing DataLoader
 
@@ -201,7 +201,7 @@ def main(args):
     else:
         raise ValueError("unsupported model name, ", args.model)
 
-    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6], output_device=1).to('cuda:0')
+    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6], output_device=1)
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
