@@ -12,7 +12,7 @@ from self_correct_robot.utils.lang_utils import LangEncoder
 import random
 import numpy as np
 from collections import namedtuple
-from self_correct_robot.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetModelWithText, ValueResNetModelWithTextWithAttnAndResidual
+from self_correct_robot.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetWithAttnPerformance
 import argparse
 from torch.cuda.amp import autocast
 import torch.multiprocessing as mp
@@ -196,10 +196,10 @@ def main(args):
         model = ValueDetrModel().to(device)
     elif args.model == 'vit':
         model = ValueViTModel().to(device)
-    elif args.model == 'resnet':
-        model = ValueResNetModelWithText().to(device)
+    # elif args.model == 'resnet':
+    #     model = ValueResNetModelWithText().to(device)
     elif args.model == 'attn':
-        model = ValueResNetModelWithTextWithAttnAndResidual().to(device)
+        model = ValueResNetWithAttnPerformance().to(device)
     else:
         raise ValueError("unsupported model name, ", args.model)
 
@@ -356,7 +356,7 @@ if __name__ == "__main__":
     lr = 1e-4
     # num_epochs = 1000
     num_epochs = 10
-    cuda = 2
+    cuda = 0
     # seed = 999
     batch_size = 256
 
