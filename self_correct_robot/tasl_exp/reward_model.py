@@ -20,7 +20,8 @@ import hashlib
 from self_correct_robot.utils.load_dataloader import load_dataloader
 import json
 from self_correct_robot.config import config_factory
-
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 torch.backends.cudnn.benchmark = True
 
@@ -201,7 +202,16 @@ def main(args):
     else:
         raise ValueError("unsupported model name, ", args.model)
 
-    model = torch.nn.DataParallel(model).to(device)
+    dist.init_process_group(backend='nccl')
+
+    # device_ids for the GPUs (0-5 will correspond to GPUs 0-5, and 6 will be GPU 7)
+    device_ids = [0, 1, 2, 3, 4, 5, 6]  # GPU 7 is now indexed as 6
+
+    # Set the output device to GPU 7, which is now indexed as 6
+    output_device = 6  # GPU 7 in the visible list
+
+    # Wrap the model with DDP and specify device_ids and output_device
+    model = DDP(model, device_ids=device_ids, output_device=output_device).to(f'cuda:{output_device}')
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
