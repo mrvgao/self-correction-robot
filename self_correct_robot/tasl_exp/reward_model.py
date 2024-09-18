@@ -201,6 +201,8 @@ def main(args):
     else:
         raise ValueError("unsupported model name, ", args.model)
 
+    model = torch.nn.DataParallel(model).to(device)
+    
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
 
@@ -317,6 +319,10 @@ def main(args):
 
 
 if __name__ == "__main__":
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,7"
+
+    device = torch.device('cuda')  # This will refer to the first available GPU in your restricted list
+
     parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
     parser.add_argument('--config', type=str, required=True, help='give the data path config')
     parser.add_argument('--tag', type=str, required=True, help='Add a tag to make logger easier')
