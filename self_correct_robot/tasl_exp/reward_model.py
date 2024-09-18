@@ -20,8 +20,7 @@ import hashlib
 from self_correct_robot.utils.load_dataloader import load_dataloader
 import json
 from self_correct_robot.config import config_factory
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
+
 
 torch.backends.cudnn.benchmark = True
 
@@ -30,23 +29,6 @@ try:
 except AttributeError:
     scaler = torch.cuda.amp.GradScaler()
 
-
-# Ensure correct GPU visibility: 0,1,2,3,4,5,7
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,7"
-
-# Set required DDP environment variables
-def setup_ddp():
-    os.environ['MASTER_ADDR'] = '127.0.0.1"'
-    os.environ['MASTER_PORT'] = '12355'  # Choose an available port number
-
-    # Set RANK and WORLD_SIZE if you're running this on multiple GPUs
-    world_size = torch.cuda.device_count()  # Number of GPUs available
-    os.environ['WORLD_SIZE'] = str(world_size)
-    os.environ['RANK'] = '0'  # Rank of this process (0 for single machine)
-
-# Initialize the DDP process group
-def init_ddp():
-    dist.init_process_group(backend='nccl', init_method='file:///tmp/sharedfile')
 
 def set_seed(seed):
     random.seed(seed)
@@ -197,22 +179,10 @@ def split_valid_test_from_robo_config_dataset(config, batch_size):
 
 
 def main(args):
-    setup_ddp()
-
-    # Initialize the distributed process group
-    init_ddp()
-
-    # Get the available GPUs (after CUDA_VISIBLE_DEVICES)
-    device_ids = [0, 1, 2, 3, 4, 5, 6]  # 7 GPUs indexed as 0-6 after CUDA_VISIBLE_DEVICES
-    output_device = 6  # Output device is GPU 7 (indexed as 6)
-
     set_seed(args.seed)
 
-    # device = torch.device(f'cuda:{args.cuda}')
-    # print(f"Using device: {device}")
-
-    device = torch.device(f'cuda:{output_device}')
-
+    device = torch.device(f'cuda:{args.cuda}')
+    print(f"Using device: {device}")
 
     train_dataloader, val_dataloader, test_dataloader = split_valid_test_from_robo_config_dataset(args.config, batch_size=args.batch_size)
 
@@ -231,16 +201,7 @@ def main(args):
     else:
         raise ValueError("unsupported model name, ", args.model)
 
-    # dist.init_process_group(backend='nccl')
-
-    # device_ids for the GPUs (0-5 will correspond to GPUs 0-5, and 6 will be GPU 7)
-    # device_ids = [0, 1, 2, 3, 4, 5, 6]  # GPU 7 is now indexed as 6
-
-    # Set the output device to GPU 7, which is now indexed as 6
-    # output_device = 6  # GPU 7 in the visible list
-
-    # Wrap the model with DDP and specify device_ids and output_device
-    model = DDP(model, device_ids=device_ids, output_device=output_device).to(device)
+    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6], output_device=6).to('cuda:0')
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
@@ -358,6 +319,7 @@ def main(args):
 
 
 if __name__ == "__main__":
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,7"
 
     device = torch.device('cuda')  # This will refer to the first available GPU in your restricted list
 
