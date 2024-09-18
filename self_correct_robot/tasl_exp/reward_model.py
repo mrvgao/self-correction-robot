@@ -36,7 +36,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,7"
 
 # Set required DDP environment variables
 def setup_ddp():
-    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_ADDR'] = '127.0.0.1"'
     os.environ['MASTER_PORT'] = '12355'  # Choose an available port number
 
     # Set RANK and WORLD_SIZE if you're running this on multiple GPUs
