@@ -1,5 +1,4 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,7"
 
 import torch
 import torch.nn as nn
@@ -154,7 +153,7 @@ class RoboCustomDataset(Dataset):
 
 def split_valid_test_from_robo_config_dataset(config, batch_size):
 
-    my_dataloader = load_dataloader(config, device='cuda:6')[0]
+    my_dataloader = load_dataloader(config, device='cuda:9')[0]
 
     dataset = my_dataloader.dataset  # Retrieve the dataset from the existing DataLoader
 
@@ -183,8 +182,8 @@ def split_valid_test_from_robo_config_dataset(config, batch_size):
 def main(args):
     set_seed(args.seed)
 
-    # device = torch.device(f'cuda:{args.cuda}')
-    # print(f"Using device: {device}")
+    device = torch.device(f'cuda:{args.cuda}')
+    print(f"Using device: {device}")
 
     train_dataloader, val_dataloader, test_dataloader = split_valid_test_from_robo_config_dataset(args.config, batch_size=args.batch_size)
 
@@ -202,8 +201,6 @@ def main(args):
         model = ValueResNetModelWithTextWithAttnAndResidual().to(device)
     else:
         raise ValueError("unsupported model name, ", args.model)
-
-    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6], output_device=1).to('cuda:0')
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
