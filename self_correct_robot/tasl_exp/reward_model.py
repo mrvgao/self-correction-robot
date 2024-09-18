@@ -202,7 +202,7 @@ def main(args):
         raise ValueError("unsupported model name, ", args.model)
 
     model = torch.nn.DataParallel(model).to(device)
-    
+
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
 
