@@ -153,7 +153,7 @@ class RoboCustomDataset(Dataset):
 
 def split_valid_test_from_robo_config_dataset(config, batch_size):
 
-    my_dataloader = load_dataloader(config, device='cuda:9')[0]
+    my_dataloader = load_dataloader(config, device='cuda:7')[0]
 
     dataset = my_dataloader.dataset  # Retrieve the dataset from the existing DataLoader
 
