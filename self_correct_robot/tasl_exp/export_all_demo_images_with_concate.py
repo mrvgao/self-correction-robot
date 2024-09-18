@@ -65,13 +65,13 @@ def extract_and_export_image(demo_dataset, task_name):
 
     task_name = '_'.join(task_name.split())
 
-    dir_name = f'/home/ubuntu/robocasa-statics/export-images-from-demo/{task_name}'
+    dir_name = f'/home/ubuntu/robocasa-statics/export-images-from-demo-3k/{task_name}'
 
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
 
     PNG_ID = 1
-    TASK_ID = 1
+    TASK_ID = 0
 
     def write_image_with_name(image1, image2, image3, task_ds_dir, png_id):
         task_dir = os.path.join(dir_name, task_ds_dir)
@@ -93,33 +93,59 @@ def extract_and_export_image(demo_dataset, task_name):
     # MAX_TRY = 10
     previous_delta = None
 
-    for i in tqdm(range(len(exporting_dataset))):
-        left_db = exporting_dataset[i]['obs'][eye_names[0]]
-        hand_db = exporting_dataset[i]['obs'][eye_names[1]]
-        right_db = exporting_dataset[i]['obs'][eye_names[2]]
-        gripper_db = exporting_dataset[i]['obs']['robot0_gripper_qpos']
-        task_ds = exporting_dataset[i]['task_ds']
+    # task_length = 0
 
-        # dir_name = f'/home/minquangao/export-images-from-demo/{task_ds_dir}'
+    current_task_string = ''
+
+    number_ds_map = {}
+
+    for i in tqdm(range(len(exporting_dataset))):
+        gripper_db = exporting_dataset[i]['obs']['robot0_gripper_qpos']
+
+        exporting_dataset.set_task_id(i, TASK_ID)
+
+        batch_size = len(gripper_db)
+
+        # exporting_dataset[i]['TEST_ID'] = TASK_ID
+        # number_ds_map{i} = TASK_ID
+        # exporting_dataset[i]['obs']['progress'] = np.zeros(len(gripper_db))
 
         delta = np.mean(gripper_db[-1] - gripper_db[-2])
 
         change_task = (previous_delta == 0 and delta != 0)
 
-        if i == 0 or change_task:
-            task_ds_dir = '_'.join(task_ds.split()) + '_ID_' + str(TASK_ID)
-            TASK_ID += 1
-            PNG_ID = 1
-            print(f'task name: {task_name}: NEW sub-TASK: {task_ds_dir}')
-
-        previous_delta = delta
+        # i == 0 [0, 1, 2, 3, 4]
+        # i == 1 [1, 2, 3, 4, 5]
+        # 5 - 5
 
         if i == 0:
-            write_several_images(left_db, hand_db, right_db, task_ds_dir, start_id=1)
-            PNG_ID += len(left_db)
+            PNG_ID += batch_size
+            exporting_dataset.set_progress(i, np.array([p for p in range(batch_size)]))
         else:
-            write_image_with_name(left_db[-1], right_db[-1], hand_db[-1], task_ds_dir, png_id=PNG_ID)
             PNG_ID += 1
+            exporting_dataset.set_progress(i, np.array([PNG_ID - di for di in reversed(range(batch_size))]))
+
+        if change_task:
+
+            mark_position = i
+            # track back
+            while mark_position >= 0 and exporting_dataset[mark_position]['task_id'] == TASK_ID:
+                ds_progress = exporting_dataset[mark_position]['progress']
+                exporting_dataset.set_progress(mark_position, ds_progress / PNG_ID * 100)
+                mark_position -= 1
+
+            print(f'task name: {task_name}')
+
+            TASK_ID += 1
+
+        previous_delta = delta
+        #
+        # if i == 0:
+        #     write_several_images(left_db, hand_db, right_db, task_ds_dir, start_id=1)
+        #     PNG_ID += len(left_db)
+        # else:
+        #     write_image_with_name(left_db[-1], right_db[-1], hand_db[-1], task_ds_dir, png_id=PNG_ID)
+        #     PNG_ID += 1
 
 
 def generate_concated_images_from_demo_path(task_name):
@@ -127,7 +153,7 @@ def generate_concated_images_from_demo_path(task_name):
     # config_path_compsoite = "/home/minquangao/pretrained_models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
 
-    ext_cfg['train']['data'][0]['path'] = TASK_MAPPING_50_DEMO[task_name]
+    ext_cfg['train']['data'][0]['path'] = TASK_PATH_MAPPING[task_name]
     # print('loading from path ', TASK_PATH_MAPPING[task_name])
     config = config_factory(ext_cfg["algo_name"])
     with config.values_unlocked():
@@ -229,26 +255,8 @@ def generate_concated_images_from_demo_path(task_name):
     extract_and_export_image(demo_dataset, task_name=task_name)
 
 
-def process_task(task_name):
-    print(f'Processing... {task_name}')
-    generate_concated_images_from_demo_path(task_name=task_name)
-
-
 if __name__ == '__main__':
-    import concurrent.futures
+    for key, value in TASK_PATH_MAPPING.items():
+        print('processing.... ', key)
+        generate_concated_images_from_demo_path(task_name=key)
 
-    max_workers = min(30, len(TASK_PATH_MAPPING))  # Assuming 30 CPUs available
-
-    # Use ProcessPoolExecutor for parallel execution
-    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
-        # Submit tasks to the pool
-        futures = {executor.submit(process_task, task_name): task_name for task_name in TASK_PATH_MAPPING}
-
-        # Ensure all tasks are completed
-        for future in concurrent.futures.as_completed(futures):
-            task_name = futures[future]
-            try:
-                future.result()
-                print(f'{task_name} processed successfully.')
-            except Exception as e:
-                print(f'Error processing {task_name}: {e}')

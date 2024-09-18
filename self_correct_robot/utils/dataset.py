@@ -153,6 +153,9 @@ class SequenceDataset(torch.utils.data.Dataset):
         # prepare for action normalization
         self.action_normalization_stats = None
 
+        self.index_progress_mapping = {}
+        self.index_task_id_mapping = {}
+
         # maybe store dataset in memory for fast access
         if self.hdf5_cache_mode in ["all", "low_dim"]:
             obs_keys_in_memory = self.obs_keys
@@ -270,10 +273,12 @@ class SequenceDataset(torch.utils.data.Dataset):
             for ep_batch in tqdm(np.array_split(self.demos, int(math.ceil(len(self.demos) / max(config.train.batch_size, 64))))):
                 # get language embedding
                 lang_batch = [self._demo_id_to_demo_lang_str[ep] for ep in ep_batch]
-                emb_batch = lang_encoder.get_lang_emb(lang_batch)
-                emb_batch = TensorUtils.to_numpy(emb_batch)
-                for batch_idx, ep in enumerate(ep_batch):
-                    self._demo_id_to_demo_lang_emb[ep] = emb_batch[batch_idx]
+                if config.need_language == 0: continue
+                else:
+                    emb_batch = lang_encoder.get_lang_emb(lang_batch)
+                    emb_batch = TensorUtils.to_numpy(emb_batch)
+                    for batch_idx, ep in enumerate(ep_batch):
+                        self._demo_id_to_demo_lang_emb[ep] = emb_batch[batch_idx]
 
         del lang_encoder
 
@@ -498,6 +503,12 @@ class SequenceDataset(torch.utils.data.Dataset):
 
         return output
 
+    def set_progress(self, i, progresses):
+        self.index_progress_mapping[i] = progresses
+
+    def set_task_id(self, i, task_id):
+        self.index_task_id_mapping[i] = task_id
+
     def get_item(self, index):
         """
         Main implementation of getitem when not using cache.
@@ -586,6 +597,12 @@ class SequenceDataset(torch.utils.data.Dataset):
             )
             meta['task_ds'] = self._demo_id_to_demo_lang_str[demo_id]
             meta['hdf5_path'] = self.hdf5_path
+
+            # if index not in self.index_progress_mapping:
+            #     self.index_progress_mapping = np.zaros(len(self.n_frame_stack))
+            #
+            meta['progress'] = self.index_progress_mapping.get(index, -1)
+            meta['task_id'] = self.index_task_id_mapping.get(index, -1)
 
         return meta
 
