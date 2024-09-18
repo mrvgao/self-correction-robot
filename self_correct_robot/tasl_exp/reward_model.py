@@ -1,7 +1,9 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,7"
+
 import torch
 import torch.nn as nn
 from torchvision import models, transforms
-import os
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data import DataLoader, random_split
@@ -319,7 +321,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,7"
 
     device = torch.device('cuda')  # This will refer to the first available GPU in your restricted list
 
