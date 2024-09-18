@@ -153,7 +153,7 @@ class RoboCustomDataset(Dataset):
 
 def split_valid_test_from_robo_config_dataset(config, batch_size):
 
-    my_dataloader = load_dataloader(config, device='cuda:7')[0]
+    my_dataloader = load_dataloader(config, device='cuda:0')[0]
 
     dataset = my_dataloader.dataset  # Retrieve the dataset from the existing DataLoader
 
@@ -367,7 +367,7 @@ if __name__ == "__main__":
     # # for i, task_dir in enumerate(sub_tasks):
     args = Args(name, model, lr, batch_size, num_epochs, cuda, args.seed, None, config)
     run_name = f"{name}_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
-    # wandb.init(project="value-model-trained-by-3k", entity="minchiuan", name=run_name, config={
+    # wandb.init(project="value-model-trained-by-3k", entity="minchiuan", name=run_name, config128
     #     ""
     #     "system_metrics": True  # Enable system metrics logging
     # })
