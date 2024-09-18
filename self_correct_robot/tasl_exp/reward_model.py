@@ -181,8 +181,8 @@ def split_valid_test_from_robo_config_dataset(config, batch_size):
 def main(args):
     set_seed(args.seed)
 
-    device = torch.device(f'cuda:{args.cuda}')
-    print(f"Using device: {device}")
+    # device = torch.device(f'cuda:{args.cuda}')
+    # print(f"Using device: {device}")
 
     train_dataloader, val_dataloader, test_dataloader = split_valid_test_from_robo_config_dataset(args.config, batch_size=args.batch_size)
 
