@@ -46,7 +46,7 @@ def setup_ddp():
 
 # Initialize the DDP process group
 def init_ddp():
-    dist.init_process_group(backend='nccl', init_method='env://')
+    dist.init_process_group(backend='nccl', init_method='file:///tmp/sharedfile')
 
 def set_seed(seed):
     random.seed(seed)
