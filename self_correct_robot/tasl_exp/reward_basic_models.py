@@ -152,7 +152,7 @@ class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
         )
 
         # Project image features to match the dimension of text features
-        self.image_projector = nn.Linear(self.resnet_fc_in_features, text_out_dim)
+        self.image_projector = nn.Linear(3 * self.resnet_fc_in_features, text_out_dim)
 
         # Add attention mechanism for text and image fusion
         self.multihead_attn = nn.MultiheadAttention(embed_dim=text_out_dim, num_heads=4)
@@ -196,8 +196,12 @@ class ValueResNetModelWithTextWithAttnAndResidual(nn.Module):
 
         self.fc4 = nn.Linear(256, 1)
 
-    def forward(self, image, text_embedding):
-        image_features = self.resnet(image)
+    def forward(self, image1, image2, image3, text_embedding):
+        image_features_1 = self.resnet(image1)
+        image_features_2 = self.resnet(image2)
+        image_features_3 = self.resnet(image3)
+
+        image_features = torch.cat((image_features_1, image_features_2, image_features_3), dim=1)
 
         if text_embedding is not None:
             text_features = self.text_fc(text_embedding)

@@ -73,6 +73,7 @@ class BaseConfig(Config):
         self.experiment.rollout.vloss_threshold = 0.05
 
         self.need_language = 1
+        self.normalize_action = 1
 
         self.experiment_config()
         self.train_config()

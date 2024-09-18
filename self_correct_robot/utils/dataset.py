@@ -22,6 +22,8 @@ import self_correct_robot.utils.action_utils as AcUtils
 import self_correct_robot.utils.log_utils as LogUtils
 import self_correct_robot.utils.lang_utils as LangUtils
 from self_correct_robot.macros import LANG_EMB_KEY
+from collections import defaultdict
+
 
 
 class SequenceDataset(torch.utils.data.Dataset):
@@ -267,7 +269,20 @@ class SequenceDataset(torch.utils.data.Dataset):
         lang_encoder = LangUtils.LangEncoder(
             device=device,
         )
-        
+
+        demo_group = defaultdict(list)
+        for key, demo_id in self._index_to_demo_id.items():
+            demo_group[demo_id].append(key)
+
+        # Step 2: Calculate progress percentage for each key
+        # progress_percentage = {}
+        self.progress_percentage = {}
+        print('computing progress... ')
+        for demo_id, keys in tqdm(demo_group.items()):
+            total_steps = len(keys)
+            for i, key in enumerate(sorted(keys)):
+                self.progress_percentage[key] = (i / total_steps) * 100
+
         if len(self._demo_id_to_demo_lang_str) > 0:
             print("getting language embeddings...")
             for ep_batch in tqdm(np.array_split(self.demos, int(math.ceil(len(self.demos) / max(config.train.batch_size, 64))))):
@@ -513,7 +528,6 @@ class SequenceDataset(torch.utils.data.Dataset):
         """
         Main implementation of getitem when not using cache.
         """
-
         demo_id = self._index_to_demo_id[index]
         demo_start_index = self._demo_id_to_start_indices[demo_id]
         demo_length = self._demo_id_to_demo_length[demo_id]
@@ -596,13 +610,13 @@ class SequenceDataset(torch.utils.data.Dataset):
                 (T, 1)
             )
             meta['task_ds'] = self._demo_id_to_demo_lang_str[demo_id]
-            meta['hdf5_path'] = self.hdf5_path
+            # meta['hdf5_path'] = self.hdf5_path
 
             # if index not in self.index_progress_mapping:
             #     self.index_progress_mapping = np.zaros(len(self.n_frame_stack))
             #
-            meta['progress'] = self.index_progress_mapping.get(index, -1)
-            meta['task_id'] = self.index_task_id_mapping.get(index, -1)
+            meta['progress'] = self.progress_percentage[index]
+            # meta['task_id'] = self.index_task_id_mapping.get(index, -1)
 
         return meta
 

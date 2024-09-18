@@ -23,6 +23,26 @@ import cv2
 from tqdm import tqdm
 from collections import Counter
 from self_correct_robot.tasl_exp.task_mapping import TASK_MAPPING_50_DEMO,TASK_PATH_MAPPING
+import time
+from multiprocessing import Pool
+from functools import partial
+
+# Global function to extract gripper_db from a single dataset entry
+def get_gripper_db(exporting_dataset, i):
+    print('running', i)
+    return exporting_dataset[i]['obs']['robot0_gripper_qpos']
+
+
+# Step 1: Precompute all the gripper_db values for the entire dataset using parallel processing
+def prefetch_gripper_db(exporting_dataset):
+    # Use partial to fix the first argument (exporting_dataset) for the function get_gripper_db
+    get_gripper_db_partial = partial(get_gripper_db, exporting_dataset)
+
+    with Pool() as pool:
+        # Use parallel map with the partial function that includes exporting_dataset
+        gripper_db_mapping = list(
+            tqdm(pool.imap(get_gripper_db_partial, range(len(exporting_dataset))), total=len(exporting_dataset)))
+    return gripper_db_mapping
 
 
 def find_overlap_length(list1, list2, max_length):
@@ -91,13 +111,96 @@ def extract_and_export_image(demo_dataset, task_name):
             start_id += 1
 
     # MAX_TRY = 10
-    previous_delta = None
+    previous_gripper_equal = False
 
     # task_length = 0
 
     current_task_string = ''
 
     number_ds_map = {}
+
+    # Function to extract gripper_db from a single dataset entry
+
+    # start_time = time.time()
+    # gripper_db_mapping = prefetch_gripper_db(exporting_dataset)  # Precompute and save the mapping
+    # time_gripper_db = time.time() - start_time
+    # print(f'Time for parallized gripper_db assignment at iteration {time_gripper_db:.6f} seconds')
+
+    current_demo_id = None
+    previous_demo_id = None
+
+    index_to_demo_id = exporting_dataset._index_to_demo_id
+
+    for i in tqdm(range(len(exporting_dataset))):
+        start_time = time.time()
+
+        # Measure the time for gripper_db assignment
+        # gripper_db = exporting_dataset[i]['obs']['robot0_gripper_qpos']
+        # gripper_db = gripper_db_mapping[i]
+        # time_gripper_db = time.time() - start_time
+        # print(f'Time for gripper_db assignment at iteration {i}: {time_gripper_db:.6f} seconds')
+
+        start_time = time.time()
+        current_demo_id = index_to_demo_id[i]
+
+        time_set_task_id = time.time() - start_time
+        print(f'Time for GETTING DEMO ID {i}: {time_set_task_id:.6f} seconds')
+
+        if previous_demo_id is None:
+            previous_demo_id = current_task_string
+
+        # start_time = time.time()
+        # batch_size = len(gripper_db)
+        # time_batch_size = time.time() - start_time
+        # print(f'Time for batch_size calculation at iteration {i}: {time_batch_size:.6f} seconds')
+
+        # start_time = time.time()
+        # gripper_equal = (gripper_db[-1] == gripper_db[-2]).all()
+        # time_delta = time.time() - start_time
+        # print(f'Time for delta calculation at iteration {i}: {time_delta:.6f} seconds')
+
+        # start_time = time.time()
+        # change_task = previous_demo_id
+        # time_change_task = time.time() - start_time
+        # print(f'Time for change_task check at iteration {i}: {time_change_task:.6f} seconds')
+
+        start_time = time.time()
+        batch_size = 19
+
+        task_changed = previous_demo_id != current_demo_id or i == 0
+
+        if task_changed:
+            PNG_ID += batch_size
+            exporting_dataset.set_progress(i, np.array([p for p in range(batch_size)]))
+        else:
+            PNG_ID += 1
+            exporting_dataset.set_progress(i, np.array([PNG_ID - di for di in reversed(range(batch_size))]))
+
+        time_set_progress = time.time() - start_time
+        # print(f'Time for progress setting at iteration {i}: {time_set_progress:.6f} seconds')
+
+        start_time = time.time()
+
+        if task_changed:
+            mark_position = i
+            while mark_position >= 0 and exporting_dataset[mark_position]['task_id'] == TASK_ID:
+                ds_progress = exporting_dataset[mark_position]['progress']
+                exporting_dataset.set_progress(mark_position, ds_progress / PNG_ID * 100)
+                mark_position -= 1
+            print(f'task name: {task_name}')
+            PNG_ID = 0
+
+        time_task_change = time.time() - start_time
+        # print(f'Time for task change block at iteration {i}: {time_task_change:.6f} seconds')
+
+        # start_time = time.time()
+        # previous_gripper_equal = gripper_equal
+        previous_demo_id = current_demo_id
+        # time_previous_delta = time.time() - start_time
+        # print(f'Time for updating previous_delta at iteration {i}: {time_previous_delta:.6f} seconds')
+
+
+    """
 
     for i in tqdm(range(len(exporting_dataset))):
         gripper_db = exporting_dataset[i]['obs']['robot0_gripper_qpos']
@@ -146,6 +249,7 @@ def extract_and_export_image(demo_dataset, task_name):
         # else:
         #     write_image_with_name(left_db[-1], right_db[-1], hand_db[-1], task_ds_dir, png_id=PNG_ID)
         #     PNG_ID += 1
+    """
 
 
 def generate_concated_images_from_demo_path(task_name):

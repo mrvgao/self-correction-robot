@@ -81,6 +81,8 @@ def get_value_target(batch, config, obj, device):
     task_embeddings = batch['obs']['lang_emb']
     task_embeddings = task_embeddings.view(-1, task_embeddings.shape[-1])
 
+    assert False
+    ## TODO ADD RESNET_TRANSFORMER FOR THESE PICTURES
     value_y_target = target_value_model(reshaped_concatenated_images, task_embeddings).view(batch_size, 10, -1)
 
     # value_y = torch.zeros_like(value_y_target, device=device)

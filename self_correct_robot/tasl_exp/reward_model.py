@@ -17,6 +17,9 @@ from torch.cuda.amp import autocast
 import torch.multiprocessing as mp
 import time
 import hashlib
+from self_correct_robot.utils.load_dataloader import load_dataloader
+import json
+from self_correct_robot.config import config_factory
 
 
 torch.backends.cudnn.benchmark = True
@@ -103,34 +106,85 @@ class CustomImageDataset(Dataset):
         return image, task_embedding, torch.tensor(label, dtype=torch.float32)
 
 
-def main(args):
-    # Initialize the feature extractor
+class NumpyToTensor:
+    """Custom transform to convert a NumPy array directly to a PyTorch tensor."""
+    def __call__(self, img):
+        if isinstance(img, np.ndarray):
+            # Convert NumPy array (H x W x C) to PyTorch tensor (C x H x W)
+            img = torch.from_numpy(img).permute(2, 0, 1).float() / 255.0
+        return img
 
-    # Argument Parsing
+
+resnet_transformer = transforms.Compose([
+    NumpyToTensor(),  # C
+    transforms.Resize((224, 224)),
+    # transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+
+# Custom Dataset that applies the transformer
+class RoboCustomDataset(Dataset):
+    def __init__(self, dataset, transformer):
+        self.dataset = dataset  # Original dataset from the DataLoader
+        self.transformer = transformer
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        # Assuming the dataset is structured as dataset[idx]['obs']
+        obs_data = self.dataset[idx]['obs']
+        progress_label = torch.tensor(self.dataset[idx]['progress'], dtype=torch.float32)
+        left_image = obs_data['robot0_agentview_left_image'][0]
+        hand_image = obs_data['robot0_eye_in_hand_image'][0]
+        right_image = obs_data['robot0_agentview_right_image'][0]
+        task_emb = torch.tensor(obs_data['lang_emb'][0], dtype=torch.float32)
+
+        # Extract the three necessary features, you can customize these keys
+        # Apply the resnet_transformer to each feature
+        feature_left = self.transformer(left_image)
+        feature_hand = self.transformer(hand_image)
+        feature_right = self.transformer(right_image)
+
+        return feature_left, feature_hand, feature_right, task_emb, progress_label
+
+
+def split_valid_test_from_robo_config_dataset(config, batch_size):
+
+    my_dataloader = load_dataloader(config, device='cuda:0')[0]
+
+    dataset = my_dataloader.dataset  # Retrieve the dataset from the existing DataLoader
+
+    # Step 1: Define the lengths for train, validation, and test splits
+    dataset_size = len(dataset)
+    train_size = int(0.80 * dataset_size)  # 70% training
+    val_size = int(0.10 * dataset_size)  # 15% validation
+    test_size = dataset_size - train_size - val_size  # Remaining for test
+
+    # Step 2: Split the dataset into train, validation, and test
+    train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size])
+
+    # Step 3: Wrap the datasets into the custom dataset class that applies the transformation
+    train_dataset = RoboCustomDataset(train_dataset, resnet_transformer)
+    val_dataset = RoboCustomDataset(val_dataset, resnet_transformer)
+    test_dataset = RoboCustomDataset(test_dataset, resnet_transformer)
+
+    # Step 4: Create new DataLoaders for each split
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=24, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=24, pin_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    return train_loader, val_loader, test_loader
+
+
+def main(args):
     set_seed(args.seed)
 
     device = torch.device(f'cuda:{args.cuda}')
     print(f"Using device: {device}")
 
-    resnet_transformer = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
-
-    # feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')
-
-    # Create the dataset
-    root_dir = '/home/ubuntu/robocasa-statics/export-images-from-demo'
-    # dataset = CustomImageDataset(root_dir, feature_extractor if args.model != 'resnet' else resnet_transformer)
-    dataset = CustomImageDataset(root_dir, resnet_transformer, device, target_task=args.task_dir)
-
-    train_size = int(0.8 * len(dataset))
-    val_size = len(dataset) - train_size
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
+    train_dataloader, val_dataloader, test_dataloader = split_valid_test_from_robo_config_dataset(args.config, batch_size=args.batch_size)
 
     # Create the dataloader
     # Example training loop
@@ -168,14 +222,18 @@ def main(args):
         progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Training]", leave=True)
         batch_loss = 0
 
-        for i, (images, task_embs, labels) in enumerate(progress_bar):
-            images, task_embs, labels = images.to(device), task_embs.to(device), labels.to(device)
-            if args.task_dir:
-                task_embs = None
+        for i, (img_1, img_2, img_3, task_embs, labels) in enumerate(progress_bar):
+            img_1 = img_1.to(device)
+            img_2 = img_2.to(device)
+            img_3 = img_3.to(device)
+            task_embs, labels = task_embs.to(device), labels.to(device)
+
+            # if args.task_dir:
+            #     task_embs = None
             optimizer.zero_grad()
             # outputs = model(image1, image2)
             with autocast():
-                outputs = model(images, task_embs)
+                outputs = model(img_1, img_2, img_3, task_embs)
                 loss = criterion(outputs, labels.unsqueeze(1))
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -228,44 +286,85 @@ def main(args):
 
         torch.save(model.state_dict(), os.path.join(save_dir, f'model_epoch_{epoch + 1}.pth'))
 
+    print("Evaluating the model on the test dataset...")
+
+    # Load the best model if it exists
+    best_model_path = os.path.join(save_dir, 'best_model.pth')
+    if os.path.exists(best_model_path):
+        model.load_state_dict(torch.load(best_model_path))
+        print(f"Loaded best model from {best_model_path} for test evaluation.")
+    else:
+        print("Best model not found, using the last saved model.")
+
+    model.eval()
+    test_loss = 0.0
+    with torch.no_grad():
+        progress_bar = tqdm(test_dataloader, desc="Evaluating on Test Dataset", leave=True)
+        for i, (img_1, img_2, img_3, task_embs, labels) in enumerate(progress_bar):
+            img_1, img_2, img_3 = img_1.to(device), img_2.to(device), img_3.to(device)
+            task_embs, labels = task_embs.to(device), labels.to(device)
+
+            with autocast():
+                outputs = model(img_1, img_2, img_3, task_embs)
+            loss = criterion(outputs, labels.unsqueeze(1))
+            test_loss += loss.item()
+
+        avg_test_loss = test_loss / len(test_dataloader)
+        print(f"Final Test Loss: {avg_test_loss:.4f}")
+        wandb.log({"test_loss": avg_test_loss})
+
     wandb.finish()
 
 
 if __name__ == "__main__":
-    mp.set_start_method('spawn', force=True)  # Set multiprocessing to use 'spawn'
-
     parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
+    parser.add_argument('--config', type=str, required=True, help='give the data path config')
     parser.add_argument('--tag', type=str, required=True, help='Add a tag to make logger easier')
     parser.add_argument('--model', type=str, required=False, choices=['attn', 'resnet'], help='Name for the selection model')
-    # parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
-    # parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
-    # parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
-    # parser.add_argument('--cuda', type=str, required=True, help='the No of cuda')
     parser.add_argument('--seed', type=int, required=True, help='training random seed')
-    # parser.add_argument('--task_dir', type=str, default=None, required=False, help='specify a task')
     args = parser.parse_args()
 
+    # config_path = '/home/ubuntu/self-correction-robot/self_correct_robot/scripts/running_configs/lambda_multi-task-with-value-correct-seed-999.json'
+
+    ext_cfg = json.load(open(args.config, 'r'))
+    config = config_factory(ext_cfg["algo_name"])
+    # update config with external json - this will throw errors if
+    # the external config has keys not present in the base algo config
+    with config.values_unlocked():
+        config.update(ext_cfg)
+
+    split_valid_test_from_robo_config_dataset(config=config, batch_size=512)
+    # mp.set_start_method('spawn', force=True)  # Set multiprocessing to use 'spawn'
+    #
+    # parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
+    # # parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for the optimizer.')
+    # # parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training.')
+    # # parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training.')
+    # # parser.add_argument('--cuda', type=str, required=True, help='the No of cuda')
+    # # parser.add_argument('--task_dir', type=str, default=None, required=False, help='specify a task')
+    #
     timestamp = str(int(time.time()))
     signature = hashlib.sha256(timestamp.encode()).hexdigest()
 
     name = f'{args.tag}_{str(signature)}_all-tasks-in-one-predicate-progress'
     model = args.model
     lr = 1e-4
-    num_epochs = 1000
+    # num_epochs = 1000
+    num_epochs = 10
     cuda = 0
     # seed = 999
-    batch_size = 500
+    batch_size = 128
 
     Args = namedtuple(
         'Args',
-        ['name', 'model', 'lr',  'batch_size', 'num_epochs', 'cuda', 'seed', 'task_dir']
+        ['name', 'model', 'lr',  'batch_size', 'num_epochs', 'cuda', 'seed', 'task_dir', 'config']
     )
-    #
-    # for i, task_dir in enumerate(sub_tasks):
-    args = Args(name, model, lr, batch_size, num_epochs, cuda, args.seed, None)
+    # #
+    # # for i, task_dir in enumerate(sub_tasks):
+    args = Args(name, model, lr, batch_size, num_epochs, cuda, args.seed, None, config)
     run_name = f"{name}_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
-    wandb.init(project="value-model-for-all-single-tasks", entity="minchiuan", name=run_name, config={
-        ""
-        "system_metrics": True  # Enable system metrics logging
-    })
+    # wandb.init(project="value-model-trained-by-3k", entity="minchiuan", name=run_name, config={
+    #     ""
+    #     "system_metrics": True  # Enable system metrics logging
+    # })
     main(args)
