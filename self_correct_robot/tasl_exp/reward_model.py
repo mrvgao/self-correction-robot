@@ -15,6 +15,7 @@ from collections import namedtuple
 from self_correct_robot.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetWithAttnPerformance
 import argparse
 from torch.cuda.amp import autocast
+from torch.utils.data import Subset
 import torch.multiprocessing as mp
 import time
 import hashlib
@@ -172,6 +173,7 @@ def split_valid_test_from_robo_config_dataset(config, batch_size):
 
     # Step 1: Define the lengths for train, validation, and test splits
     dataset_size = len(dataset)
+
     train_size = int(0.80 * dataset_size)  # 70% training
     val_size = int(0.10 * dataset_size)  # 15% validation
     test_size = dataset_size - train_size - val_size  # Remaining for test
@@ -307,6 +309,7 @@ def main(args):
     best_model_path = os.path.join(save_dir, 'best_model.pth')
     if os.path.exists(best_model_path):
         model.load_state_dict(torch.load(best_model_path))
+        model = model.to(device)
         print(f"Loaded best model from {best_model_path} for test evaluation.")
     else:
         print("Best model not found, using the last saved model.")
@@ -368,7 +371,7 @@ if __name__ == "__main__":
     model = args.model
     lr = 1e-4
     # num_epochs = 1000
-    num_epochs = 10
+    num_epochs = 1
     cuda = 0
     # seed = 999
     batch_size = 512
