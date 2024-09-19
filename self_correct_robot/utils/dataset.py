@@ -523,7 +523,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         demo_index_offset = 0 if pad_frame_stack else (n_frame_stack - 1)
         index_in_demo = index - demo_start_index + demo_index_offset
 
-        progress = index_in_demo / demo_length
+        progress = index_in_demo / demo_length * 100
 
         need_data = {}
 

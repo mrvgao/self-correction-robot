@@ -42,6 +42,33 @@ def set_seed(seed):
     # torch.backends.cudnn.benchmark = False
 
 
+def get_subset_dataloader(dataloader, percentage):
+    # Get the dataset from the DataLoader
+    dataset = dataloader.dataset
+    dataset_size = len(dataset)
+
+    # Calculate subset size (20% in your case)
+    subset_size = int(percentage * dataset_size)
+
+    # Get a list of all indices from the dataset
+    all_indices = list(range(dataset_size))
+
+    # Shuffle the indices
+    random.shuffle(all_indices)
+
+    # Select 20% of the shuffled indices
+    subset_indices = all_indices[:subset_size]
+
+    # Use Subset to create a new dataset with the selected indices
+    subset = Subset(dataset, subset_indices)
+
+    # Create a new DataLoader with the subset
+    subset_dataloader = DataLoader(subset, batch_size=dataloader.batch_size, shuffle=False,
+                                   num_workers=dataloader.num_workers)
+
+    return subset_dataloader
+
+
 class CustomImageDataset(Dataset):
     def __init__(self, root_dir, feature_extractor, device, target_task=None):
         self.root_dir = root_dir
@@ -190,6 +217,11 @@ def split_valid_test_from_robo_config_dataset(config, batch_size):
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=24, pin_memory=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=24, pin_memory=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    percentage = 0.2
+    train_loader = get_subset_dataloader(train_loader, percentage)
+    val_loader = get_subset_dataloader(val_loader, percentage)
+    test_loader = get_subset_dataloader(test_loader, percentage)
 
     return train_loader, val_loader, test_loader
 
