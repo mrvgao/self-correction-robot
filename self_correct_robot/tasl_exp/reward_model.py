@@ -305,11 +305,16 @@ def main(args):
 
     print("Evaluating the model on the test dataset...")
 
+    # Move the model to CPU
+    model = model.to('cpu')
+    torch.cuda.empty_cache()
+
     # Load the best model if it exists
     best_model_path = os.path.join(save_dir, 'best_model.pth')
     if os.path.exists(best_model_path):
         model.load_state_dict(torch.load(best_model_path))
-        model = model.to(device)
+        with torch.no_grad():
+            model = model.to(device)
         print(f"Loaded best model from {best_model_path} for test evaluation.")
     else:
         print("Best model not found, using the last saved model.")
@@ -371,7 +376,7 @@ if __name__ == "__main__":
     model = args.model
     lr = 1e-4
     # num_epochs = 1000
-    num_epochs = 1
+    num_epochs = 10
     cuda = 0
     # seed = 999
     batch_size = 512

@@ -1136,6 +1136,11 @@ class MetaDataset(torch.utils.data.Dataset):
     def __len__(self):
         return np.sum([len(ds) for ds in self.datasets])
 
+    def get_progress_train(self, idx):
+        ds_ind = np.digitize(idx, self._ds_ind_bins) - 1
+        ind_in_ds = idx - self._ds_ind_bins[ds_ind]
+        return self.datasets[ds_ind].get_progress_train(ind_in_ds)
+
     def __getitem__(self, idx):
         ds_ind = np.digitize(idx, self._ds_ind_bins) - 1
         ind_in_ds = idx - self._ds_ind_bins[ds_ind]
