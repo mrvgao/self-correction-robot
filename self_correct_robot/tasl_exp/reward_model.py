@@ -136,12 +136,24 @@ class RoboCustomDataset(Dataset):
 
     def __getitem__(self, idx):
         # Assuming the dataset is structured as dataset[idx]['obs']
-        obs_data = self.dataset[idx]['obs']
-        progress_label = torch.tensor(self.dataset[idx]['progress'], dtype=torch.float32)
-        left_image = obs_data['robot0_agentview_left_image'][0]
-        hand_image = obs_data['robot0_eye_in_hand_image'][0]
-        right_image = obs_data['robot0_agentview_right_image'][0]
-        task_emb = torch.tensor(obs_data['lang_emb'][0], dtype=torch.float32)
+        # n = 100
+
+        # t = time.time()
+        # for _ in range(n):
+        obs_data = self.dataset.dataset.get_progress_train(idx)
+        # print('get progress new train used time, ', time.time() - t)
+
+        # t = time.time()
+        # for _ in range(n):
+        #     obs_data = self.dataset[idx]
+
+        # print('get progress old train used time, ', time.time() - t)
+
+        progress_label = torch.tensor(obs_data['progress'], dtype=torch.float32)
+        left_image = obs_data['obs']['robot0_agentview_left_image'][0]
+        hand_image = obs_data['obs']['robot0_eye_in_hand_image'][0]
+        right_image = obs_data['obs']['robot0_agentview_right_image'][0]
+        task_emb = torch.tensor(obs_data['lang_emb'], dtype=torch.float32)
 
         # Extract the three necessary features, you can customize these keys
         # Apply the resnet_transformer to each feature
@@ -259,13 +271,14 @@ def main(args):
             val_loss = 0.0
             with torch.no_grad():
                 progress_bar = tqdm(val_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Validation]", leave=True)
-                for i, (images, task_embs, labels) in enumerate(progress_bar):
-                    images, task_embs, labels = images.to(device), task_embs.to(device), labels.to(device)
+                for i, (img_1, img_2, img_3, task_embs, labels) in enumerate(progress_bar):
+                    img_1, img_2, img_3 = img_1.to(device), img_2.to(device), img_3.to(device)
+                    task_embs, labels = task_embs.to(device), labels.to(device)
                     if args.task_dir:
                         task_embs = None
 
                     with autocast():
-                        outputs = model(images, task_embs)
+                        outputs = model(img_1, img_2, img_3, task_embs)
                     loss = criterion(outputs, labels.unsqueeze(1))
                     val_loss += loss.item()
 
@@ -358,7 +371,7 @@ if __name__ == "__main__":
     num_epochs = 10
     cuda = 0
     # seed = 999
-    batch_size = 256
+    batch_size = 512
 
     Args = namedtuple(
         'Args',

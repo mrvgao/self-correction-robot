@@ -270,19 +270,6 @@ class SequenceDataset(torch.utils.data.Dataset):
             device=device,
         )
 
-        demo_group = defaultdict(list)
-        for key, demo_id in self._index_to_demo_id.items():
-            demo_group[demo_id].append(key)
-
-        # Step 2: Calculate progress percentage for each key
-        # progress_percentage = {}
-        self.progress_percentage = {}
-        print('computing progress... ')
-        for demo_id, keys in tqdm(demo_group.items()):
-            total_steps = len(keys)
-            for i, key in enumerate(sorted(keys)):
-                self.progress_percentage[key] = (i / total_steps) * 100
-
         if len(self._demo_id_to_demo_lang_str) > 0:
             print("getting language embeddings...")
             for ep_batch in tqdm(np.array_split(self.demos, int(math.ceil(len(self.demos) / max(config.train.batch_size, 64))))):
@@ -303,7 +290,8 @@ class SequenceDataset(torch.utils.data.Dataset):
         This property allows for a lazy hdf5 file open.
         """
         if self._hdf5_file is None:
-            self._hdf5_file = h5py.File(self.hdf5_path, 'r', swmr=self.hdf5_use_swmr, libver='latest')
+            print('open hdf5!!!!')
+            self._hdf5_file = h5py.File(self.hdf5_path, 'r', swmr=self.hdf5_use_swmr, libver='latest', rdcc_nbytes=1024**2, rdcc_w0=0.5, rdcc_nslots=521)
         return self._hdf5_file
 
     def close_and_delete_hdf5_handle(self):
@@ -524,6 +512,35 @@ class SequenceDataset(torch.utils.data.Dataset):
     def set_task_id(self, i, task_id):
         self.index_task_id_mapping[i] = task_id
 
+    def get_progress_train(self, index):
+        demo_id = self._index_to_demo_id[index]
+        demo_start_index = self._demo_id_to_start_indices[demo_id]
+        demo_length = self._demo_id_to_demo_length[demo_id]
+
+        # start at offset index if not padding for frame stacking
+        pad_frame_stack = False
+        n_frame_stack = 1
+        demo_index_offset = 0 if pad_frame_stack else (n_frame_stack - 1)
+        index_in_demo = index - demo_start_index + demo_index_offset
+
+        progress = index_in_demo / demo_length
+
+        need_data = {}
+
+        need_data["obs"] = self.get_obs_sequence_from_demo(
+            demo_id,
+            index_in_demo=index_in_demo,
+            keys=('robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image'),
+            num_frames_to_stack=n_frame_stack-1,
+            seq_length=1,
+            prefix="obs"
+        )
+
+        need_data['progress'] = progress
+        need_data['lang_emb'] = self._demo_id_to_demo_lang_emb[demo_id]
+
+        return need_data
+
     def get_item(self, index):
         """
         Main implementation of getitem when not using cache.
@@ -609,14 +626,6 @@ class SequenceDataset(torch.utils.data.Dataset):
                 self._demo_id_to_demo_lang_emb[demo_id],
                 (T, 1)
             )
-            meta['task_ds'] = self._demo_id_to_demo_lang_str[demo_id]
-            # meta['hdf5_path'] = self.hdf5_path
-
-            # if index not in self.index_progress_mapping:
-            #     self.index_progress_mapping = np.zaros(len(self.n_frame_stack))
-            #
-            meta['progress'] = self.progress_percentage[index]
-            # meta['task_id'] = self.index_task_id_mapping.get(index, -1)
 
         return meta
 
