@@ -144,7 +144,7 @@ class BC(PolicyAlgo):
             # calculate accumulated difference, if this value is greater than some threshold, re-train this model.
             losses = self._compute_losses(predictions, batch)
 
-            value_y_delta = value_y - value_hat
+            value_y_delta = value_y / 100 - value_hat  # set progress to 0 to 1
 
             value_loss = torch.mean(value_y_delta ** 2)
 
