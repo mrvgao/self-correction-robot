@@ -198,7 +198,7 @@ class BC(PolicyAlgo):
                 value_reg_loss.backward(retain_graph=True)
 
                 # trust_threshold = 0.80
-                value_loss_threshold = 500
+                value_loss_threshold = 850
                 # value_loss_lambda = 0.1
 
                 torch.cuda.synchronize()  # Synchronize before moving to CPU
