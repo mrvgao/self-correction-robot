@@ -98,6 +98,8 @@ def get_value_target(batch, config, obj, device):
     # task_embeddings = batch['obs']['lang_emb']
     # task_embeddings = task_embeddings.view(-1, task_embeddings.shape[-1])
 
+    import pdb; pdb.set_trace()
+
     left_image = resnet_transformer(batch['obs']['robot0_agentview_left_image']).to(device)
     hand_image = resnet_transformer(batch['obs']['robot0_eye_in_hand_image']).to(device)
     right_image = resnet_transformer(batch['obs']['robot0_agentview_right_image']).to(device)

@@ -76,8 +76,6 @@ def train(config, device):
         main_value_model = None
         # main_value_model.load_state_dict(torch.load(config.value_model_path))
         # main_value_model.to(device)
-
-        import pdb; pdb.set_trace()
         target_value_model = ValueResNetWithAttnPerformance()
         target_value_model.load_state_dict(torch.load(config.value_model_path))
         target_value_model.to(device)
