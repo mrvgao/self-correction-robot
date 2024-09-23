@@ -46,7 +46,7 @@ resnet_transformer = transforms.Compose([
 ])
 
 
-def get_value_target(batch, config, obj, device):
+def get_value_target(batch, config, obj, device, model='train'):
     assert isinstance(batch, dict)
 
     direct_obs = False
@@ -98,14 +98,18 @@ def get_value_target(batch, config, obj, device):
     # task_embeddings = batch['obs']['lang_emb']
     # task_embeddings = task_embeddings.view(-1, task_embeddings.shape[-1])
 
-    import pdb; pdb.set_trace()
+    if model == 'train':
+        value_y_target = batch['progress'].to(device)
+    else:
+        raise NotImplementedError
+    # import pdb; pdb.set_trace()
+    #
+    # left_image = resnet_transformer(batch['obs']['robot0_agentview_left_image']).to(device)
+    # hand_image = resnet_transformer(batch['obs']['robot0_eye_in_hand_image']).to(device)
+    # right_image = resnet_transformer(batch['obs']['robot0_agentview_right_image']).to(device)
+    # task_emb = torch.tensor(batch['obs']['lang_emb'], dtype=torch.float32).to(device)
 
-    left_image = resnet_transformer(batch['obs']['robot0_agentview_left_image']).to(device)
-    hand_image = resnet_transformer(batch['obs']['robot0_eye_in_hand_image']).to(device)
-    right_image = resnet_transformer(batch['obs']['robot0_agentview_right_image']).to(device)
-    task_emb = torch.tensor(batch['obs']['lang_emb'], dtype=torch.float32).to(device)
-
-    value_y_target = target_value_model(left_image, hand_image, right_image, task_emb).view(left_image.shape[0], 10, -1)
+    # value_y_target = target_value_model(left_image, hand_image, right_image, task_emb).view(left_image.shape[0], 10, -1)
 
     # value_y = torch.zeros_like(value_y_target, device=device)
     # value_y[:, 0, :] = value_y_target[:, 0, :]
