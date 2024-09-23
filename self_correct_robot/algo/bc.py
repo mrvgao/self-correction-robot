@@ -209,12 +209,13 @@ class BC(PolicyAlgo):
                 #     print('update policy')
                     value_loss_cpu = value_loss.detach().cpu().item()
                     if value_loss_cpu < value_loss_threshold:
+                        print('updating action')
                     # losses['action_loss'] *= trust
                         step_info = self._train_step(losses)
                         info.update(step_info)
-                    else:
-                        torch.nn.utils.clip_grad_norm_(self.nets['policy'].parameters(), max_norm=1.0)
-                        torch.nn.utils.clip_grad_norm_(self.nets["value_decoder"].parameters(), max_norm=1.0)
+                    # else:
+                    #     torch.nn.utils.clip_grad_norm_(self.nets['policy'].parameters(), max_norm=1.0)
+                    #     torch.nn.utils.clip_grad_norm_(self.nets["value_decoder"].parameters(), max_norm=1.0)
 
                 self.value_optimizer.step()
 
