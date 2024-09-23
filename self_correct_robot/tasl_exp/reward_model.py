@@ -271,19 +271,27 @@ def main(args):
     best_val_loss = float('inf')
     early_stopping_counter = 0
 
+    train_dataloader_iter = iter(train_dataloader_whole)
+    val_dataloader_iter = iter(val_dataloader_whole)
+    test_dataloader_iter = iter(test_dataloader)
+
     for epoch in range(num_epochs):
         # percentage = 1
         # train_dataloader = get_subset_dataloader(train_dataloader_whole, percentage=percentage)
         # val_dataloader = get_subset_dataloader(val_dataloader_whole, percentage=percentage)
-        train_dataloader = train_dataloader_whole
-        val_dataloader = val_dataloader_whole
 
         model.train()
         running_loss = 0.0
-        progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Training]", leave=True)
+        progress_bar = tqdm(range(len(train_dataloader_whole)), desc=f"Epoch {epoch + 1}/{num_epochs} [Training]", leave=True)
         batch_loss = 0
 
-        for i, (img_1, img_2, img_3, task_embs, labels) in enumerate(progress_bar):
+        for i in progress_bar:
+            try:
+                # Fetch the next batch using next()
+                img_1, img_2, img_3, task_embs, labels = next(train_dataloader_iter)
+            except StopIteration:
+                break
+
             img_1 = img_1.to(device)
             img_2 = img_2.to(device)
             img_3 = img_3.to(device)
@@ -309,7 +317,7 @@ def main(args):
 
             progress_bar.set_postfix(loss=loss.item())
 
-        print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {batch_loss / len(train_dataloader):.4f}")
+        print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {batch_loss / len(train_dataloader_whole):.4f}")
 
         # Save the model
 
@@ -317,8 +325,15 @@ def main(args):
             model.eval()
             val_loss = 0.0
             with torch.no_grad():
-                progress_bar = tqdm(val_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Validation]", leave=True)
-                for i, (img_1, img_2, img_3, task_embs, labels) in enumerate(progress_bar):
+                progress_bar = tqdm(range(len(val_dataloader_whole)), desc=f"Epoch {epoch + 1}/{num_epochs} [Validation]", leave=True)
+
+                for _ in progress_bar:
+                    try:
+                        # Fetch the next batch using next()
+                        img_1, img_2, img_3, task_embs, labels = next(val_dataloader_iter)
+                    except StopIteration:
+                        break
+
                     img_1, img_2, img_3 = img_1.to(device), img_2.to(device), img_3.to(device)
                     task_embs, labels = task_embs.to(device), labels.to(device)
                     if args.task_dir:
@@ -329,7 +344,7 @@ def main(args):
                     loss = criterion(outputs, labels.unsqueeze(1))
                     val_loss += loss.item()
 
-                avg_val_loss = val_loss / len(val_dataloader)
+                avg_val_loss = val_loss / len(val_dataloader_whole)
                 current_lr = optimizer.param_groups[0]['lr']
                 wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss, 'lr': current_lr})
                 print(f"Epoch [{epoch + 1}/{num_epochs}], Validation Loss: {avg_val_loss:.4f}")
@@ -367,8 +382,15 @@ def main(args):
     model.eval()
     test_loss = 0.0
     with torch.no_grad():
-        progress_bar = tqdm(test_dataloader, desc="Evaluating on Test Dataset", leave=True)
-        for i, (img_1, img_2, img_3, task_embs, labels) in enumerate(progress_bar):
+        progress_bar = tqdm(range(len(test_dataloader)), desc="Evaluating on Test Dataset", leave=True)
+        for _ in progress_bar:
+
+            try:
+                # Fetch the next batch using next()
+                img_1, img_2, img_3, task_embs, labels = next(test_dataloader_iter)
+            except StopIteration:
+                break
+
             img_1, img_2, img_3 = img_1.to(device), img_2.to(device), img_3.to(device)
             task_embs, labels = task_embs.to(device), labels.to(device)
 
