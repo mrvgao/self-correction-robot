@@ -887,6 +887,14 @@ class RNN_MIMO_MLP(Module):
         return msg
 
 
+class ScaledTanhLayer(nn.Module):
+    def __init__(self):
+        super(ScaledTanhLayer, self).__init__()
+
+    def forward(self, x):
+        # Apply the tanh transformation and scale by 50
+        return 50 * (torch.tanh(x) + 1)
+
 class MIMO_Transformer(Module):
     """
     Extension to Transformer (based on GPT architecture) to accept multiple observation 
@@ -1005,7 +1013,7 @@ class MIMO_Transformer(Module):
         # self.nets["value_embedding"] = nn.Linear(1, transformer_embed_dim)
         self.nets["value_decoder"] = nn.Sequential(
             nn.Linear(transformer_embed_dim, 1),
-            nn.ReLU(),
+            ScaledTanhLayer()
             # nn.Linear(transformer_embed_dim // 2, transformer_embed_dim // 1),
             # nn.Sigmoid()
             # nn.Linear(transformer_embed_dim // 4, 1)
