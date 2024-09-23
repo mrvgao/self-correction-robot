@@ -149,7 +149,7 @@ class BC(PolicyAlgo):
             # value_loss = torch.mean(value_y_delta ** 2)
 
             epsilon = 1e-6
-            value_loss = (torch.log(value_hat + epsilon) - torch.log(value_y + epsilon)) ** 2
+            value_loss = torch.mean((torch.log(value_hat + epsilon) - torch.log(value_y + epsilon)) ** 2)
 
             # value_delta = get_diff_percentage(value_hat, normalized_value_y)
 
@@ -164,33 +164,33 @@ class BC(PolicyAlgo):
 
             info["value_lr"] = self.value_optimizer.param_groups[0]['lr']
 
-            tau = config.experiment.tau
-            _lambda = 0.05
+            # tau = config.experiment.tau
+            # _lambda = 0.05
 
-            if value_loss < self.epsilon_train:
-                self.epsilon_train = value_loss.clone().detach()
+            # if value_loss < self.epsilon_train:
+            #     self.epsilon_train = value_loss.clone().detach()
 
-            epsilon_LVM = 0.1
-            vloss_threshold = 0.01
-            vloss_threshod_min = 0.02**2
+            # epsilon_LVM = 0.1
+            # vloss_threshold = 0.01
+            # vloss_threshod_min = 0.02**2
 
-            log_prob = info["losses"]["log_probs"]
-            threshold_value = tau * (config.bias + value_loss + epsilon_LVM + self.epsilon_train)
-
-            regularization_term = torch.max(
-                torch.zeros_like(log_prob),
-                threshold_value - log_prob
-            )
-
-            info['threshold_value'] = TensorUtils.detach(threshold_value)
-            info['threshold_term'] = TensorUtils.detach(regularization_term)
+            # log_prob = info["losses"]["log_probs"]
+            # threshold_value = tau * (config.bias + value_loss + epsilon_LVM + self.epsilon_train)
+            #
+            # regularization_term = torch.max(
+            #     torch.zeros_like(log_prob),
+            #     threshold_value - log_prob
+            # )
+            #
+            # info['threshold_value'] = TensorUtils.detach(threshold_value)
+            # info['threshold_term'] = TensorUtils.detach(regularization_term)
 
             # print('regularization term: ', regularization_term.item())
 
             # value_loss += _lambda * regularization_term
 
             beta = config.experiment.value_loss_lambda
-            value_reg_loss = beta * value_loss + _lambda * regularization_term
+            value_reg_loss = beta * value_loss
 
             # value_loss.backward(retain_graph=True)
 
