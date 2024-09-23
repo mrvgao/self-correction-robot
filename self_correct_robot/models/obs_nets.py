@@ -1017,7 +1017,7 @@ class MIMO_Transformer(Module):
             nn.Linear(transformer_embed_dim // 2, transformer_embed_dim // 4),
             nn.ReLU(),
             nn.Linear(transformer_embed_dim // 4, 1),
-            nn.Sigmoid()
+            nn.Sigmoid() * 100
         )
 
         self.nets['value_decoder'].apply(partial(custom_init, lower=-0.1, upper=0.1))

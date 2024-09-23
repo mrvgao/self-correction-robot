@@ -144,7 +144,7 @@ class BC(PolicyAlgo):
             # calculate accumulated difference, if this value is greater than some threshold, re-train this model.
             losses = self._compute_losses(predictions, batch)
 
-            value_y_delta = value_y / 100 - value_hat  # set progress to 0 to 1
+            value_y_delta = value_y - value_hat  # set progress to 0 to 1
 
             value_loss = torch.mean(value_y_delta ** 2)
 
@@ -160,7 +160,6 @@ class BC(PolicyAlgo):
 
             # trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
             # info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
-            self.value_optimizer.zero_grad()
 
             info["value_lr"] = self.value_optimizer.param_groups[0]['lr']
 
@@ -195,10 +194,11 @@ class BC(PolicyAlgo):
             # value_loss.backward(retain_graph=True)
 
             if not validate:
+                self.value_optimizer.zero_grad()
                 value_reg_loss.backward(retain_graph=True)
 
                 # trust_threshold = 0.80
-                value_loss_threshold = 0.01 # MSE error 10%
+                value_loss_threshold = 100
                 # value_loss_lambda = 0.1
 
                 torch.cuda.synchronize()  # Synchronize before moving to CPU
@@ -212,6 +212,8 @@ class BC(PolicyAlgo):
                     # losses['action_loss'] *= trust
                         step_info = self._train_step(losses)
                         info.update(step_info)
+                    else:
+                        torch.nn.utils.clip_grad_norm_(self.nets['policy'].parameters(), max_norm=1.0)
 
                 self.value_optimizer.step()
 

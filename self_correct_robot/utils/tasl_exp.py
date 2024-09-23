@@ -121,6 +121,7 @@ def get_value_target(batch, config, obj, device, model='train'):
 
     # if direct_obs:
     #     batch = batch['obs']
+    print('progress target: ', value_y_target)
 
     return batch, value_y_target
 
