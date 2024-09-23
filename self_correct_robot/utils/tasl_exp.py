@@ -6,7 +6,7 @@ import self_correct_robot.utils.obs_utils as ObsUtils
 import self_correct_robot.utils.action_utils as AcUtils
 import numpy as np
 import torch.nn.functional as F
-
+from torchvision import models, transforms
 
 def concatenate_images(batch, direct_obs=False):
     # Extract the image tensors
@@ -29,6 +29,23 @@ def concatenate_images(batch, direct_obs=False):
     return batch
 
 
+class NumpyToTensor:
+    """Custom transform to convert a NumPy array directly to a PyTorch tensor."""
+    def __call__(self, img):
+        if isinstance(img, np.ndarray):
+            # Convert NumPy array (H x W x C) to PyTorch tensor (C x H x W)
+            img = torch.from_numpy(img).permute(2, 0, 1).float() / 255.0
+        return img
+
+
+resnet_transformer = transforms.Compose([
+    NumpyToTensor(),  # C
+    transforms.Resize((224, 224), antialias=True),
+    # transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+
 def get_value_target(batch, config, obj, device):
     assert isinstance(batch, dict)
 
@@ -48,29 +65,29 @@ def get_value_target(batch, config, obj, device):
         # main_value_model = obj.main_value_model
         target_value_model = obj.target_value_model
 
-    batch = concatenate_images(batch, direct_obs)
-    obs_images = batch['obs']['concatenated_images']
+    # batch = concatenate_images(batch, direct_obs)
+    # obs_images = batch['obs']['concatenated_images']
 
-    target_value_model = target_value_model.to(device)
+    # target_value_model = target_value_model.to(device)
     # progress_model = progress_model.to(device)
 
     # Check if obs_images has a batch dimension
-    if len(obs_images.shape) == 5:
+    # if len(obs_images.shape) == 5:
         # Case when obs_images has shape (batch, 10, 128, 384, 3)
-        batch_size = obs_images.shape[0]
-        step_size = obs_images.shape[1]
-        reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2],
-                                                       obs_images.shape[-1])
-    else:
+        # batch_size = obs_images.shape[0]
+        # step_size = obs_images.shape[1]
+        # reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2],
+        #                                                obs_images.shape[-1])
+    # else:
         # Case when obs_images has shape (10, 128, 384, 3)
-        batch_size = 1
-        step_size = obs_images.shape[0]
-        reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2],
-                                                       obs_images.shape[-1])
+        # batch_size = 1
+        # step_size = obs_images.shape[0]
+        # reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2],
+        #                                                obs_images.shape[-1])
 
     # Move to CUDA device if available
     # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    reshaped_concatenated_images = reshaped_concatenated_images.permute(0, 3, 1, 2).to(device)
+    # reshaped_concatenated_images = reshaped_concatenated_images.permute(0, 3, 1, 2).to(device)
 
     # Assuming progress_model, main_value_model, and target_value_model are defined and on the correct device
     # progresses = progress_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
@@ -78,12 +95,15 @@ def get_value_target(batch, config, obj, device):
     # rewards = torch.where(progresses > p_threshold, torch.tensor(1.0, device=device), torch.tensor(-1.0, device=device))
     # value_y_hats = main_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
     # value_y_target = target_value_model(None, reshaped_concatenated_images).view(batch_size, 10, -1)
-    task_embeddings = batch['obs']['lang_emb']
-    task_embeddings = task_embeddings.view(-1, task_embeddings.shape[-1])
+    # task_embeddings = batch['obs']['lang_emb']
+    # task_embeddings = task_embeddings.view(-1, task_embeddings.shape[-1])
 
-    assert False
-    ## TODO ADD RESNET_TRANSFORMER FOR THESE PICTURES
-    value_y_target = target_value_model(reshaped_concatenated_images, task_embeddings).view(batch_size, 10, -1)
+    left_image = resnet_transformer(batch['obs']['robot0_agentview_left_image']).to(device)
+    hand_image = resnet_transformer(batch['obs']['robot0_eye_in_hand_image']).to(device)
+    right_image = resnet_transformer(batch['obs']['robot0_agentview_right_image']).to(device)
+    task_emb = torch.tensor(batch['obs']['lang_emb'], dtype=torch.float32).to(device)
+
+    value_y_target = target_value_model(left_image, hand_image, right_image, task_embeddings).view(batch_size, 10, -1)
 
     # value_y = torch.zeros_like(value_y_target, device=device)
     # value_y[:, 0, :] = value_y_target[:, 0, :]
