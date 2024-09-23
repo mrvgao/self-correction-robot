@@ -198,7 +198,7 @@ class BC(PolicyAlgo):
                 value_reg_loss.backward(retain_graph=True)
 
                 # trust_threshold = 0.80
-                value_loss_threshold = 100
+                value_loss_threshold = 500
                 # value_loss_lambda = 0.1
 
                 torch.cuda.synchronize()  # Synchronize before moving to CPU
@@ -214,6 +214,7 @@ class BC(PolicyAlgo):
                         info.update(step_info)
                     else:
                         torch.nn.utils.clip_grad_norm_(self.nets['policy'].parameters(), max_norm=1.0)
+                        torch.nn.utils.clip_grad_norm_(self.nets["value_decoder"].parameters(), max_norm=1.0)
 
                 self.value_optimizer.step()
 
