@@ -198,7 +198,7 @@ class BC(PolicyAlgo):
                 value_reg_loss.backward(retain_graph=True)
 
                 # trust_threshold = 0.80
-                # value_loss_threshold = 0.01 # MSE error 10%
+                value_loss_threshold = 0.01 # MSE error 10%
                 # value_loss_lambda = 0.1
 
                 torch.cuda.synchronize()  # Synchronize before moving to CPU
@@ -207,11 +207,11 @@ class BC(PolicyAlgo):
                     print("value_loss contains NaN or Inf values.")
                 # elif value_loss.item() < vloss_threshold:
                 #     print('update policy')
-                    # value_loss_cpu = value_loss.detach().cpu().item()
-                    # if value_loss_cpu < value_loss_threshold:
+                    value_loss_cpu = value_loss.detach().cpu().item()
+                    if value_loss_cpu < value_loss_threshold:
                     # losses['action_loss'] *= trust
-                step_info = self._train_step(losses)
-                info.update(step_info)
+                        step_info = self._train_step(losses)
+                        info.update(step_info)
 
                 self.value_optimizer.step()
 
