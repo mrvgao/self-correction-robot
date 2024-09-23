@@ -146,7 +146,10 @@ class BC(PolicyAlgo):
 
             value_y_delta = value_y - value_hat
 
-            value_loss = torch.mean(value_y_delta ** 2)
+            # value_loss = torch.mean(value_y_delta ** 2)
+
+            epsilon = 1e-6
+            value_loss = (torch.log(value_hat + epsilon) - torch.log(value_y + epsilon)) ** 2
 
             # value_delta = get_diff_percentage(value_hat, normalized_value_y)
 
