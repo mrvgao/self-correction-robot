@@ -349,8 +349,7 @@ def run_epoch(model, data_loader, epoch, validate=False, num_steps=None, obs_nor
         timing_stats["Process_Batch"].append(time.time() - t)
 
         # forward and backward pass
-        TASK_DS, PROGRESS = 'task_ds', 'progress'
-        input_batch[TASK_DS] = batch[TASK_DS]
+        PROGRESS = 'progress'
         input_batch[PROGRESS] = batch[PROGRESS]
 
         t = time.time()
