@@ -15,7 +15,7 @@
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "progress-model"
+            "wandb_proj_name": "iclr-2025"
         },
         "mse": {},
         "save": {
