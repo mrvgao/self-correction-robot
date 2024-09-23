@@ -10,6 +10,7 @@
         "validate": false,
         "tau": 30,
         "only_rollout": false,
+        "value_loss_lambda": 50,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,
