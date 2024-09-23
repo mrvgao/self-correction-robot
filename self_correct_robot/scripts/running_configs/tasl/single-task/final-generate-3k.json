@@ -207,7 +207,7 @@
         "goal_mode": null,
         "cuda": true,
         "batch_size": 16,
-        "num_epochs": 1000,
+        "num_epochs": 1500,
         "max_grad_norm": 100.0,
         "seed": 999,
         "action_config": {

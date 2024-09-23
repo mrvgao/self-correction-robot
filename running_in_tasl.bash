@@ -31,15 +31,16 @@ nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scri
 nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/LServer/rollout_lambda_5_1k_vloss_5e-2-seed-999.json > tasl-logs/rollout_lambda_5_1k_vloss_5e-2-seed-999.log &
 
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/rollout/rollout_lambda_5_1k_vloss_5e-2-seed-999.json > tasl-logs/rollout_lambda_5_1k_vloss_5e-2-seed-999-2.log &
-# running tail 999-2.log
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/rollout/rollout_lambda_5_1k_vloss_5e-2-seed-100.json > tasl-logs/rollout_lambda_5_1k_vloss_5e-2-seed-100-2.log &
-# running tail 100-2.log
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/rollout/rollout_lambda_5_1k_vloss_5e-2-seed-200.json > tasl-logs/rollout_lambda_5_1k_vloss_5e-2-seed-200.log &
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/rollout/rollout_lambda_5_1k_vloss_5e-2-seed-500.json > tasl-logs/rollout_lambda_5_1k_vloss_5e-2-seed-500-2.log &
-# running tail 500.log
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/rollout/rollout_lambda_5_1k_vloss_5e-2-seed-700.json > tasl-logs/rollout_lambda_5_1k_vloss_5e-2-seed-700.log &
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/rollout/rollout_lambda_5_1k_vloss_5e-2-seed-0.json > tasl-logs/rollout_lambda_5_1k_vloss_5e-2-seed-0.log &
 
 nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/LServer/lambda_5_3k_continue_1k.json > tasl-logs/demo_3k_continue_1k.log &
+
+nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/single-task/final-generate-3k.json > tasl-logs/demo_3k_log_prob.log &
+nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/single-task/final-human-50.json > tasl-logs/demo_50_log_prob.log &
+
 
 wait
