@@ -1005,13 +1005,13 @@ class MIMO_Transformer(Module):
         # self.nets["value_embedding"] = nn.Linear(1, transformer_embed_dim)
         self.nets["value_decoder"] = nn.Sequential(
             nn.Linear(transformer_embed_dim, 1),
-            # nn.ReLU(),
+            nn.ReLU(),
             # nn.Linear(transformer_embed_dim // 2, transformer_embed_dim // 1),
-            nn.Sigmoid()
+            # nn.Sigmoid()
             # nn.Linear(transformer_embed_dim // 4, 1)
         )
 
-        self.nets['value_decoder'].apply(partial(custom_init, lower=-0.1, upper=0.1))
+        self.nets['value_decoder'].apply(partial(custom_init, lower=-10, upper=10))
 
     def output_shape(self, input_shape=None):
         """
