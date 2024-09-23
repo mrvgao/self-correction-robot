@@ -537,7 +537,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         )
 
         need_data['progress'] = progress
-        need_data['lang_emb'] = self._demo_id_to_demo_lang_emb[demo_id]
+        need_data['obs']['lang_emb'] = self._demo_id_to_demo_lang_emb[demo_id]
 
         return need_data
 
@@ -556,6 +556,8 @@ class SequenceDataset(torch.utils.data.Dataset):
         # end at offset index if not padding for seq length
         demo_length_offset = 0 if self.pad_seq_length else (self.seq_length - 1)
         end_index_in_demo = demo_length - demo_length_offset
+
+        progress = index_in_demo / demo_length * 100
 
         meta = self.get_dataset_sequence_from_demo(
             demo_id,
@@ -618,6 +620,8 @@ class SequenceDataset(torch.utils.data.Dataset):
 
         # also return the sampled index
         meta["index"] = index
+
+        meta['progress'] = progress
 
         if demo_id in self._demo_id_to_demo_lang_emb:
             # language embedding
@@ -993,13 +997,11 @@ class R2D2Dataset(SequenceDataset):
         pad_mask = pad_mask[:, None].astype(np.bool_)
 
         return seq, pad_mask
-    
 
     def get_item(self, index):
         """
         Main implementation of getitem when not using cache.
         """
-
         demo_id = self._index_to_demo_id[index]
         demo_start_index = self._demo_id_to_start_indices[demo_id]
         demo_length = self._demo_id_to_demo_length[demo_id]

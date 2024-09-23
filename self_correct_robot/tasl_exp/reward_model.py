@@ -12,7 +12,7 @@ from self_correct_robot.utils.lang_utils import LangEncoder
 import random
 import numpy as np
 from collections import namedtuple
-from self_correct_robot.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetWithAttnPerformance
+from self_correct_robot.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetWithAttnPerformance, ValueResNetModelWithTextWithAttnAndResidual
 import argparse
 from torch.cuda.amp import autocast
 from torch.utils.data import Subset
@@ -168,7 +168,7 @@ class RoboCustomDataset(Dataset):
 
         # t = time.time()
         # for _ in range(n):
-        obs_data = self.dataset.dataset.get_progress_train(idx)
+        # obs_data = self.dataset.dataset.get_progress_train(idx)
         # print('get progress new train used time, ', time.time() - t)
 
         # t = time.time()
@@ -177,11 +177,13 @@ class RoboCustomDataset(Dataset):
 
         # print('get progress old train used time, ', time.time() - t)
 
+        obs_data = self.dataset[idx]
+
         progress_label = torch.tensor(obs_data['progress'], dtype=torch.float32)
         left_image = obs_data['obs']['robot0_agentview_left_image'][0]
         hand_image = obs_data['obs']['robot0_eye_in_hand_image'][0]
         right_image = obs_data['obs']['robot0_agentview_right_image'][0]
-        task_emb = torch.tensor(obs_data['lang_emb'], dtype=torch.float32)
+        task_emb = torch.tensor(obs_data['obs']['lang_emb'][0], dtype=torch.float32)
 
         # Extract the three necessary features, you can customize these keys
         # Apply the resnet_transformer to each feature
@@ -201,8 +203,8 @@ def split_valid_test_from_robo_config_dataset(config, batch_size):
     # Step 1: Define the lengths for train, validation, and test splits
     dataset_size = len(dataset)
 
-    train_size = int(0.80 * dataset_size)  # 70% training
-    val_size = int(0.10 * dataset_size)  # 15% validation
+    train_size = int(0.85 * dataset_size)  # 70% training
+    val_size = int(0.15 * dataset_size)  # 15% validation
     test_size = dataset_size - train_size - val_size  # Remaining for test
 
     # Step 2: Split the dataset into train, validation, and test
@@ -215,13 +217,13 @@ def split_valid_test_from_robo_config_dataset(config, batch_size):
 
     # Step 4: Create new DataLoaders for each split
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=24, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=24, pin_memory=True)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=24, pin_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=24, pin_memory=True)
 
-    percentage = 0.2
-    train_loader = get_subset_dataloader(train_loader, percentage)
-    val_loader = get_subset_dataloader(val_loader, percentage)
-    test_loader = get_subset_dataloader(test_loader, percentage)
+    # percentage = 0.2
+    # train_loader = get_subset_dataloader(train_loader, percentage)
+    # val_loader = get_subset_dataloader(val_loader, percentage)
+    # test_loader = get_subset_dataloader(test_loader, percentage)
 
     return train_loader, val_loader, test_loader
 
@@ -232,7 +234,8 @@ def main(args):
     device = torch.device(f'cuda:{args.cuda}')
     print(f"Using device: {device}")
 
-    train_dataloader, val_dataloader, test_dataloader = split_valid_test_from_robo_config_dataset(args.config, batch_size=args.batch_size)
+    train_dataloader_whole, val_dataloader_whole, test_dataloader = split_valid_test_from_robo_config_dataset(args.config,
+                                                                                                  batch_size=args.batch_size)
 
     # Create the dataloader
     # Example training loop
@@ -248,6 +251,10 @@ def main(args):
         model = ValueResNetWithAttnPerformance().to(device)
     else:
         raise ValueError("unsupported model name, ", args.model)
+    if args.ckpt:
+        print('load pretrainde model, ', args.ckpt)
+        model.load_state_dict(torch.load(args.ckpt))
+        model = model.to(device)
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
@@ -265,6 +272,12 @@ def main(args):
     early_stopping_counter = 0
 
     for epoch in range(num_epochs):
+        # percentage = 1
+        # train_dataloader = get_subset_dataloader(train_dataloader_whole, percentage=percentage)
+        # val_dataloader = get_subset_dataloader(val_dataloader_whole, percentage=percentage)
+        train_dataloader = train_dataloader_whole
+        val_dataloader = val_dataloader_whole
+
         model.train()
         running_loss = 0.0
         progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Training]", leave=True)
@@ -289,8 +302,8 @@ def main(args):
 
             running_loss += loss.item()
             batch_loss += loss.item()
-            if i % 10 == 9:  # Log every 10 batches
-                avg_loss = running_loss / 10
+            if i % 5 == 0:  # Log every 10 batches
+                avg_loss = running_loss / 5
                 wandb.log({"epoch": epoch + 1, "batch": i + 1, "train_loss": avg_loss})
                 running_loss = 0.0
 
@@ -318,7 +331,7 @@ def main(args):
 
                 avg_val_loss = val_loss / len(val_dataloader)
                 current_lr = optimizer.param_groups[0]['lr']
-                wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss, 'loss': current_lr})
+                wandb.log({"epoch": epoch + 1, "val_loss": avg_val_loss, 'lr': current_lr})
                 print(f"Epoch [{epoch + 1}/{num_epochs}], Validation Loss: {avg_val_loss:.4f}")
 
             scheduler.step(avg_val_loss)
@@ -380,6 +393,7 @@ if __name__ == "__main__":
     parser.add_argument('--tag', type=str, required=True, help='Add a tag to make logger easier')
     parser.add_argument('--model', type=str, required=False, choices=['attn', 'resnet'], help='Name for the selection model')
     parser.add_argument('--seed', type=int, required=True, help='training random seed')
+    parser.add_argument('--ckpt', type=str, default=None, required=False, help='specify a pretraind model path')
     args = parser.parse_args()
 
     # config_path = '/home/ubuntu/self-correction-robot/self_correct_robot/scripts/running_configs/lambda_multi-task-with-value-correct-seed-999.json'
@@ -408,21 +422,22 @@ if __name__ == "__main__":
     model = args.model
     lr = 1e-4
     # num_epochs = 1000
-    num_epochs = 10
+    num_epochs = 100
     cuda = 0
     # seed = 999
-    batch_size = 512
+    batch_size = 128
 
     Args = namedtuple(
         'Args',
-        ['name', 'model', 'lr',  'batch_size', 'num_epochs', 'cuda', 'seed', 'task_dir', 'config']
+        ['name', 'model', 'lr',  'batch_size', 'num_epochs',
+                    'cuda', 'seed', 'task_dir', 'config', 'ckpt']
     )
     # #
     # # for i, task_dir in enumerate(sub_tasks):
-    args = Args(name, model, lr, batch_size, num_epochs, cuda, args.seed, None, config)
+    mock_args = Args(name, model, lr, batch_size, num_epochs, cuda, args.seed, None, config, args.ckpt)
     run_name = f"{name}_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
     # wandb.init(project="value-model-trained-by-3k", entity="minchiuan", name=run_name, config128
     #     ""
     #     "system_metrics": True  # Enable system metrics logging
     # })
-    main(args)
+    main(mock_args)
