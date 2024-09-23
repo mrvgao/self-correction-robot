@@ -72,17 +72,18 @@ def train(config, device):
         shape_meta_list
     ) = load_dataloader(config, device)
 
-    if config.value_model_path:
-        main_value_model = None
-        # main_value_model.load_state_dict(torch.load(config.value_model_path))
-        # main_value_model.to(device)
-        target_value_model = ValueResNetWithAttnPerformance()
-        target_value_model.load_state_dict(torch.load(config.value_model_path))
-        target_value_model.to(device)
-        target_value_model.eval()
-    else:
-        main_value_model = None
-        target_value_model = None
+    # if config.value_model_path:
+    #     main_value_model = None
+    #     # main_value_model.load_state_dict(torch.load(config.value_model_path))
+    #     # main_value_model.to(device)
+    #     target_value_model = ValueResNetWithAttnPerformance()
+    #     target_value_model.load_state_dict(torch.load(config.value_model_path))
+    #     target_value_model.to(device)
+    #     target_value_model.eval()
+    # else:
+
+    main_value_model = None
+    target_value_model = None
 
     ckpt_path = config.experiment.ckpt_path
 

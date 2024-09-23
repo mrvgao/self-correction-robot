@@ -49,21 +49,21 @@ resnet_transformer = transforms.Compose([
 def get_value_target(batch, config, obj, device, model='train'):
     assert isinstance(batch, dict)
 
-    direct_obs = False
-    if 'obs' not in batch and 'robot0_eye_in_hand_image' in batch:
-        for key in batch:
-            if 'image' in key or 'lang':
-                batch[key] = torch.tensor(batch[key]).to(device)
-
-        batch['obs'] = batch.copy()
-        direct_obs = True
-        # progress_model = obj.policy.progress_model
-        # main_value_model = obj.policy.main_value_model
-        target_value_model = obj.policy.target_value_model
-    else:
-        # progress_model = obj.progress_model
-        # main_value_model = obj.main_value_model
-        target_value_model = obj.target_value_model
+    # direct_obs = False
+    # if 'obs' not in batch and 'robot0_eye_in_hand_image' in batch:
+    #     for key in batch:
+    #         if 'image' in key or 'lang':
+    #             batch[key] = torch.tensor(batch[key]).to(device)
+    #
+    #     batch['obs'] = batch.copy()
+    #     direct_obs = True
+    #     # progress_model = obj.policy.progress_model
+    #     # main_value_model = obj.policy.main_value_model
+    #     target_value_model = obj.policy.target_value_model
+    # else:
+    #     # progress_model = obj.progress_model
+    #     # main_value_model = obj.main_value_model
+    #     target_value_model = obj.target_value_model
 
     # batch = concatenate_images(batch, direct_obs)
     # obs_images = batch['obs']['concatenated_images']
