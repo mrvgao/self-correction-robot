@@ -1003,9 +1003,9 @@ class BC_Transformer_GMM(BC_Transformer):
         log["Log_Likelihood"] = info["losses"]["log_probs"].item()
         log['value_loss'] = info['value_loss'].item()
         # log['trust'] = info['trust']
-        log['regularization_term'] = info['threshold_term'].item()
+        # log['regularization_term'] = info['threshold_term'].item()
         log['value_lr'] = info['value_lr']
-        log['threshold_value'] = info['threshold_value'].item()
+        # log['threshold_value'] = info['threshold_value'].item()
         if "policy_grad_norms" in info:
             log["Policy_Grad_Norms"] = info["policy_grad_norms"]
 
