@@ -73,15 +73,15 @@ def get_value_target(batch, config, obj, device):
 
     # Check if obs_images has a batch dimension
     # if len(obs_images.shape) == 5:
-        # Case when obs_images has shape (batch, 10, 128, 384, 3)
-        # batch_size = obs_images.shape[0]
-        # step_size = obs_images.shape[1]
+    #     Case when obs_images has shape (batch, 10, 128, 384, 3)
+    #     batch_size = obs_images.shape[0]
+    #     step_size = obs_images.shape[1]
         # reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2],
         #                                                obs_images.shape[-1])
     # else:
-        # Case when obs_images has shape (10, 128, 384, 3)
-        # batch_size = 1
-        # step_size = obs_images.shape[0]
+    #     Case when obs_images has shape (10, 128, 384, 3)
+    #     batch_size = 1
+    #     step_size = obs_images.shape[0]
         # reshaped_concatenated_images = obs_images.view(-1, obs_images.shape[-3], obs_images.shape[-2],
         #                                                obs_images.shape[-1])
 
@@ -103,7 +103,7 @@ def get_value_target(batch, config, obj, device):
     right_image = resnet_transformer(batch['obs']['robot0_agentview_right_image']).to(device)
     task_emb = torch.tensor(batch['obs']['lang_emb'], dtype=torch.float32).to(device)
 
-    value_y_target = target_value_model(left_image, hand_image, right_image, task_embeddings).view(batch_size, 10, -1)
+    value_y_target = target_value_model(left_image, hand_image, right_image, task_emb).view(left_image.shape[0], 10, -1)
 
     # value_y = torch.zeros_like(value_y_target, device=device)
     # value_y[:, 0, :] = value_y_target[:, 0, :]
