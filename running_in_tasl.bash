@@ -39,8 +39,8 @@ nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/
 
 nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/LServer/lambda_5_3k_continue_1k.json > tasl-logs/demo_3k_continue_1k.log &
 
-nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/single-task/final-generate-3k.json > tasl-logs/demo_3k_log_prob.log &
-nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/single-task/final-human-50.json > tasl-logs/demo_50_log_prob.log &
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/single-task/final-generate-3k.json > tasl-logs/demo_3k_log_prob.log &
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/single-task/final-human-50.json > tasl-logs/demo_50_log_prob.log &
 
 
 wait

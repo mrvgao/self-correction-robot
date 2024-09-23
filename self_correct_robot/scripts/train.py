@@ -42,7 +42,7 @@ import self_correct_robot.utils.lang_utils as LangUtils
 from self_correct_robot.config import config_factory
 from self_correct_robot.algo import algo_factory, RolloutPolicy
 from self_correct_robot.utils.log_utils import PrintLogger, DataLogger, flush_warnings
-from self_correct_robot.tasl_exp.reward_model import ValueResNetModelWithTextWithAttnAndResidual
+from self_correct_robot.tasl_exp.reward_model import ValueResNetWithAttnPerformance
 from self_correct_robot.utils.load_dataloader import load_dataloader
 
 
@@ -77,7 +77,7 @@ def train(config, device):
         # main_value_model.load_state_dict(torch.load(config.value_model_path))
         # main_value_model.to(device)
 
-        target_value_model = ValueResNetModelWithTextWithAttnAndResidual()
+        target_value_model = ValueResNetWithAttnPerformance()
         target_value_model.load_state_dict(torch.load(config.value_model_path))
         target_value_model.to(device)
         target_value_model.eval()
