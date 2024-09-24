@@ -189,7 +189,7 @@ class BC(PolicyAlgo):
             # value_loss += _lambda * regularization_term
 
             beta = config.experiment.value_loss_lambda
-            value_reg_loss = beta * value_loss
+            value_reg_loss = -1 * beta * value_loss
 
             # value_loss.backward(retain_graph=True)
 
@@ -210,7 +210,7 @@ class BC(PolicyAlgo):
                 # elif value_loss.item() < vloss_threshold:
                 #     print('update policy')
                 elif value_loss_cpu < value_loss_threshold:
-                    print('updating action')
+                    # print('updating action')
                     # losses['action_loss'] *= trust
                     step_info = self._train_step(losses)
                     info.update(step_info)
