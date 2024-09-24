@@ -147,7 +147,7 @@ class BC(PolicyAlgo):
             value_y = (value_y.float() / 100).long()
             value_y_delta = value_y - value_hat  # set progress to 0 to 1
 
-            divergence = 0 if self.previous_progress_predict is None or torch.mean(torch.abs(value_hat - self.previous_progress_predict))
+            divergence = 0 if self.previous_progress_predict is None else torch.mean(torch.abs(value_hat - self.previous_progress_predict))
 
             value_loss = torch.mean(value_y_delta ** 2) + 0.5 * divergence
 
