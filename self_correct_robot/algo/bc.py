@@ -194,8 +194,8 @@ class BC(PolicyAlgo):
             # value_loss.backward(retain_graph=True)
 
             if not validate:
-                self.value_optimizer.zero_grad()
-                value_reg_loss.backward(retain_graph=True)
+                # self.value_optimizer.zero_grad()
+                # value_reg_loss.backward(retain_graph=True)
 
                 # trust_threshold = 0.80
                 value_loss_threshold = 850
@@ -209,7 +209,7 @@ class BC(PolicyAlgo):
                     print("value_loss contains NaN or Inf values.")
                 # elif value_loss.item() < vloss_threshold:
                 #     print('update policy')
-                elif value_loss_cpu < value_loss_threshold:
+                # elif value_loss_cpu < value_loss_threshold:
                     # print('updating action')
                     # losses['action_loss'] *= trust
                     step_info = self._train_step(losses)
@@ -218,7 +218,7 @@ class BC(PolicyAlgo):
                     #     torch.nn.utils.clip_grad_norm_(self.nets['policy'].parameters(), max_norm=1.0)
                     #     torch.nn.utils.clip_grad_norm_(self.nets["value_decoder"].parameters(), max_norm=1.0)
 
-                self.value_optimizer.step()
+                # self.value_optimizer.step()
 
         return info
 
