@@ -149,7 +149,7 @@ class BC(PolicyAlgo):
             value_loss = torch.mean(value_y_delta ** 2)
 
             # divergence = torch.mean((value_loss - self.previous_progress_loss)**2)
-            divergence = torch.mean((torch.log(self.previous_progress_loss) - torch.log(value_loss))**2)
+            divergence = torch.mean(torch.log(self.previous_progress_loss / value_loss)**2)
 
             print('divergence: ', divergence)
 
@@ -940,7 +940,7 @@ class BC_Transformer_GMM(BC_Transformer):
             verbose=False
         )
 
-        self.previous_progress_loss = 0
+        self.previous_progress_loss = 1
 
     def _forward_training(self, batch, epoch=None):
         """
