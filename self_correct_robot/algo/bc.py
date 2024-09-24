@@ -147,7 +147,9 @@ class BC(PolicyAlgo):
             value_y = (value_y.float() / 100).long()
             value_y_delta = value_y - value_hat  # set progress to 0 to 1
 
-            value_loss = torch.mean(value_y_delta ** 2)
+            divergence = 0 if self.previous_progress_predict is None or torch.mean(torch.abs(value_hat - self.previous_progress_predict))
+
+            value_loss = torch.mean(value_y_delta ** 2) + 0.5 * divergence
 
             # epsilon = 1e-6
             # value_loss = torch.mean((torch.log(value_hat + epsilon) - torch.log(value_y + epsilon)) ** 2)
@@ -220,6 +222,9 @@ class BC(PolicyAlgo):
                     #     torch.nn.utils.clip_grad_norm_(self.nets["value_decoder"].parameters(), max_norm=1.0)
 
                 self.value_optimizer.step()
+
+                with torch.no_grad():
+                    self.previous_progress_predict = value_hat.clone()
 
         return info
 
@@ -930,6 +935,8 @@ class BC_Transformer_GMM(BC_Transformer):
             patience=2,
             verbose=False
         )
+
+        self.previous_progress_predict = None
 
     def _forward_training(self, batch, epoch=None):
         """
