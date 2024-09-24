@@ -181,14 +181,14 @@ def extract_and_export_image(demo_dataset, task_name):
 
         start_time = time.time()
 
-        if task_changed:
-            mark_position = i
-            while mark_position >= 0 and exporting_dataset[mark_position]['task_id'] == TASK_ID:
-                ds_progress = exporting_dataset[mark_position]['progress']
-                exporting_dataset.set_progress(mark_position, ds_progress / PNG_ID * 100)
-                mark_position -= 1
-            print(f'task name: {task_name}')
-            PNG_ID = 0
+        # if task_changed:
+        #     mark_position = i
+        #     while mark_position >= 0 and exporting_dataset[mark_position]['task_id'] == TASK_ID:
+        #         ds_progress = exporting_dataset[mark_position]['progress']
+        #         exporting_dataset.set_progress(mark_position, ds_progress / PNG_ID * 100)
+        #         mark_position -= 1
+        #     print(f'task name: {task_name}')
+        #     PNG_ID = 0
 
         time_task_change = time.time() - start_time
         # print(f'Time for task change block at iteration {i}: {time_task_change:.6f} seconds')
@@ -257,7 +257,7 @@ def generate_concated_images_from_demo_path(task_name):
     # config_path_compsoite = "/home/minquangao/pretrained_models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
 
-    ext_cfg['train']['data'][0]['path'] = TASK_PATH_MAPPING[task_name]
+    ext_cfg['train']['data'][0]['path'] = TASK_MAPPING_50_DEMO[task_name]
     # print('loading from path ', TASK_PATH_MAPPING[task_name])
     config = config_factory(ext_cfg["algo_name"])
     with config.values_unlocked():
@@ -360,7 +360,7 @@ def generate_concated_images_from_demo_path(task_name):
 
 
 if __name__ == '__main__':
-    for key, value in TASK_PATH_MAPPING.items():
+    for key, value in TASK_MAPPING_50_DEMO.items():
         print('processing.... ', key)
         generate_concated_images_from_demo_path(task_name=key)
 
