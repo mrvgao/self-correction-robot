@@ -189,7 +189,7 @@ class BC(PolicyAlgo):
             # value_loss += _lambda * regularization_term
 
             beta = config.experiment.value_loss_lambda
-            value_reg_loss = -1 * beta * value_loss
+            value_reg_loss = beta * value_loss
 
             # value_loss.backward(retain_graph=True)
 
