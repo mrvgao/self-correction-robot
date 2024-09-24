@@ -147,11 +147,11 @@ class BC(PolicyAlgo):
             value_y = (value_y.float() / 100).long()
             value_y_delta = value_y - value_hat  # set progress to 0 to 1
 
-            divergence = 0 if self.previous_progress_predict is None else torch.mean(torch.abs(value_hat - self.previous_progress_predict))
+            value_loss = torch.mean(value_y_delta ** 2)
 
-            print(divergence)
+            divergence = 0 if self.previous_progress_loss is None else torch.mean(torch.square(value_loss - self.previous_progress_loss))
 
-            value_loss = torch.mean(value_y_delta ** 2) + 100 * divergence
+            value_loss += 0.5 * divergence
 
             # epsilon = 1e-6
             # value_loss = torch.mean((torch.log(value_hat + epsilon) - torch.log(value_y + epsilon)) ** 2)
@@ -226,7 +226,7 @@ class BC(PolicyAlgo):
                 self.value_optimizer.step()
 
                 with torch.no_grad():
-                    self.previous_progress_predict = value_hat.clone()
+                    self.previous_progress_loss = value_loss.clone()
 
         return info
 
