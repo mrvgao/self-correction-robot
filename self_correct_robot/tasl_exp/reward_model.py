@@ -271,14 +271,15 @@ def main(args):
     best_val_loss = float('inf')
     early_stopping_counter = 0
 
-    train_dataloader_iter = iter(train_dataloader_whole)
-    val_dataloader_iter = iter(val_dataloader_whole)
     test_dataloader_iter = iter(test_dataloader)
 
     for epoch in range(num_epochs):
-        # percentage = 1
-        # train_dataloader = get_subset_dataloader(train_dataloader_whole, percentage=percentage)
-        # val_dataloader = get_subset_dataloader(val_dataloader_whole, percentage=percentage)
+        percentage = 0.2
+        train_dataloader = get_subset_dataloader(train_dataloader_whole, percentage=percentage)
+        val_dataloader = get_subset_dataloader(val_dataloader_whole, percentage=percentage)
+
+        train_dataloader_iter = iter(train_dataloader)
+        val_dataloader_iter = iter(val_dataloader)
 
         model.train()
         running_loss = 0.0
