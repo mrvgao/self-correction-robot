@@ -85,7 +85,7 @@
                 "do_eval":  true,
                 "path": "/data3/mgao/robocasa/datasets/v0.1/multi_stage/washing_dishes/PreSoakPan/2024-05-10/demo_im128.hdf5"
             }],
-        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/09-22-multi-task",
+        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/09-22-multi-task-soak-pan",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
