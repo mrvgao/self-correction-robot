@@ -228,7 +228,7 @@ class BC(PolicyAlgo):
                 self.value_optimizer.step()
 
                 with torch.no_grad():
-                    self.previous_progress_loss = value_loss.clone()
+                    self.previous_progress_loss = value_loss.detach().clone()
 
         return info
 
