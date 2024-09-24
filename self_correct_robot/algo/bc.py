@@ -153,7 +153,7 @@ class BC(PolicyAlgo):
 
             print('divergence: ', divergence)
 
-            value_loss += 0.5 * divergence
+            loss_with_divergence = value_loss + 0.5 * divergence
 
             # epsilon = 1e-6
             # value_loss = torch.mean((torch.log(value_hat + epsilon) - torch.log(value_y + epsilon)) ** 2)
@@ -163,7 +163,7 @@ class BC(PolicyAlgo):
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
             # info[f'Parameters_hist_of_value_embedding_{epoch}'] = self.nets.policy.nets.value_embedding.weight.detach().cpu().numpy()
-            info["value_loss"] = TensorUtils.detach(value_loss)
+            info["value_loss"] = TensorUtils.detach(loss_with_divergence)
 
             # trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
             # info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
@@ -195,14 +195,14 @@ class BC(PolicyAlgo):
 
             # value_loss += _lambda * regularization_term
 
-            beta = config.experiment.value_loss_lambda
-            value_reg_loss = beta * value_loss
+            # beta = config.experiment.value_loss_lambda
+            # value_reg_loss = beta * value_loss
 
             # value_loss.backward(retain_graph=True)
 
             if not validate:
                 self.value_optimizer.zero_grad()
-                value_reg_loss.backward(retain_graph=True)
+                loss_with_divergence.backward(retain_graph=True)
 
                 # trust_threshold = 0.80
                 value_loss_threshold = 850
