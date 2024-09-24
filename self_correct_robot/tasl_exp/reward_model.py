@@ -442,7 +442,7 @@ if __name__ == "__main__":
 
     name = f'{args.tag}_{str(signature)}_all-tasks-in-one-predicate-progress'
     model = args.model
-    lr = 1e-5
+    lr = 1e-4
     # num_epochs = 1000
     num_epochs = 100
     cuda = 0
