@@ -144,16 +144,15 @@ class BC(PolicyAlgo):
             # calculate accumulated difference, if this value is greater than some threshold, re-train this model.
             losses = self._compute_losses(predictions, batch)
 
-            value_y = (value_y.float() / 100).long()
             value_y_delta = value_y - value_hat  # set progress to 0 to 1
 
             value_loss = torch.mean(value_y_delta ** 2)
 
-            divergence = 0 if self.previous_progress_loss is None else torch.mean(torch.abs(value_loss - self.previous_progress_loss))
+            divergence = torch.mean((value_loss - self.previous_progress_loss)**2)
 
             print('divergence: ', divergence)
 
-            loss_with_divergence = value_loss - 5 * divergence
+            loss_with_divergence = value_loss + divergence
 
             # epsilon = 1e-6
             # value_loss = torch.mean((torch.log(value_hat + epsilon) - torch.log(value_y + epsilon)) ** 2)
@@ -940,7 +939,7 @@ class BC_Transformer_GMM(BC_Transformer):
             verbose=False
         )
 
-        self.previous_progress_loss = None
+        self.previous_progress_loss = 0
 
     def _forward_training(self, batch, epoch=None):
         """
