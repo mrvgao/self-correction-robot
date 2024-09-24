@@ -42,5 +42,18 @@ nohup /home/ubuntu/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scri
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/single-task/final-generate-3k.json > tasl-logs/demo_3k_log_prob.log &
 nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/single-task/final-human-50.json > tasl-logs/demo_50_log_prob.log &
 
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/single-task/final-human-50.json > tasl-logs/demo_50_log_prob.log &
+
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/single-task/final-generate-3k.json > tasl-logs/demo_3k_log_prob.log &
+
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/multi-tasks/ArrangeVegetables-from-scratch.json > multi-tasks/arrange-vegetables.log &
+
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/multi-tasks/MicrowaveThawing-from-sratch.json > multi-tasks/microwave-thawing.log &
+
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/multi-tasks/PrepareCoffe-from-scratch.json > multi-tasks/prepare-coffee.log &
+
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/multi-tasks/PreSoakPan-from-scratch.json > multi-tasks/prepare-soak-pan.log &
+
+nohup /home/minquangao/anaconda3/envs/robocasa/bin/python -u self_correct_robot/scripts/train.py --config=self_correct_robot/scripts/running_configs/tasl/multi-tasks/RestockPantry-from-scratch.json > multi-tasks/restockpantry.log &
 
 wait
