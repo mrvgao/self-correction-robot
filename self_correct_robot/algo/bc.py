@@ -153,7 +153,7 @@ class BC(PolicyAlgo):
 
             # print('divergence: ', divergence)
 
-            loss_with_divergence = value_loss + 5 * divergence
+            loss_with_divergence = value_loss + divergence
 
             # epsilon = 1e-6
             # value_loss = torch.mean((torch.log(value_hat + epsilon) - torch.log(value_y + epsilon)) ** 2)
