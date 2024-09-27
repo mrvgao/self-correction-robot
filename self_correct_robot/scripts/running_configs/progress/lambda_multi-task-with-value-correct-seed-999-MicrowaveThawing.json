@@ -83,7 +83,7 @@
                 "filter_key": "50_demos",
                 "path": "/home/ubuntu/robocasa-statics/robocasa/datasets/datasets/v0.1/multi_stage/defrosting_food/MicrowaveThawing/2024-05-11/demo_im128.hdf5"
             }],
-        "output_dir": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/multi-task-with-atten-value-model",
+        "output_dir": "/home/ubuntu/robocasa-statics/robocasa/im/bc_xfmr/multi-task-with-atten-value-model-thawing",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
