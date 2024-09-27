@@ -6,7 +6,7 @@
     "cuda_mark": "cuda:0",
     "bias": 0,
     "experiment": {
-        "name": "progress-monitor-train-prepare-coffee-with-3k-lr-5e-4-split-resnet",
+        "name": "Sept-26-progress-monitor-train-prepare-coffee-with-3k-lr-5e-4-split-resnet",
         "validate": false,
         "tau": 30,
         "only_rollout": false,

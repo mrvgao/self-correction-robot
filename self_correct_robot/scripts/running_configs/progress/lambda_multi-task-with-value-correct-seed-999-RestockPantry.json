@@ -6,7 +6,7 @@
     "cuda_mark": "cuda:0",
     "bias": 0,
     "experiment": {
-        "name": "progress-monitor-train-with-restock-pantry-3k-lr-5e-4-split-resnet",
+        "name": "Sept-6-progress-monitor-train-with-restock-pantry-3k-lr-5e-4-split-resnet",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
