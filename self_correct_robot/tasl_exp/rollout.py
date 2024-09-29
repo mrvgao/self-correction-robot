@@ -27,15 +27,9 @@ def adaptive_threshold(i, max_step):
 
 
 def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pbar):
-
-    # tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
     THRESHOLD = config.experiment.rollout.vloss_threshold
-
-    trying = 0
+    trying = 100
     TRYING_MAX = 1
-
-    # find = tmp_value_loss_current < THRESHOLD
-
     find = False
 
     policy.policy.nets['policy'].train()
@@ -45,7 +39,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
         policy.policy.value_optimizer.zero_grad()
         tmp_value_loss_current.backward()
         policy.policy.value_optimizer.step()
-        
+
         find = tmp_value_loss_current < THRESHOLD
         trying += 1
         # print(f'trying, {trying}/{TRYING_MAX}, loss is {tmp_value_loss_current}')
