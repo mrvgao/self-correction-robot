@@ -192,7 +192,7 @@ def get_current_state_value_loss(rollout_policy, config, obs_dict, previouss_plo
     tmp_value_loss = torch.mean((value_predict - target_value) ** 2)
     divergence = torch.mean(torch.log(previouss_ploss / tmp_value_loss) ** 2)
 
-    tmp_value_loss = tmp_value_loss + divergence
+    tmp_value_loss = divergence
 
     return tmp_value_loss, ac_dist
 
