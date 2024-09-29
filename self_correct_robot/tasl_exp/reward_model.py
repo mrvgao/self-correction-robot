@@ -23,8 +23,6 @@ from self_correct_robot.utils.load_dataloader import load_dataloader
 import json
 from self_correct_robot.config import config_factory
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,7"
-
 torch.backends.cudnn.benchmark = True
 
 try:
