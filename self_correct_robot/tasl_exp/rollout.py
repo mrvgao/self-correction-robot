@@ -65,72 +65,6 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
 
     return find
 
-    # for i in range(TRYING):
-    #
-    #     trust_threshold = adaptive_threshold(i, TRYING-1)
-    #
-    #
-    #     if step_i == 0:
-    #         # tmp_value_loss = tmp_value_loss_current
-    #         if tmp_value_loss_current < minimal_loss:
-    #             minimal_loss = tmp_value_loss_current
-    #             minimal_loss_state = env.get_state()
-    #             minimal_loss_ac_dist = ac_dist
-    #             minimal_index = i
-    #
-    #         print(f'trying time: {i}, miniaml loss is :{minimal_loss} threshold is : {trust_threshold}')
-    #
-    #         if minimal_loss > trust_threshold:
-    #             ob_dict = env.reset()
-    #             tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
-    #         else:
-    #             if minimal_index != i: env = env.reset_to(minimal_loss_state)
-    #
-    #             frame = env.render(mode="rgb_array", height=512, width=512)
-    #             video_frames.append(frame)
-    #             find = True
-    #             break
-    #     else:
-    #         sample = ac_dist.sample()
-    #         tmp_ac = sample[:, 0, :]
-    #
-    #         # apply ac
-    #         tmp_ac = post_process_ac(tmp_ac, False, obj=policy)
-    #         tmp_ob_dict_next, _, _, _ = env.step(tmp_ac)  # drive first time
-    #
-    #         _, tmp_target_value_next = get_value_target(tmp_ob_dict_next, config, policy, policy.policy.device)
-    #
-    #         tmp_prepared_batch_next = policy._prepare_observation(tmp_ob_dict_next)
-    #         tmp_next_ac_dist, tmp_value_next = policy.policy.nets['policy'].forward_train(obs_dict=tmp_prepared_batch_next)
-    #
-    #         tmp_target_value = tmp_target_value_next
-    #         tmp_target_value = normalize(tmp_target_value)
-    #
-    #         tmp_value = tmp_value_next
-    #         #
-    #         tmp_value_loss_forward = torch.mean((tmp_target_value - tmp_value)**2)
-    #
-    #         if tmp_value_loss_forward < minimal_loss:
-    #             minimal_loss = tmp_value_loss_forward
-    #             minimal_loss_state = env.get_state()
-    #             minimal_loss_ac_dist = ac_dist
-    #             minimal_index = i
-    #
-    #         print(f'trying time: {i}, mini loss is :{minimal_loss} threshold is : {trust_threshold}')
-    #
-    #         if minimal_loss < trust_threshold: # get the action that can drive to next state
-    #             print('find NEW action that can drive to TRUST state')
-    #             find = True
-    #             if i != minimal_index: env.reset_to(minimal_loss_state)
-    #
-    #             revert_frame = env.render(mode="rgb_array", height=512, width=512)
-    #             video_frames.append(revert_frame)
-    #             break
-    #         else:
-    #             env.reset_to(original_state)
-    #
-    # return find
-
 
 def run_rollout(
         policy,
@@ -224,41 +158,8 @@ def run_rollout(
         if with_progress_correct:
             # original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
             #     rollout_policy=policy, obs_dict=ob_dict)
-            find = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, progress_bar)
-            # tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
-            # print('tmp value loss', tmp_value_loss_current)
+            find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, progress_bar)
 
-            # loss_threshold = 0.01
-            #
-            # if step_i == 0:
-            #     for i in range(10):
-            #         if tmp_value_loss_current > loss_threshold:
-            #             print(f'trying: {i} more with ', tmp_value_loss_current)
-            #             ob_dict = env.reset()
-            #             tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
-            #         else:
-            #             step_i += 1
-
-            # if step_i > 0 and tmp_value_loss_current > loss_threshold:
-            #     env.reset_to(previous_states)
-            # elif step_i > 0 and tmp_value_loss_current < loss_threshold:
-            #     step_i += 1
-
-            # if not find:
-            #     abnormal_states[STATE].append(env.get_state())
-            #     print('cannot find reliable forward state!')
-                # abnormal_states[LOSS].append(current_value_loss)
-                # print('we cannot find a new action that can drive to trust state')
-                # print('re-start a new task')
-                # break
-            # else:
-                # previous_value = target_value
-                # break
-                # print('this state is reliable!')
-        # else:
-            # tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
-            # print('tmp value loss', tmp_value_loss_current)
-            previous_states = env.get_state()
         ac = policy(ob=ob_dict, goal=goal_dict)
         ob_dict, r, done, _ = env.step(ac)
         progress_bar.update(1)
