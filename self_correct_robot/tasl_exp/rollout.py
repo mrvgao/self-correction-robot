@@ -101,7 +101,7 @@ def run_rollout(
         old_state = pickle.load(f)
         print('load pickle!')
 
-    env.reset_to(old_state)
+    ob_dict = env.reset_to(old_state)
 
     policy.start_episode(lang=env._ep_lang_str)
 
