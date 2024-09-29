@@ -178,8 +178,9 @@ def get_current_state_value_loss(rollout_policy, config, obs_dict):
     obs_dict = rollout_policy._prepare_observation(obs_dict)
     # tmp_ob, tmp_target_value = get_value_target(obs_dict, config, rollout_policy, rollout_policy.policy.device)
 
+    ac_dist, value_predict = rollout_policy.policy.nets['policy'].forward_train(obs_dict=obs_dict)
+
     with torch.no_grad():
-        ac_dist, value_predict = rollout_policy.policy.nets['policy'].forward_train(obs_dict=obs_dict)
         left_image = resnet_transformer(obs_dict['robot0_agentview_left_image'][0])
         hand_image = resnet_transformer(obs_dict['robot0_eye_in_hand_image'][0])
         right_image = resnet_transformer(obs_dict['robot0_agentview_right_image'][0])
@@ -187,6 +188,7 @@ def get_current_state_value_loss(rollout_policy, config, obs_dict):
 
         target_value = rollout_policy.policy.target_value_model(left_image, hand_image, right_image, task_emb)
 
+    target_value = target_value.detach()
     tmp_value_loss = torch.mean((value_predict - target_value) ** 2)
 
     return tmp_value_loss, ac_dist
