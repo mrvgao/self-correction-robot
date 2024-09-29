@@ -16,6 +16,7 @@ from tqdm import tqdm
 from self_correct_robot.utils.tasl_exp import get_current_state_value_loss
 import copy
 import matplotlib.pyplot as plt
+import torch
 
 
 def adaptive_threshold(i, max_step):
@@ -48,6 +49,8 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
     policy.policy.nets['policy'].eval()
     #
     print('current PLoss = ', tmp_value_loss_current)
+
+    torch.cuda.empty_cache()
 
     return find, tmp_value_loss_current
 
