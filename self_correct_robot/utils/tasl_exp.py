@@ -185,7 +185,7 @@ def get_current_state_value_loss(rollout_policy, config, obs_dict):
     import pdb; pdb.set_trace()
     task_emb = torch.tensor(obs_dict['lang_emb'], dtype=torch.float32)
 
-    target_value = rollout_policy.target_value_model(left_image, hand_image, right_image, task_emb)
+    target_value = rollout_policy.policy.target_value_model(left_image, hand_image, right_image, task_emb[0])
 
     tmp_value_loss = torch.mean((value_predict - target_value) ** 2)
 
