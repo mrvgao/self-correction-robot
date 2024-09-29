@@ -172,6 +172,7 @@ def run_rollout(
 
         previous_gripper_pose = ob_dict[GRIPPER_KEY]
 
+        del ob_dict
         # rews.append(r)
 
         # cur_success_metrics = env.is_success()
