@@ -37,17 +37,17 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
 
     policy.policy.nets['policy'].train()
 
-    while not find and trying < TRYING_MAX:
-        policy.policy.value_optimizer.zero_grad()
-        tmp_value_loss_current.backward()
-        policy.policy.value_optimizer.step()
-        tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
-        find = tmp_value_loss_current < THRESHOLD
-        trying += 1
-        # print(f'trying, {trying}/{TRYING_MAX}, loss is {tmp_value_loss_current}')
-
-    policy.policy.nets['policy'].eval()
+    # while not find and trying < TRYING_MAX:
+    #     policy.policy.value_optimizer.zero_grad()
+    #     tmp_value_loss_current.backward()
+    #     policy.policy.value_optimizer.step()
+    #     tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
+    #     find = tmp_value_loss_current < THRESHOLD
+    #     trying += 1
+    #     # print(f'trying, {trying}/{TRYING_MAX}, loss is {tmp_value_loss_current}')
     #
+    # policy.policy.nets['policy'].eval()
+    # #
     print('current PLoss = ', tmp_value_loss_current)
 
     return find, tmp_value_loss_current
