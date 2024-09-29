@@ -391,8 +391,7 @@ def rollout_with_stats(
         horizon_list = [horizon]
 
     with tqdm(total=num_episodes * config.experiment.rollout.horizon*len(horizon_list), desc='rollout progress') as pbar:
-        for env_i, env in enumerate(envs):
-            import pdb; pdb.set_trace()
+        for env_i, env in enumerate(envs, horizon_list):
             batched = isinstance(env, SubprocVectorEnv)
 
             if batched:
@@ -444,7 +443,7 @@ def rollout_with_stats(
                     rollout_info = run_rollout(
                         policy=policy,
                         env=env,
-                        horizon=None,
+                        horizon=horizon,
                         render=render,
                         use_goals=use_goals,
                         video_writer=env_video_writer,
