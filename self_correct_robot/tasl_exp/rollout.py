@@ -153,8 +153,7 @@ def run_rollout(
             # original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
             #     rollout_policy=policy, obs_dict=ob_dict)
             find, ploss = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, progress_bar)
-            import pdb; pdb.set_trace()
-            plosses.append(ploss.cpu())
+            plosses.append(ploss.cpu().detach().numpy())
 
         ac = policy(ob=ob_dict, goal=goal_dict)
 
