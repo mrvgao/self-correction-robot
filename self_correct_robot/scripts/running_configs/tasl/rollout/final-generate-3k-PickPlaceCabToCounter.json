@@ -11,7 +11,7 @@
         "validate": false,
         "tau": 30,
         "only_rollout": true,
-        "value_loss_lambda": 0.5,
+        "value_loss_lambda": 0.3,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,

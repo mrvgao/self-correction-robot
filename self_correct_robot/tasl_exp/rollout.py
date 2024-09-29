@@ -51,8 +51,9 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
 
     find = tmp_value_loss_current < THRESHOLD
 
+    policy.policy.nets['policy'].train()
+
     while not find and trying < TRYING_MAX:
-        policy.policy.nets['policy'].train()
         policy.policy.value_optimizer.zero_grad()
         tmp_value_loss_current.backward()
         policy.policy.value_optimizer.step()
