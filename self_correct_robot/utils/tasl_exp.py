@@ -179,7 +179,10 @@ def get_current_state_value_loss(rollout_policy, config, obs_dict):
     # tmp_ob, tmp_target_value = get_value_target(obs_dict, config, rollout_policy, rollout_policy.policy.device)
 
     ac_dist, value_predict = rollout_policy.policy.nets['policy'].forward_train(obs_dict=obs_dict)
-    
+
+    for k, v in obs_dict.items():
+        v.to('cpu')
+
     with torch.no_grad():
         left_image = resnet_transformer(obs_dict['robot0_agentview_left_image'][0])
         hand_image = resnet_transformer(obs_dict['robot0_eye_in_hand_image'][0])
