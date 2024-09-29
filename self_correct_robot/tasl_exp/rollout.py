@@ -26,7 +26,7 @@ def adaptive_threshold(i, max_step):
     return threshold
 
 
-def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pbar):
+def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pbar, previous_ploss):
     THRESHOLD = config.experiment.rollout.vloss_threshold
     trying = 0
     TRYING_MAX = 100
@@ -35,12 +35,16 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
     policy.policy.nets['policy'].train()
 
     while not find and trying < TRYING_MAX:
-        tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
-        policy.policy.value_optimizer.zero_grad()
-        tmp_value_loss_current.backward()
-        policy.policy.value_optimizer.step()
+        tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict, previous_ploss)
 
-        find = tmp_value_loss_current < THRESHOLD
+        if tmp_value_loss_current < THRESHOLD:
+            find = True
+            break
+        else:
+            policy.policy.value_optimizer.zero_grad()
+            tmp_value_loss_current.backward()
+            policy.policy.value_optimizer.step()
+
         trying += 1
         # print(f'trying, {trying}/{TRYING_MAX}, loss is {tmp_value_loss_current}')
 
@@ -143,6 +147,8 @@ def run_rollout(
 
     plosses = []
 
+    previous_p_loss = 1
+
     for step_i in range(config.experiment.rollout.horizon):
 
         # print('step := {}/{}'.format(step_i, horizon))
@@ -152,7 +158,8 @@ def run_rollout(
         if with_progress_correct:
             # original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
             #     rollout_policy=policy, obs_dict=ob_dict)
-            find, ploss = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, progress_bar)
+            find, ploss = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, progress_bar, previous_p_loss)
+            previous_p_loss = ploss
             plosses.append(ploss.cpu().detach().numpy())
 
         ac = policy(ob=ob_dict, goal=goal_dict)

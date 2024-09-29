@@ -174,7 +174,7 @@ def post_process_ac(ac, batched, obj):
     return ac
 
 
-def get_current_state_value_loss(rollout_policy, config, obs_dict):
+def get_current_state_value_loss(rollout_policy, config, obs_dict, previouss_ploss):
     obs_dict = rollout_policy._prepare_observation(obs_dict)
     # tmp_ob, tmp_target_value = get_value_target(obs_dict, config, rollout_policy, rollout_policy.policy.device)
 
@@ -190,6 +190,9 @@ def get_current_state_value_loss(rollout_policy, config, obs_dict):
 
     target_value = target_value.detach()
     tmp_value_loss = torch.mean((value_predict - target_value) ** 2)
+    divergence = torch.mean(torch.log(previouss_ploss / tmp_value_loss) ** 2)
+
+    tmp_value_loss += divergence
 
     return tmp_value_loss, ac_dist
 
