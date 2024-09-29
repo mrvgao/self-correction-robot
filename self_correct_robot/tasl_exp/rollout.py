@@ -97,7 +97,7 @@ def run_rollout(
     ob_dict = env.reset()
     old_state = env.get_state()
 
-    with open('old_state.pkl', 'rb') as f:
+    with open('old_state.pkl', 'wb') as f:
         pickle.dump(old_state, f)
         print('saved pickle!')
 
