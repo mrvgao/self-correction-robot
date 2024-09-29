@@ -214,6 +214,7 @@ def train(config, device):
             )
 
             num_episodes = config.experiment.rollout.n
+            import pdb; pdb.set_trace()
             all_rollout_logs, video_paths = RolloutUtils.rollout_with_stats(
                 policy=rollout_model,
                 envs=env_iterator(),
