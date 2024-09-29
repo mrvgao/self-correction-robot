@@ -28,8 +28,8 @@ def adaptive_threshold(i, max_step):
 
 def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pbar):
     THRESHOLD = config.experiment.rollout.vloss_threshold
-    trying = 100
-    TRYING_MAX = 1
+    trying = 0
+    TRYING_MAX = 100
     find = False
 
     policy.policy.nets['policy'].train()
