@@ -11,7 +11,7 @@
         "validate": false,
         "tau": 30,
         "only_rollout": true,
-        "value_loss_lambda": 0.3,
+        "value_loss_lambda": 0.5,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,
@@ -43,7 +43,8 @@
             "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
-            "with_progress_correct": true
+            "with_progress_correct": true,
+            "vloss_threshold": 0.05
         },
         "env_meta_update_dict": {
             "env_kwargs": {
