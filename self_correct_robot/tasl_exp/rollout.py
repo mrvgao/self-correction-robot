@@ -110,6 +110,8 @@ def run_rollout(
     assert isinstance(policy, RolloutPolicy)
     assert isinstance(env, EnvBase) or isinstance(env, EnvWrapper) or isinstance(env, SubprocVectorEnv)
 
+    import pdb; pdb.set_trace()
+    
     batched = isinstance(env, SubprocVectorEnv)
 
     ob_dict = env.reset()
