@@ -15,6 +15,7 @@ import pickle
 from tqdm import tqdm
 from self_correct_robot.utils.tasl_exp import get_current_state_value_loss
 import copy
+import matplotlib.pyplot as plt
 
 
 def adaptive_threshold(i, max_step):
@@ -50,7 +51,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
     tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
     print('current PLoss = ', tmp_value_loss_current)
 
-    return find
+    return find, tmp_value_loss_current
 
 
 def run_rollout(
@@ -144,6 +145,8 @@ def run_rollout(
     # while step_i < config.experiment.rollout.horizon:
     previous_gripper_pose = None
 
+    plosses = []
+
     for step_i in range(config.experiment.rollout.horizon):
 
         # print('step := {}/{}'.format(step_i, horizon))
@@ -153,7 +156,8 @@ def run_rollout(
         if with_progress_correct:
             # original_ac_dist, execute_ac, execute_value_predict = get_deployment_action_and_value_from_obs(
             #     rollout_policy=policy, obs_dict=ob_dict)
-            find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, progress_bar)
+            find, ploss = find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, progress_bar)
+            plosses.append(ploss)
 
         ac = policy(ob=ob_dict, goal=goal_dict)
         ob_dict, r, done, _ = env.step(ac)
@@ -264,6 +268,12 @@ def run_rollout(
         #     if done or (terminate_on_success and success["task"]):
         #         end_step = step_i
         #         break
+
+    plt.plot(range(len(plosses)), plosses)
+    plt.xlabel('steps')
+    plt.ylabel('Progress Loss')
+    plt.title('PLoss with Steps')
+    plt.savefig('ploss-with-step.png')
 
     with open(f'abnormal_states_{frame_save_dir}.pkl', 'wb') as f:
         pickle.dump(abnormal_states, f)
