@@ -44,7 +44,7 @@
             "warmstart": 0,
             "terminate_on_success": true,
             "with_progress_correct": true,
-            "vloss_threshold": 0.05
+            "vloss_threshold": 0.07
         },
         "env_meta_update_dict": {
             "env_kwargs": {
