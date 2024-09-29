@@ -182,10 +182,9 @@ def get_current_state_value_loss(rollout_policy, config, obs_dict):
     left_image = resnet_transformer(obs_dict['robot0_agentview_left_image'][0])
     hand_image = resnet_transformer(obs_dict['robot0_eye_in_hand_image'][0])
     right_image = resnet_transformer(obs_dict['robot0_agentview_right_image'][0])
-    import pdb; pdb.set_trace()
-    task_emb = torch.tensor(obs_dict['lang_emb'], dtype=torch.float32)
+    task_emb = torch.tensor(obs_dict['lang_emb'][0], dtype=torch.float32)
 
-    target_value = rollout_policy.policy.target_value_model(left_image, hand_image, right_image, task_emb[0])
+    target_value = rollout_policy.policy.target_value_model(left_image, hand_image, right_image, task_emb)
 
     tmp_value_loss = torch.mean((value_predict - target_value) ** 2)
 
