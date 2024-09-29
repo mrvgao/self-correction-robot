@@ -180,6 +180,8 @@ def get_current_state_value_loss(rollout_policy, config, obs_dict):
 
     ac_dist, value_predict = rollout_policy.policy.nets['policy'].forward_train(obs_dict=obs_dict)
 
+    import pdb; pdb.set_trace()
+
     with torch.no_grad():
         left_image = resnet_transformer(obs_dict['robot0_agentview_left_image'][0])
         hand_image = resnet_transformer(obs_dict['robot0_eye_in_hand_image'][0])
