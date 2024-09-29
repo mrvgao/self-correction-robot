@@ -160,8 +160,6 @@ def run_rollout(
 
         ac = policy(ob=ob_dict, goal=goal_dict)
 
-        del ob_dict
-
         ob_dict, r, done, _ = env.step(ac)
         progress_bar.update(1)
 
