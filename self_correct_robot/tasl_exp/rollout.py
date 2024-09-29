@@ -48,7 +48,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
     # policy.policy.nets['policy'].eval()
     find = True
 
-    tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
+    # tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
     print('current PLoss = ', tmp_value_loss_current)
 
     return find, tmp_value_loss_current
