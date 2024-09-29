@@ -95,6 +95,15 @@ def run_rollout(
     batched = isinstance(env, SubprocVectorEnv)
 
     ob_dict = env.reset()
+    old_state = env.get_state()
+
+    with open('old_state.pkl', 'rb') as f:
+        pickle.dump(old_state, f)
+        print('saved pickle!')
+
+    import pdb; pdb.set_trace()
+
+
     policy.start_episode(lang=env._ep_lang_str)
 
     environment_name = env._env_name
