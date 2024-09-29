@@ -50,8 +50,6 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
     #
     print('current PLoss = ', tmp_value_loss_current)
 
-    torch.cuda.empty_cache()
-
     return find, tmp_value_loss_current
 
 
