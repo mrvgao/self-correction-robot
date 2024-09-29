@@ -25,25 +25,7 @@ def adaptive_threshold(i, max_step):
 
 
 def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pbar):
-    original_state = env.get_state()
-    TRYING = 10
-
     tmp_value_loss_current, ac_dist = get_current_state_value_loss(policy, config, ob_dict)
-
-    max_trust = -float('inf')
-
-    # max_ac = None
-    find = False
-
-    minimal_loss = float('inf')
-    minimal_loss_state = None
-    minimal_loss_ac_dist = None
-    minimal_index = -1
-
-    previous_value = -float('inf')
-
-    # CONSTRAINT_FORWARD = False
-
     THRESHOLD = config.experiment.rollout.vloss_threshold
 
     trying = 0
