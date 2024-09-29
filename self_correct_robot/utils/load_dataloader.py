@@ -82,7 +82,6 @@ def load_dataloader(config, device):
     eval_shape_meta_list = []
     eval_env_name_list = []
     eval_env_horizon_list = []
-    import pdb; pdb.set_trace()
     for (dataset_i, dataset_cfg) in enumerate(config.train.data):
         do_eval = dataset_cfg.get("do_eval", True)
         if do_eval is not True:
