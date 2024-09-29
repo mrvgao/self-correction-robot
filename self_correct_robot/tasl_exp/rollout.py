@@ -159,6 +159,9 @@ def run_rollout(
             plosses.append(ploss.cpu())
 
         ac = policy(ob=ob_dict, goal=goal_dict)
+
+        del ob_dict
+
         ob_dict, r, done, _ = env.step(ac)
         progress_bar.update(1)
 
@@ -172,7 +175,6 @@ def run_rollout(
 
         previous_gripper_pose = ob_dict[GRIPPER_KEY]
 
-        del ob_dict
         # rews.append(r)
 
         # cur_success_metrics = env.is_success()
