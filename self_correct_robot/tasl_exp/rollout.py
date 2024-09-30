@@ -49,7 +49,7 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
         trying += 1
 
     policy.policy.nets['policy'].eval()
-    print('current PLoss = ', tmp_value_loss_current)
+    # print('current PLoss = ', tmp_value_loss_current)
 
     return find, tmp_value_loss_current
 
@@ -71,7 +71,7 @@ def run_rollout_ahead(initial_state, policy, env, config):
 
     previous_p_loss = 1
 
-    for step_i in range(config.experiment.rollout.horizon):
+    for step_i in tqdm(range(config.experiment.rollout.horizon)):
         find, ploss = find_reliable_action(step_i, ob_dict, env, policy, config, None, None, previous_p_loss)
         previous_p_loss = ploss.detach().clone()
         plosses.append(ploss.cpu().detach().numpy())
