@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
+import pickle
 
 
 def soft_update(source, target, tau):
@@ -196,7 +197,7 @@ def lr_scheduler_from_optim_params(net_optim_params, net, optimizer, num_trainin
         raise ValueError("Invalid LR scheduler type: {}".format(lr_scheduler_type))
 
 
-def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False):
+def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, total_step=0):
     """
     Backpropagate loss and update parameters for network with
     name @name.
@@ -220,7 +221,14 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False):
     optim.zero_grad()
     loss.backward(retain_graph=retain_graph)
 
-    import pdb; pdb.set_trace()
+    gradients = []
+    if total_step % 10 == 0:
+        for param in net.parameters():
+            if param.grad is not None:
+                gradients.append(param.grad.view(-1))
+
+        with open(f'action-progress-{total_step}.pkl', 'wb') as f:
+            pickle.dump(gradients, f)
 
     # gradient clipping
     if max_grad_norm is not None:

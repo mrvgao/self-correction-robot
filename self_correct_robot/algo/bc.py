@@ -1,6 +1,7 @@
 """
 Implementation of Behavioral Cloning (BC).
 """
+import pickle
 from collections import OrderedDict
 
 import torch
@@ -200,11 +201,21 @@ class BC(PolicyAlgo):
 
             # value_loss.backward(retain_graph=True)
 
+            self.total_step += 1
+
             if not validate:
                 self.value_optimizer.zero_grad()
                 loss_with_divergence.backward(retain_graph=True)
 
-                import pdb; pdb.set_trace()
+                gradients = []
+
+                if self.total_step % 10 == 0:
+                    for param in self.nets['policy'].parameters():
+                        if param.grad is not None:
+                            gradients.append(param.grad.view(-1))
+
+                    with open(f'gradient-progress-{self.total_step}.pkl', 'wb') as f:
+                        pickle.dump(gradients, f)
 
                 # trust_threshold = 0.80
                 value_loss_threshold = 850
@@ -221,7 +232,7 @@ class BC(PolicyAlgo):
                 # elif value_loss_cpu < value_loss_threshold:
                     # print('updating action')
                     # losses['action_loss'] *= trust
-                step_info = self._train_step(losses)
+                step_info = self._train_step(losses, self.total_step)
                 info.update(step_info)
                     # else:
                     #     torch.nn.utils.clip_grad_norm_(self.nets['policy'].parameters(), max_norm=1.0)
@@ -281,7 +292,7 @@ class BC(PolicyAlgo):
         losses["action_loss"] = action_loss
         return losses
 
-    def _train_step(self, losses):
+    def _train_step(self, losses, total_step):
         """
         Internal helper function for BC algo class. Perform backpropagation on the
         loss tensors in @losses to update networks.
@@ -297,6 +308,7 @@ class BC(PolicyAlgo):
             optim=self.optimizers["policy"],
             loss=losses["action_loss"],
             max_grad_norm=self.global_config.train.max_grad_norm,
+            total_step=total_step
         )
         info["policy_grad_norms"] = policy_grad_norms
 
@@ -943,6 +955,8 @@ class BC_Transformer_GMM(BC_Transformer):
         )
 
         self.previous_progress_loss = 1
+
+        self.total_steps = 0
 
     def _forward_training(self, batch, epoch=None):
         """
