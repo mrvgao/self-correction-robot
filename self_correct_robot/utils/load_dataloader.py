@@ -90,7 +90,7 @@ def load_dataloader(config, device):
         eval_shape_meta_list.append(shape_meta_list[dataset_i])
         eval_env_name_list.append(env_meta_list[dataset_i]["env_name"])
         # horizon = dataset_cfg.get("horizon", config.experiment.rollout.horizon)
-        horizon = max(dataset_cfg.get('horizon', 0), config.experiment.rollout.horizon)
+        horizon = dataset_cfg.get('horizon', 0)
         eval_env_horizon_list.append(horizon)
 
 
