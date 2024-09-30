@@ -201,7 +201,6 @@ def train(config, device):
         # Evaluate the model by by running rollouts
 
         # do rollouts at fixed rate or if it's time to save a new ckpt
-        video_paths = None
         rollout_check = (epoch % config.experiment.rollout.rate == 0) #or (should_save_ckpt and ckpt_reason == "time") # remove this section condition, not desired when rollouts are expensive and saving frequent checkpoints
 
         if config.experiment.rollout.enabled and (epoch > config.experiment.rollout.warmstart) and rollout_check:

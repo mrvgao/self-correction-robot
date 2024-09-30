@@ -454,7 +454,7 @@ def rollout_with_stats(
 
             if video_dir is not None:
                 # video is written per env
-                video_str = "_epoch_{}.mp4".format(epoch) if epoch is not None else ".mp4"
+                video_str = "{}_epoch_{}.mp4".format(env._ep_lang_str, epoch) if epoch is not None else ".mp4"
                 video_path = os.path.join(video_dir, "{}{}".format(env_name, video_str))
                 video_writer = imageio.get_writer(video_path, fps=20)
 
