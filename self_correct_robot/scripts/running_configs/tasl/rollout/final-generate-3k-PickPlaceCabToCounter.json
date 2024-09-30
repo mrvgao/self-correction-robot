@@ -7,7 +7,7 @@
     "bias": 0,
     "experiment": {
         "name": "TASL-mg-3k-rollout",
-        "ckpt_path": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k/20240925051751/models/model_epoch_1430.pth",
+        "ckpt_path": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k/20240925051751/models/model_epoch_800.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": true,
