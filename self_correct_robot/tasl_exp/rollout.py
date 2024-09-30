@@ -54,6 +54,43 @@ def find_reliable_action(step_i, ob_dict, env, policy, config, video_frames, pba
     return find, tmp_value_loss_current
 
 
+def run_rollout_ahead(initial_state, policy, env, config):
+    # with open('old_state.pkl', 'rb') as f:
+    #     old_state = pickle.load(f)
+    #     print('load pickle!')
+
+    ob_dict = env.reset_to(initial_state)
+
+    policy.start_episode(lang=env._ep_lang_str)
+
+    goal_dict = None
+
+    previous_gripper_pose = None
+
+    plosses = []
+
+    previous_p_loss = 1
+
+    for step_i in range(config.experiment.rollout.horizon):
+        find, ploss = find_reliable_action(step_i, ob_dict, env, policy, config, None, None, previous_p_loss)
+        previous_p_loss = ploss.detach().clone()
+        plosses.append(ploss.cpu().detach().numpy())
+
+        ac = policy(ob=ob_dict, goal=goal_dict)
+
+        ob_dict, r, done, _ = env.step(ac)
+        # progress_bar.update(1)
+
+        GRIPPER_KEY = 'robot0_gripper_qpos'
+
+        if previous_gripper_pose is not None:
+            delta = np.mean(ob_dict[GRIPPER_KEY] - previous_gripper_pose)
+            if delta == 0:
+                print('FINISH THIS TASK!')
+                break
+
+        previous_gripper_pose = ob_dict[GRIPPER_KEY]
+
 def run_rollout(
         policy,
         env,
@@ -110,8 +147,6 @@ def run_rollout(
 
     policy.start_episode(lang=env._ep_lang_str)
 
-    environment_name = env._env_name
-
     goal_dict = None
     if use_goals:
         # retrieve goal from the environment
@@ -148,6 +183,11 @@ def run_rollout(
     plosses = []
 
     previous_p_loss = 1
+
+    ahead_num = 2
+    for ahead in range(ahead_num):
+        print('running ahead = ', ahead)
+        run_rollout_ahead(old_state, policy, env, config)
 
     for step_i in range(config.experiment.rollout.horizon):
 
