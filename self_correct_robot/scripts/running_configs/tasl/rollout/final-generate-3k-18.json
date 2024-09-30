@@ -1,9 +1,10 @@
+
 {
     "algo_name": "bc",
     "value_model_path": "/data2/mgao/self-correction-robot/value_models/progress-monitor-train-with-3k/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:7",
+    "cuda_mark": "cuda:4",
     "bias": 0,
     "experiment": {
         "name": "TASL-mg-3k-rollout",
@@ -38,12 +39,12 @@
         "video_skip": 5,
         "rollout": {
             "enabled": true,
-            "n": 10,
+            "n": 25,
             "horizon": 1000,
             "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
-            "with_progress_correct": true,
+            "with_progress_correct": false,
             "vloss_threshold": 0.1
         },
         "env_meta_update_dict": {
@@ -81,14 +82,13 @@
     },
     "train": {
         "data": [
-            {
-                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCabToCounter/2024-04-24/demo_gentex_im128_randcams.hdf5",
+             {
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_stove/TurnOnStove/2024-05-02/demo_gentex_im128_randcams.hdf5",
                 "horizon": 500,
-                "do_eval": true,
                 "filter_key": "50_demos"
             }
         ],
-        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k-rollout-cab-to-counter",
+        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k-rollout-18",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
