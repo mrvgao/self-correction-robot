@@ -137,18 +137,18 @@ def run_rollout(
     batched = isinstance(env, SubprocVectorEnv)
 
     ob_dict = env.reset()
-    old_state = env.get_state()
+    # old_state = env.get_state()
 
     # with open('new_old_state.pkl', 'wb') as f:
     #     pickle.dump(old_state, f)
     #
     # import pdb; pdb.set_trace()
 
-    with open('new_old_state.pkl', 'rb') as f:
-        old_state = pickle.load(f)
-        print('load pickle!')
+    # with open('new_old_state.pkl', 'rb') as f:
+    #     old_state = pickle.load(f)
+    #     print('load pickle!')
 
-    ob_dict = env.reset_to(old_state)
+    # ob_dict = env.reset_to(old_state)
 
     policy.start_episode(lang=env._ep_lang_str)
 
