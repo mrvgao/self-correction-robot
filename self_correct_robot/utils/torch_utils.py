@@ -220,6 +220,8 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False):
     optim.zero_grad()
     loss.backward(retain_graph=retain_graph)
 
+    import pdb; pdb.set_trace()
+
     # gradient clipping
     if max_grad_norm is not None:
         torch.nn.utils.clip_grad_norm_(net.parameters(), max_grad_norm)

@@ -204,6 +204,8 @@ class BC(PolicyAlgo):
                 self.value_optimizer.zero_grad()
                 loss_with_divergence.backward(retain_graph=True)
 
+                import pdb; pdb.set_trace()
+
                 # trust_threshold = 0.80
                 value_loss_threshold = 850
                 # value_loss_lambda = 0.1
