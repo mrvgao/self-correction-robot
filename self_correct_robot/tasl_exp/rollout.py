@@ -136,10 +136,15 @@ def run_rollout(
 
     batched = isinstance(env, SubprocVectorEnv)
 
-    # ob_dict = env.reset()
-    # old_state = env.get_state()
+    ob_dict = env.reset()
+    old_state = env.get_state()
 
-    with open('old_state.pkl', 'rb') as f:
+    with open('new_old_state.pkl', 'wb') as f:
+        pickle.dump(old_state, f)
+
+    import pdb; pdb.set_trace()
+
+    with open('new_old_state.pkl', 'rb') as f:
         old_state = pickle.load(f)
         print('load pickle!')
 
@@ -184,10 +189,10 @@ def run_rollout(
 
     previous_p_loss = 1
 
-    ahead_num = 2
-    for ahead in range(ahead_num):
-        print('running ahead = ', ahead)
-        run_rollout_ahead(old_state, policy, env, config)
+    # ahead_num = 2
+    # for ahead in range(ahead_num):
+    #     print('running ahead = ', ahead)
+    #     run_rollout_ahead(old_state, policy, env, config)
 
     for step_i in range(config.experiment.rollout.horizon):
 
