@@ -92,7 +92,6 @@
                 "do_eval": false,
                 "filter_key": "50_demos"
             },
-
             {
                 "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToSink/2024-04-25/demo_gentex_im128_randcams.hdf5",
                 "horizon": 700,
@@ -111,7 +110,6 @@
                 "do_eval": false,
                 "filter_key": "50_demos"
             },
-
             {
                 "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPMicrowaveToCounter/2024-04-26/demo_gentex_im128_randcams.hdf5",
                 "horizon": 500,
@@ -130,7 +128,6 @@
                 "do_eval": false,
                 "filter_key": "50_demos"
             },
-
             {
                 "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_doors/OpenSingleDoor/2024-04-24/demo_gentex_im128_randcams.hdf5",
                 "horizon": 500,
@@ -149,7 +146,6 @@
                 "do_eval": false,
                 "filter_key": "50_demos"
             },
-
             {
                 "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_doors/CloseDoubleDoor/2024-04-29/demo_gentex_im128_randcams.hdf5",
                 "horizon": 700,
@@ -168,7 +164,6 @@
                 "do_eval": false,
                 "filter_key": "50_demos"
             },
-
             {
                 "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_sink/TurnOnSinkFaucet/2024-04-25/demo_gentex_im128_randcams.hdf5",
                 "horizon": 500,
@@ -187,7 +182,6 @@
                 "do_eval": false,
                 "filter_key": "50_demos"
             },
-
              {
                 "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_stove/TurnOnStove/2024-05-02/demo_gentex_im128_randcams.hdf5",
                 "horizon": 500,
@@ -206,7 +200,6 @@
                 "do_eval": false,
                 "filter_key": "50_demos"
             },
-
             {
                 "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_coffee/CoffeeServeMug/2024-05-01/demo_gentex_im128_randcams.hdf5",
                 "horizon": 600,
