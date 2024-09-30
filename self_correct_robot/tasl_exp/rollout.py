@@ -139,10 +139,10 @@ def run_rollout(
     ob_dict = env.reset()
     old_state = env.get_state()
 
-    with open('new_old_state.pkl', 'wb') as f:
-        pickle.dump(old_state, f)
-
-    import pdb; pdb.set_trace()
+    # with open('new_old_state.pkl', 'wb') as f:
+    #     pickle.dump(old_state, f)
+    #
+    # import pdb; pdb.set_trace()
 
     with open('new_old_state.pkl', 'rb') as f:
         old_state = pickle.load(f)
