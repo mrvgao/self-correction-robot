@@ -196,6 +196,8 @@ def run_rollout(
 
     rollout_horizon = int(horizon * 1.3)
 
+    import pdb; pdb.set_trace()
+
     for step_i in range(rollout_horizon):
 
         # print('step := {}/{}'.format(step_i, horizon))
