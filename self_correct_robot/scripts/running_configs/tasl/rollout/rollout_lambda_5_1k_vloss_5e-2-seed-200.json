@@ -38,13 +38,13 @@
         "video_skip": 5,
         "rollout": {
             "enabled": true,
-            "horizon": 2000,
-            "n": 10,
+            "horizon": 1000,
+            "n": 50,
             "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
             "with_progress_correct": true,
-            "vloss_threshold": 0.05
+            "vloss_threshold": 0.1
         },
         "env_meta_update_dict": {
             "env_kwargs": {
