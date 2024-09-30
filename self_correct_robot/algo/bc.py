@@ -956,7 +956,7 @@ class BC_Transformer_GMM(BC_Transformer):
 
         self.previous_progress_loss = 1
 
-        self.total_steps = 0
+        self.total_step = 0
 
     def _forward_training(self, batch, epoch=None):
         """
