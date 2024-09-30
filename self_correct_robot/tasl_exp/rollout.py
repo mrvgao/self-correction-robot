@@ -194,9 +194,7 @@ def run_rollout(
     #     print('running ahead = ', ahead)
     #     run_rollout_ahead(old_state, policy, env, config)
 
-    rollout_horizon = int(horizon * 1.3)
-
-    import pdb; pdb.set_trace()
+    rollout_horizon = int(horizon * 1.5)
 
     for step_i in range(rollout_horizon):
 
