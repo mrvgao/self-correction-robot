@@ -39,11 +39,11 @@
         "rollout": {
             "enabled": true,
             "n": 5,
-            "horizon": 500,
+            "horizon": 700,
             "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
-            "with_progress_correct": false,
+            "with_progress_correct": true,
             "vloss_threshold": 0.1
         },
         "env_meta_update_dict": {
