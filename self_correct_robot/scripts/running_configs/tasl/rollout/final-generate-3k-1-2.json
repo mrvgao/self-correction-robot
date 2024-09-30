@@ -3,7 +3,7 @@
     "value_model_path": "/data2/mgao/self-correction-robot/value_models/progress-monitor-train-with-3k/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:2",
+    "cuda_mark": "cuda:0",
     "bias": 0,
     "experiment": {
         "name": "TASL-mg-3k-rollout",
@@ -81,13 +81,18 @@
     },
     "train": {
         "data": [
+            {
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5",
+                "horizon": 500,
+                "filter_key": "50_demos"
+            },
              {
-                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToStove/2024-04-26/demo_gentex_im128_randcams.hdf5",
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCabToCounter/2024-04-24/demo_gentex_im128_randcams.hdf5",
                 "horizon": 500,
                 "filter_key": "50_demos"
             }
         ],
-        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k-rollout-7",
+        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k-rollout-1",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,

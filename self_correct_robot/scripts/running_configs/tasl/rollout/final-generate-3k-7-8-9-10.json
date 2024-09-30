@@ -1,10 +1,9 @@
-
 {
     "algo_name": "bc",
     "value_model_path": "/data2/mgao/self-correction-robot/value_models/progress-monitor-train-with-3k/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:3",
+    "cuda_mark": "cuda:2",
     "bias": 0,
     "experiment": {
         "name": "TASL-mg-3k-rollout",
@@ -83,12 +82,27 @@
     "train": {
         "data": [
              {
-                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_doors/OpenDoubleDoor/2024-04-26/demo_gentex_im128_randcams.hdf5",
-                "horizon": 1000,
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToStove/2024-04-26/demo_gentex_im128_randcams.hdf5",
+                "horizon": 500,
+                "filter_key": "50_demos"
+            },
+              {
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPStoveToCounter/2024-05-01/demo_gentex_im128_randcams.hdf5",
+                "horizon": 500,
+                "filter_key": "50_demos"
+            },
+             {
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_doors/OpenSingleDoor/2024-04-24/demo_gentex_im128_randcams.hdf5",
+                "horizon": 500,
+                "filter_key": "50_demos"
+            },
+            {
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_doors/CloseSingleDoor/2024-04-24/demo_gentex_im128_randcams.hdf5",
+                "horizon": 500,
                 "filter_key": "50_demos"
             }
         ],
-        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k-rollout-11",
+        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k-rollout-7",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,

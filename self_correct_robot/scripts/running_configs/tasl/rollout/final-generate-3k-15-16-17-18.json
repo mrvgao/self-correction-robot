@@ -86,6 +86,21 @@
                 "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_sink/TurnOnSinkFaucet/2024-04-25/demo_gentex_im128_randcams.hdf5",
                 "horizon": 500,
                 "filter_key": "50_demos"
+            },
+             {
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_sink/TurnOffSinkFaucet/2024-04-25/demo_gentex_im128_randcams.hdf5",
+                "horizon": 500,
+                "filter_key": "50_demos"
+            },
+              {
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_sink/TurnSinkSpout/2024-04-29/demo_gentex_im128_randcams.hdf5",
+                "horizon": 500,
+                "filter_key": "50_demos"
+            },
+            {
+                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_stove/TurnOnStove/2024-05-02/demo_gentex_im128_randcams.hdf5",
+                "horizon": 500,
+                "filter_key": "50_demos"
             }
         ],
         "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k-rollout-15",
