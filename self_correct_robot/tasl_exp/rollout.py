@@ -489,7 +489,7 @@ def rollout_with_stats(
                 #     os.makedirs(save_frames_dir)
 
                 try:
-                    previous_policy_parameters = copy.deepcopy(policy.policy.nets['policy'].state_dict())
+                    # previous_policy_parameters = copy.deepcopy(policy.policy.nets['policy'].state_dict())
 
                     rollout_info = run_rollout(
                         policy=policy,
@@ -508,7 +508,7 @@ def rollout_with_stats(
                         progress_bar=pbar
                     )
 
-                    policy.policy.nets['policy'].load_state_dict(previous_policy_parameters)
+                    # policy.policy.nets['policy'].load_state_dict(previous_policy_parameters)
 
                     final_steps.append(rollout_info['final_step'])
 
