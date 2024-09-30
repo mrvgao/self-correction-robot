@@ -225,7 +225,7 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, 
     if total_step % 10 == 0:
         for param in net.parameters():
             if param.grad is not None:
-                gradients.append(param.grad.view(-1))
+                gradients.append(param.grad.view(-1).cpu().numpy())
 
         with open(f'action-progress-{total_step}.pkl', 'wb') as f:
             pickle.dump(gradients, f)

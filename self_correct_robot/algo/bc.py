@@ -212,7 +212,7 @@ class BC(PolicyAlgo):
                 if self.total_step % 10 == 0:
                     for param in self.nets['policy'].parameters():
                         if param.grad is not None:
-                            gradients.append(param.grad.view(-1))
+                            gradients.append(param.grad.view(-1).cpu().numpy())
 
                     with open(f'gradient-progress-{self.total_step}.pkl', 'wb') as f:
                         pickle.dump(gradients, f)
