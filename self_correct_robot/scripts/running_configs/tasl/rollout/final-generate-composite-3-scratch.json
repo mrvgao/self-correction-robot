@@ -3,11 +3,11 @@
     "value_model_path": "/data2/mgao/self-correction-robot/value_models/progress-monitor-train-with-3k/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:0",
+    "cuda_mark": "cuda:2",
     "bias": 0,
     "experiment": {
         "name": "TASL-mg-3k-rollout",
-        "ckpt_path": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k/20240925051751/models/model_epoch_800.pth",
+        "ckpt_path": "/data3/mgao/robocasa/im/bc_xfmr/09-22-multi-task-coffee/20240925051751/models/model_epoch_1000.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": true,
@@ -81,18 +81,14 @@
     },
     "train": {
         "data": [
-            {
-                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5",
-                "horizon": 500,
-                "filter_key": "50_demos"
-            },
              {
-                "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCabToCounter/2024-04-24/demo_gentex_im128_randcams.hdf5",
-                "horizon": 500,
-                "filter_key": "50_demos"
+                "horizon": 1000,
+                "filter_key": "50_demos",
+                "do_eval":  true,
+                "path": "/data3/mgao/robocasa/datasets/v0.1/multi_stage/brewing/PrepareCoffee/2024-05-07/demo_im128.hdf5"
             }
         ],
-        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k-rollout-1",
+        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k-rollout-composite-3",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
