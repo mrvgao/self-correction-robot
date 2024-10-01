@@ -234,8 +234,8 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, 
                     return i, n // i
 
         rows, cols = closest_factors(len(gradients))
-        gradient1_reshaped = progress_gradient.reshape(rows, cols)
-        gradient2_reshaped = progress_gradient.reshape(rows, cols)
+        gradient1_reshaped = np.array(gradients).reshape(rows, cols)
+        gradient2_reshaped = np.array(progress_gradient).reshape(rows, cols)
 
         correlation_matrix = np.zeros_like(gradient1_reshaped)
 
