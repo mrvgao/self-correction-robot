@@ -214,8 +214,8 @@ class BC(PolicyAlgo):
                         if param.grad is not None:
                             gradients.append(param.grad.view(-1).cpu().numpy())
 
-                    with open(f'gradient-progress-{self.total_step}.pkl', 'wb') as f:
-                        pickle.dump(gradients, f)
+                    # with open(f'gradient-progress-{self.total_step}.pkl', 'wb') as f:
+                    #     pickle.dump(gradients, f)
 
                 # trust_threshold = 0.80
                 value_loss_threshold = 850
@@ -232,7 +232,7 @@ class BC(PolicyAlgo):
                 # elif value_loss_cpu < value_loss_threshold:
                     # print('updating action')
                     # losses['action_loss'] *= trust
-                step_info = self._train_step(losses, self.total_step)
+                step_info = self._train_step(losses, self.total_step, progress_gradient=gradients)
                 info.update(step_info)
                     # else:
                     #     torch.nn.utils.clip_grad_norm_(self.nets['policy'].parameters(), max_norm=1.0)
@@ -292,7 +292,7 @@ class BC(PolicyAlgo):
         losses["action_loss"] = action_loss
         return losses
 
-    def _train_step(self, losses, total_step):
+    def _train_step(self, losses, total_step, progress_gradient):
         """
         Internal helper function for BC algo class. Perform backpropagation on the
         loss tensors in @losses to update networks.
@@ -308,7 +308,8 @@ class BC(PolicyAlgo):
             optim=self.optimizers["policy"],
             loss=losses["action_loss"],
             max_grad_norm=self.global_config.train.max_grad_norm,
-            total_step=total_step
+            total_step=total_step,
+            progress_gradient=progress_gradient
         )
         info["policy_grad_norms"] = policy_grad_norms
 

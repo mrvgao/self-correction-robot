@@ -6,6 +6,7 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 import pickle
+import matplotlib.pyplot as plt
 
 
 def soft_update(source, target, tau):
@@ -197,7 +198,7 @@ def lr_scheduler_from_optim_params(net_optim_params, net, optimizer, num_trainin
         raise ValueError("Invalid LR scheduler type: {}".format(lr_scheduler_type))
 
 
-def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, total_step=0):
+def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, total_step=0, progress_gradient=None):
     """
     Backpropagate loss and update parameters for network with
     name @name.
@@ -227,8 +228,36 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, 
             if param.grad is not None:
                 gradients.append(param.grad.view(-1).cpu().numpy())
 
-        with open(f'action-progress-{total_step}.pkl', 'wb') as f:
-            pickle.dump(gradients, f)
+        def closest_factors(n):
+            for i in range(int(n ** 0.5), 0, -1):
+                if n % i == 0:
+                    return i, n // i
+
+        rows, cols = closest_factors(len(gradients))
+        gradient1_reshaped = progress_gradient.reshape(rows, cols)
+        gradient2_reshaped = progress_gradient.reshape(rows, cols)
+
+        correlation_matrix = np.zeros_like(gradient1_reshaped)
+
+        # Calculate the cosine similarity for each element
+        for i in range(rows):
+            for j in range(cols):
+                g1, g2 = gradient1_reshaped[i, j], gradient2_reshaped[i, j]
+                norm_g1 = np.linalg.norm(g1)
+                norm_g2 = np.linalg.norm(g2)
+
+                if norm_g1 != 0 and norm_g2 != 0:
+                    # Calculate the cosine similarity
+                    correlation_matrix[i, j] = np.dot(g1, g2) / (norm_g1 * norm_g2)
+                else:
+                    # If any gradient is zero, assign 0 correlation
+                    correlation_matrix[i, j] = 0
+
+        plt.figure(figsize=(10, 10))
+        plt.imshow(correlation_matrix, cmap='RdYlGn', interpolation='none', aspect='auto')
+        plt.colorbar(label='Cosine Similarity')
+        plt.title(f'Gradient Directional Cosine Similarity Matrix (Continuous Values)-step-{total_step}')
+        plt.savefig(f'gradient_direction_cosine_similarity_matrix_continuous_{total_step}.png')
 
     # gradient clipping
     if max_grad_norm is not None:
