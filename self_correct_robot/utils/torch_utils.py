@@ -258,7 +258,7 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, 
                     correlation_matrix[i, j] = 0
 
         plt.figure(figsize=(10, 10))
-        plt.imshow(correlation_matrix, cmap='RdYlGn', interpolation='none', aspect='auto')
+        plt.imshow(correlation_matrix, cmap='RdYlGn', interpolation='bilinear', aspect='auto')
         plt.colorbar(label='Cosine Similarity')
         plt.title(f'Gradient Directional Cosine Similarity Matrix (Continuous Values)-step-{total_step}')
         plt.savefig(f'gradient_direction_cosine_similarity_matrix_continuous_{total_step}.png')
