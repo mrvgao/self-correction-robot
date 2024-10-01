@@ -7,6 +7,7 @@
     "bias": 0,
     "experiment": {
         "name": "TASL-human-50",
+        "ckpt_path": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-50-demos/20240928140103/models/model_epoch_975.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
