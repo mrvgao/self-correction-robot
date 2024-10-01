@@ -7,7 +7,7 @@
     "bias": 0,
     "experiment": {
         "name": "TASL-mg-3k-rollout",
-        "ckpt_path": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-50-demos/20240928140103/models/model_epoch_975.pth",
+        "ckpt_path": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-50-demos/20241001063914/models/model_epoch_125.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": true,
@@ -43,7 +43,7 @@
             "rate": 1,
             "warmstart": 0,
             "terminate_on_success": true,
-            "with_progress_correct": true,
+            "with_progress_correct": false,
             "vloss_threshold": 0.5
         },
         "env_meta_update_dict": {
