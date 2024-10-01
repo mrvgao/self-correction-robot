@@ -233,9 +233,13 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, 
                 if n % i == 0:
                     return i, n // i
 
-        rows, cols = closest_factors(len(gradients))
-        gradient1_reshaped = np.array(gradients).reshape(rows, cols)
-        gradient2_reshaped = np.array(progress_gradient).reshape(rows, cols)
+        flattened_gradients_1 = [g.mean().item() for g in gradients]
+        flattened_gradients_2 = [g.mean().item() for g in progress_gradient]
+
+        rows, cols = closest_factors(len(flattened_gradients_1))
+
+        gradient1_reshaped = np.array(flattened_gradients_1).reshape(rows, cols)
+        gradient2_reshaped = np.array(flattened_gradients_2).reshape(rows, cols)
 
         correlation_matrix = np.zeros_like(gradient1_reshaped)
 
