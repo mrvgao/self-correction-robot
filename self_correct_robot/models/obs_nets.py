@@ -1018,12 +1018,11 @@ class MIMO_Transformer(Module):
         """
         return { k : list(self.output_shapes[k]) for k in self.output_shapes }
 
-    def get_progress_embedding(self, inputs, original_embeddings):
+    def get_progress_embedding(self, progress, original_embeddings):
         import pdb; pdb.set_trace()
         if self.progress_dim_size == 0:
             return torch.zeros(original_embeddings.shape, device=original_embeddings.device)
         else:
-            progress = inputs['obs']['progresses']
             progress_embeddings = self.nets['progress_mlp'](progress)
             progress_embeddings = progress_embeddings.unsqueeze(1).repeat(1, original_embeddings.shape[1], 1)
             return progress_embeddings
