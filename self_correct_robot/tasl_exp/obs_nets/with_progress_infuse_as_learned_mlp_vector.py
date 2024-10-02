@@ -209,9 +209,6 @@ class MIMO_Transformer(Module):
                 to @self.output_shapes. Leading dimensions will be batch and time [B, T, ...]
                 for each tensor.
         """
-
-        import pdb; pdb.set_trace()
-
         for obs_group in self.input_obs_group_shapes:
             for k in self.input_obs_group_shapes[obs_group]:
                 # first two dimensions should be [B, T] for inputs
