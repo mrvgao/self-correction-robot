@@ -1078,8 +1078,9 @@ class MIMO_Transformer(Module):
         Returns:
             embeddings (torch.Tensor): input embeddings to pass to transformer backbone.
         """
+        progresses = inputs['obs']['progresses']
         embeddings = self.nets["embed_encoder"](inputs)
-        progress_embeddings = self.get_progress_embedding(inputs, embeddings)
+        progress_embeddings = self.get_progress_embedding(progresses, embeddings)
         time_embeddings = self.embed_timesteps(embeddings)
         embeddings = embeddings + time_embeddings
         embeddings = embeddings + progress_embeddings
@@ -1103,8 +1104,6 @@ class MIMO_Transformer(Module):
                 to @self.output_shapes. Leading dimensions will be batch and time [B, T, ...]
                 for each tensor.
         """
-        import pdb; pdb.set_trace()
-
         for obs_group in self.input_obs_group_shapes:
             for k in self.input_obs_group_shapes[obs_group]:
                 # first two dimensions should be [B, T] for inputs
