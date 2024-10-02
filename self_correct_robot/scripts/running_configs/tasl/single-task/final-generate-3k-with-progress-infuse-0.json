@@ -190,7 +190,7 @@
                 "filter_key": "3000_demos"
             }
         ],
-        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-3k",
+        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/progress-infuse-0",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
