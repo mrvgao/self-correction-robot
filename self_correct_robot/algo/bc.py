@@ -18,6 +18,7 @@ import self_correct_robot.utils.obs_utils as ObsUtils
 
 from self_correct_robot.algo import register_algo_factory_func, PolicyAlgo
 from self_correct_robot.utils.tasl_exp import get_value_target
+import numpy as np
 
 
 @register_algo_factory_func("bc")
@@ -131,7 +132,7 @@ class BC(PolicyAlgo):
                 that might be relevant for logging
         """
         with TorchUtils.maybe_no_grad(no_grad=validate):
-            batch['obs']['progresses'] = batch["progress"]
+            batch['obs']['progresses'] = np.array(batch["progress"] * 10)
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
             predictions = self._forward_training(batch)
             losses = self._compute_losses(predictions, batch)

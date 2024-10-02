@@ -559,8 +559,7 @@ class SequenceDataset(torch.utils.data.Dataset):
 
         progress = index_in_demo / demo_length
         # progresses = np.array([(index_in_demo + i) / demo_length for i in range(self.seq_length)])
-        # value = index_in_demo + 2 - demo_length
-        progresses = np.array([progress] * self.seq_length)
+        # progresses = np.array([progress] * self.seq_length)
 
         meta = self.get_dataset_sequence_from_demo(
             demo_id,
@@ -624,7 +623,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         # also return the sampled index
         meta["index"] = index
 
-        meta['progress'] = progresses
+        meta['progress'] = progress
 
         if demo_id in self._demo_id_to_demo_lang_emb:
             # language embedding
