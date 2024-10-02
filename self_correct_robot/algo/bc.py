@@ -209,11 +209,6 @@ class BC(PolicyAlgo):
 
                 gradients = []
 
-                if self.total_step % 10 == 0:
-                    for param in self.nets['policy'].parameters():
-                        if param.grad is not None:
-                            gradients.append(param.grad.view(-1).cpu().numpy())
-
                     # with open(f'gradient-progress-{self.total_step}.pkl', 'wb') as f:
                     #     pickle.dump(gradients, f)
 
@@ -232,7 +227,7 @@ class BC(PolicyAlgo):
                 # elif value_loss_cpu < value_loss_threshold:
                     # print('updating action')
                     # losses['action_loss'] *= trust
-                step_info = self._train_step(losses, self.total_step, progress_gradient=gradients)
+                step_info = self._train_step(losses, self.total_step, progress_gradient=None)
                 info.update(step_info)
                     # else:
                     #     torch.nn.utils.clip_grad_norm_(self.nets['policy'].parameters(), max_norm=1.0)

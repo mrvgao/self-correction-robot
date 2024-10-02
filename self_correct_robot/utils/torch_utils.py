@@ -222,47 +222,6 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, 
     optim.zero_grad()
     loss.backward(retain_graph=retain_graph)
 
-    gradients = []
-    if total_step % 10 == 0:
-        for param in net.parameters():
-            if param.grad is not None:
-                gradients.append(param.grad.view(-1).cpu().numpy())
-
-        def closest_factors(n):
-            for i in range(int(n ** 0.5), 0, -1):
-                if n % i == 0:
-                    return i, n // i
-
-        flattened_gradients_1 = [g.mean().item() for g in gradients]
-        flattened_gradients_2 = [g.mean().item() for g in progress_gradient]
-
-        rows, cols = closest_factors(len(flattened_gradients_1))
-
-        gradient1_reshaped = np.array(flattened_gradients_1).reshape(rows, cols)
-        gradient2_reshaped = np.array(flattened_gradients_2).reshape(rows, cols)
-
-        correlation_matrix = np.zeros_like(gradient1_reshaped)
-
-        # Calculate the cosine similarity for each element
-        for i in range(rows):
-            for j in range(cols):
-                g1, g2 = gradient1_reshaped[i, j], gradient2_reshaped[i, j]
-                norm_g1 = np.linalg.norm(g1)
-                norm_g2 = np.linalg.norm(g2)
-
-                if norm_g1 != 0 and norm_g2 != 0:
-                    # Calculate the cosine similarity
-                    correlation_matrix[i, j] = np.dot(g1, g2) / (norm_g1 * norm_g2)
-                else:
-                    # If any gradient is zero, assign 0 correlation
-                    correlation_matrix[i, j] = 0
-
-        plt.figure(figsize=(10, 10))
-        plt.imshow(correlation_matrix, cmap='RdYlGn', interpolation='bilinear', aspect='auto')
-        plt.colorbar(label='Cosine Similarity')
-        plt.title(f'Gradient Directional Cosine Similarity Matrix (Continuous Values)-step-{total_step}')
-        plt.savefig(f'gradient_direction_cosine_similarity_matrix_continuous_{total_step}.png')
-
     # gradient clipping
     if max_grad_norm is not None:
         torch.nn.utils.clip_grad_norm_(net.parameters(), max_grad_norm)
