@@ -6,8 +6,7 @@
     "cuda_mark": "cuda:7",
     "bias": 0,
     "experiment": {
-        "name": "TASL-human-50-fix-counter-to-stove-env",
-        "ckpt_path": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-50-demos/20240928140103/models/model_epoch_975.pth",
+        "name": "TASL-human-50-progress-infuse",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
