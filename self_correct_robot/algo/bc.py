@@ -865,7 +865,7 @@ class BC_Transformer_GMM(BC_Transformer):
             msg="Error: expect temporal dimension of obs batch to match transformer context length {}".format(self.context_length),
         )
 
-        dists, predict_value = self.nets["policy"].forward_train(
+        dists = self.nets["policy"].forward_train(
             obs_dict=batch["obs"], 
             actions=None,
             goal_dict=batch["goal_obs"],

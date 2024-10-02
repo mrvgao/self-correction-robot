@@ -1279,7 +1279,7 @@ class TransformerGMMActorNetwork(TransformerActorNetwork):
 
         forward_kwargs = dict(obs=obs_dict, goal=goal_dict)
 
-        outputs, predict_value = MIMO_Transformer.forward(self, **forward_kwargs)
+        outputs = MIMO_Transformer.forward(self, **forward_kwargs)
 
         means = outputs["mean"]
         scales = outputs["scale"]
@@ -1315,7 +1315,7 @@ class TransformerGMMActorNetwork(TransformerActorNetwork):
             # Wrap distribution with Tanh
             dists = TanhWrappedDistribution(base_dist=dists, scale=1.)
 
-        return dists, predict_value
+        return dists
 
     def forward(self, obs_dict, actions=None, goal_dict=None):
         """
