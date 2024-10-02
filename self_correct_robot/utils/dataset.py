@@ -583,8 +583,6 @@ class SequenceDataset(torch.utils.data.Dataset):
             prefix="obs"
         )
 
-        meta["obs"]["progresses"] = progresses
-
         if self.load_next_obs:
             meta["next_obs"] = self.get_obs_sequence_from_demo(
                 demo_id,
@@ -625,7 +623,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         # also return the sampled index
         meta["index"] = index
 
-        meta['progress'] = progress
+        meta['progress'] = progresses
 
         if demo_id in self._demo_id_to_demo_lang_emb:
             # language embedding
