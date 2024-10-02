@@ -132,7 +132,7 @@ class BC(PolicyAlgo):
         """
         import pdb; pdb.set_trace()
         with TorchUtils.maybe_no_grad(no_grad=validate):
-            batch['obs']['progresses'] = batch["progresses"]
+            batch['obs']['progresses'] = batch["progress"]
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
             predictions = self._forward_training(batch)
             losses = self._compute_losses(predictions, batch)
