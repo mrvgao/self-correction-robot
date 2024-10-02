@@ -113,11 +113,7 @@ class BC(PolicyAlgo):
         # this minimizes the amount of data transferred to GPU
         return TensorUtils.to_float(TensorUtils.to_device(input_batch, self.device))
 
-    def update_value_network(self, tau=0.005):
-        for target_param, param in zip(self.target_value_model.parameters(), self.main_value_model.parameters()):
-            target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
-
-    def train_on_batch(self, batch, epoch, validate=False, config=None):
+    def train_on_batch(self, batch, epoch, validate=False):
         """
         Training on a single batch of data.
 
@@ -134,109 +130,17 @@ class BC(PolicyAlgo):
             info (dict): dictionary of relevant inputs, outputs, and losses
                 that might be relevant for logging
         """
-
         with TorchUtils.maybe_no_grad(no_grad=validate):
-
-            _, value_y = get_value_target(batch, config, self, self.device)
-
-            # get action fused value, which is corresponding with the progress
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
-            predictions, value_hat = self._forward_training(batch)
-            # calculate accumulated difference, if this value is greater than some threshold, re-train this model.
+            predictions = self._forward_training(batch)
             losses = self._compute_losses(predictions, batch)
-
-            value_y_delta = value_y - value_hat  # set progress to 0 to 1
-
-            value_loss = torch.mean(value_y_delta ** 2)
-
-            # divergence = torch.mean((value_loss - self.previous_progress_loss)**2)
-            divergence = torch.mean(torch.log(self.previous_progress_loss / value_loss)**2)
-
-            # print('divergence: ', divergence)
-
-            loss_with_divergence = value_loss + divergence
-
-            # epsilon = 1e-6
-            # value_loss = torch.mean((torch.log(value_hat + epsilon) - torch.log(value_y + epsilon)) ** 2)
-
-            # value_delta = get_diff_percentage(value_hat, normalized_value_y)
 
             info["predictions"] = TensorUtils.detach(predictions)
             info["losses"] = TensorUtils.detach(losses)
-            # info[f'Parameters_hist_of_value_embedding_{epoch}'] = self.nets.policy.nets.value_embedding.weight.detach().cpu().numpy()
-            info["value_loss"] = TensorUtils.detach(loss_with_divergence)
-
-            # trust = ((100 - value_delta) ** 2) / (100 ** 2) if value_delta < 100 else 0
-            # info['trust'] = TensorUtils.detach(trust).item() if not isinstance(trust, (int, float)) else trust
-
-            info["value_lr"] = self.value_optimizer.param_groups[0]['lr']
-
-            # tau = config.experiment.tau
-            # _lambda = 0.05
-
-            # if value_loss < self.epsilon_train:
-            #     self.epsilon_train = value_loss.clone().detach()
-
-            # epsilon_LVM = 0.1
-            # vloss_threshold = 0.01
-            # vloss_threshod_min = 0.02**2
-
-            # log_prob = info["losses"]["log_probs"]
-            # threshold_value = tau * (config.bias + value_loss + epsilon_LVM + self.epsilon_train)
-            #
-            # regularization_term = torch.max(
-            #     torch.zeros_like(log_prob),
-            #     threshold_value - log_prob
-            # )
-            #
-            # info['threshold_value'] = TensorUtils.detach(threshold_value)
-            # info['threshold_term'] = TensorUtils.detach(regularization_term)
-
-            # print('regularization term: ', regularization_term.item())
-
-            # value_loss += _lambda * regularization_term
-
-            # beta = config.experiment.value_loss_lambda
-            # value_reg_loss = beta * value_loss
-
-            # value_loss.backward(retain_graph=True)
-
-            self.total_step += 1
 
             if not validate:
-                self.value_optimizer.zero_grad()
-                loss_with_divergence.backward(retain_graph=True)
-
-                gradients = []
-
-                    # with open(f'gradient-progress-{self.total_step}.pkl', 'wb') as f:
-                    #     pickle.dump(gradients, f)
-
-                # trust_threshold = 0.80
-                value_loss_threshold = 850
-                # value_loss_lambda = 0.1
-
-                torch.cuda.synchronize()  # Synchronize before moving to CPU
-
-                value_loss_cpu = value_loss.detach().cpu().item()
-
-                if torch.isnan(value_loss).any() or torch.isinf(value_loss).any():
-                    print("value_loss contains NaN or Inf values.")
-                # elif value_loss.item() < vloss_threshold:
-                #     print('update policy')
-                # elif value_loss_cpu < value_loss_threshold:
-                    # print('updating action')
-                    # losses['action_loss'] *= trust
-                step_info = self._train_step(losses, self.total_step, progress_gradient=None)
+                step_info = self._train_step(losses)
                 info.update(step_info)
-                    # else:
-                    #     torch.nn.utils.clip_grad_norm_(self.nets['policy'].parameters(), max_norm=1.0)
-                    #     torch.nn.utils.clip_grad_norm_(self.nets["value_decoder"].parameters(), max_norm=1.0)
-
-                self.value_optimizer.step()
-
-                with torch.no_grad():
-                    self.previous_progress_loss = value_loss.detach().clone()
 
         return info
 
@@ -287,7 +191,7 @@ class BC(PolicyAlgo):
         losses["action_loss"] = action_loss
         return losses
 
-    def _train_step(self, losses, total_step, progress_gradient):
+    def _train_step(self, losses):
         """
         Internal helper function for BC algo class. Perform backpropagation on the
         loss tensors in @losses to update networks.
@@ -302,16 +206,8 @@ class BC(PolicyAlgo):
             net=self.nets["policy"],
             optim=self.optimizers["policy"],
             loss=losses["action_loss"],
-            max_grad_norm=self.global_config.train.max_grad_norm,
-            total_step=total_step,
-            progress_gradient=progress_gradient
         )
         info["policy_grad_norms"] = policy_grad_norms
-
-        # step through optimizers
-        for k in self.lr_schedulers:
-            if self.lr_schedulers[k] is not None:
-                self.lr_schedulers[k].step()
         return info
 
     def log_info(self, info):
@@ -797,6 +693,7 @@ class BC_Transformer(BC):
             goal_shapes=self.goal_shapes,
             ac_dim=self.ac_dim,
             encoder_kwargs=ObsUtils.obs_encoder_kwargs_from_config(self.obs_config.encoder),
+            progress_dim_size=self.algo_config.progress_emb_size,
             **BaseNets.transformer_args_from_config(self.algo_config.transformer),
         )
         self._set_params_from_config()
@@ -936,23 +833,23 @@ class BC_Transformer_GMM(BC_Transformer):
         self._set_params_from_config()
         self.nets = self.nets.float().to(self.device)
 
-        self.value_optimizer = torch.optim.Adam(
-            self.nets['policy'].parameters(),
-            lr=self.global_config.value_lr,
-            weight_decay=self.global_config.value_weight_decay
-        )
-
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            self.value_optimizer,
-            mode='min',
-            factor=0.75,
-            patience=2,
-            verbose=False
-        )
-
-        self.previous_progress_loss = 1
-
-        self.total_step = 0
+        # self.value_optimizer = torch.optim.Adam(
+        #     self.nets['policy'].parameters(),
+        #     lr=self.global_config.value_lr,
+        #     weight_decay=self.global_config.value_weight_decay
+        # )
+        #
+        # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        #     self.value_optimizer,
+        #     mode='min',
+        #     factor=0.75,
+        #     patience=2,
+        #     verbose=False
+        # )
+        #
+        # self.previous_progress_loss = 1
+        #
+        # self.total_step = 0
 
     def _forward_training(self, batch, epoch=None):
         """

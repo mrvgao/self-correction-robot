@@ -198,7 +198,7 @@ def lr_scheduler_from_optim_params(net_optim_params, net, optimizer, num_trainin
         raise ValueError("Invalid LR scheduler type: {}".format(lr_scheduler_type))
 
 
-def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False, total_step=0, progress_gradient=None):
+def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False):
     """
     Backpropagate loss and update parameters for network with
     name @name.

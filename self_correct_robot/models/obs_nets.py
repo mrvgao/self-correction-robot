@@ -977,6 +977,7 @@ class MIMO_Transformer(Module):
 
         self.progress_dim_size = progress_dim_size
 
+        import pdb; pdb.set_trace()
         if progress_dim_size > 0:
             self.nets['progress_mlp'] = MLP(
                 input_dim=1, output_dim=transformer_embed_dim,
@@ -1081,10 +1082,10 @@ class MIMO_Transformer(Module):
             embeddings (torch.Tensor): input embeddings to pass to transformer backbone.
         """
         embeddings = self.nets["embed_encoder"](inputs)
-        # progress_embeddings = self.get_progress_embedding(inputs, embeddings)
+        progress_embeddings = self.get_progress_embedding(inputs, embeddings)
         time_embeddings = self.embed_timesteps(embeddings)
         embeddings = embeddings + time_embeddings
-        # embeddings = embeddings + progress_embeddings
+        embeddings = embeddings + progress_embeddings
         embeddings = self.nets["embed_ln"](embeddings)
         embeddings = self.nets["embed_drop"](embeddings)
 

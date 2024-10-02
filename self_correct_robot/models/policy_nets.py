@@ -997,6 +997,7 @@ class TransformerActorNetwork(MIMO_Transformer):
         transformer_nn_parameter_for_timesteps=False,
         goal_shapes=None,
         encoder_kwargs=None,
+        progress_dim_size=0,
     ):
         """
         Args:
@@ -1076,8 +1077,8 @@ class TransformerActorNetwork(MIMO_Transformer):
             transformer_sinusoidal_embedding=transformer_sinusoidal_embedding,
             transformer_activation=transformer_activation,
             transformer_nn_parameter_for_timesteps=transformer_nn_parameter_for_timesteps,
-
             encoder_kwargs=encoder_kwargs,
+            progress_dim_size=progress_dim_size
         )
 
     def _get_output_shapes(self):
