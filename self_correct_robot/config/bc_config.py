@@ -108,3 +108,5 @@ class BCConfig(BaseConfig):
         self.algo.transformer.causal = True                         # whether the transformer is causal
 
         self.algo.language_conditioned = False                      # whether policy is language conditioned
+
+        self.algo.progress_emb_size = 0
