@@ -978,9 +978,10 @@ class MIMO_Transformer(Module):
         self.progress_dim_size = progress_dim_size
 
         if progress_dim_size > 0:
-            self.nets['progress_mlp'] = MLP(
-                input_dim=1, output_dim=transformer_embed_dim,
-                layer_dims=[progress_dim_size],
+            self.nets['progress_mlp'] = torch.nn.Sequential(
+                nn.Linear(in_features=1, out_features=progress_dim_size),
+                nn.ReLU(),
+                nn.Linear(in_features=progress_dim_size, out_features=transformer_embed_dim)
             )
 
         # layer norm for embeddings
