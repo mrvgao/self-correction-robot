@@ -3,7 +3,7 @@
     "value_model_path": "/data2/mgao/self-correction-robot/value_models/progress-monitor-train-with-3k/best_model.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:0",
+    "cuda_mark": "cuda:1",
     "bias": 0,
     "experiment": {
         "name": "TASL-mg-3k-rollout",
