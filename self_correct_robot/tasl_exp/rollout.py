@@ -452,6 +452,7 @@ def rollout_with_stats(
             else:
                 env_name = env.name
 
+            import pdb; pdb.set_trace()
             if video_dir is not None:
                 # video is written per env
                 video_str = "_epoch_{}.mp4".format(epoch) if epoch is not None else ".mp4"
