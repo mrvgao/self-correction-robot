@@ -3,7 +3,7 @@
 Configs are instances of the `Config` class defined in `config/config.py`. The implementation is largely based on [addict](https://github.com/mewwts/addict), which makes working with nested dictionaries convenient. At their core, configs are essentially nested dictionaries (similar to loaded json objects), with an easy way to access and set nested keys by using attributes. See the example below:
 
 ```python
-from robomimic.config import Config
+from self_correct_robot.config import Config
 
 # normal way to create nested dictionaries and read values
 c = dict()
@@ -40,20 +40,20 @@ All algorithm config classes (one class per algorithm type) are subclasses of th
 ```python
 import os
 import json
-import robomimic
-from robomimic.config import get_all_registered_configs
+import self_correct_robot
+from self_correct_robot.config import get_all_registered_configs
 
 # store template config jsons in this directory
-target_dir = os.path.join(robomimic.__path__[0], "exps/templates/")
+target_dir = os.path.join(self_correct_robot.__path__[0], "exps/templates/")
 
 # iterate through registered algorithm config classes
 all_configs = get_all_registered_configs()
 for algo_name in all_configs:
-    # make config class for this algorithm
-    c = all_configs[algo_name]()
-    # dump to json
-    json_path = os.path.join(target_dir, "{}.json".format(algo_name))
-    c.dump(filename=json_path)
+  # make config class for this algorithm
+  c = all_configs[algo_name]()
+  # dump to json
+  json_path = os.path.join(target_dir, "{}.json".format(algo_name))
+  c.dump(filename=json_path)
 ```
 
 We now go over the general structure of algorithm config classes by dicusssing the `BaseConfig` class, which has more specific functionality than the general `Config` class for use with this repository. 
@@ -64,21 +64,22 @@ The `BaseConfig` class has a property and classmethod called `ALGO_NAME` that mu
 
 ```python
 import json
-from robomimic.config import config_factory
+from self_correct_robot.config import config_factory
 
 # base config for algorithm with default values
 config = config_factory("bc")
 
 # update defaults with config json
 with open("/path/to/config.json", "r") as f:
-    ext_config_json = json.load(f)
+  ext_config_json = json.load(f)
 config.update(ext_config_json)
 ```
 
 At test-time, when loading a model from a checkpoint, the config is restored by reading the json string from the checkpoint, and then using it to instantiate the config. An example is below (modified slightlyt from `config_from_checkpoint` in `utils/file_utils.py`)
 
 ```python
-import robomimic.utils.file_utils as FileUtils
+import self_correct_robot.utils.file_utils as FileUtils
+
 ckpt_dict = FileUtils.load_dict_from_checkpoint("path/to/ckpt.pth")
 config_json = ckpt_dict["config"]
 config = config_factory(ckpt_dict["algo_name"], dic=json.loads(config_json))

@@ -58,23 +58,23 @@ Although it is possible to manually specify the `env_meta` dictionary, the **rob
 The demonstration dataset file should contain all necessary information to construct an environment. Here is standalone example for initializing a `EnvRobosuite` environment instance by reading environment metadata from the a dataset.
 
 ```python
-import robomimic.utils.env_utils as EnvUtils
-import robomimic.utils.file_utils as FileUtils
+import self_correct_robot.utils.env_utils as EnvUtils
+import self_correct_robot.utils.file_utils as FileUtils
 
 env_meta = FileUtils.get_env_metadata_from_dataset("path/to/the/dataset.hdf5")
 
 env = EnvUtils.create_env_from_metadata(
-    env_meta=env_meta,
-    env_name=env_name, 
-    render=False, 
-    render_offscreen=False,
-    use_image_obs=False, 
+  env_meta=env_meta,
+  env_name=env_name,
+  render=False,
+  render_offscreen=False,
+  use_image_obs=False,
 )
 ```
 
 The repo offers a simple utility tool `robomimic/scripts/get_dataset_info.py` to view the environment metadata included in a dataset. For example:
 ```bash
-$ python robomimic/scripts/get_dataset_info.py --dataset path/to/the/dataset.hdf5
+$ python self_correct_robot/scripts/get_dataset_info.py --dataset path/to/the/dataset.hdf5
 
 ...
 

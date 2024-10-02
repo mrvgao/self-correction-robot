@@ -11,9 +11,9 @@ lines = [x for x in lines if (('.png' not in x) and ('.gif' not in x))]
 long_description = ''.join(lines)
 
 setup(
-    name="robomimic",
+    name="self_correct_robot",
     packages=[
-        package for package in find_packages() if package.startswith("robomimic")
+        package for package in find_packages() if package.startswith("self_correct_robot")
     ],
     install_requires=[
         "numpy==1.23.2",
@@ -36,7 +36,7 @@ setup(
     eager_resources=['*'],
     include_package_data=True,
     python_requires='>=3',
-    description="robomimic: A Modular Framework for Robot Learning from Demonstration",
+    description="self_correct_robot: A Modular Framework for Robot Learning from Demonstration",
     author="Ajay Mandlekar, Danfei Xu, Josiah Wong, Soroush Nasiriany, Chen Wang",
     url="https://github.com/ARISE-Initiative/robomimic",
     author_email="amandlek@cs.stanford.edu",

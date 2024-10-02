@@ -164,7 +164,7 @@ This is a diagnostic dataset to test the ability of algorithms to learn from mix
 After downloading the appropriate datasets you're interested in using by running the `download_datasets.py` script, the `generate_paper_configs.py` script can be used to generate all training config json files necessary to reproduce the experiments in the [study](https://arise-initiative.github.io/robomimic-web/study/). A few examples are below.
 
 ```sh
-# Assume datasets already exist in robomimic/../datasets folder. Configs will be generated under robomimic/exps/paper, and training results will be at /tmp/experiment_results when launching training runs.
+# Assume datasets already exist in self_correct_robot/../datasets folder. Configs will be generated under self_correct_robot/exps/paper, and training results will be at /tmp/experiment_results when launching training runs.
 $ python generate_paper_configs.py --output_dir /tmp/experiment_results
 
 # Alternatively, specify where datasets exist, and specify where configs should be generated.
@@ -181,8 +181,8 @@ Then, to reproduce a specific set of training runs for different experiment grou
 #  task: lift
 #    dataset type: ph
 #      hdf5 type: low_dim
-python /path/to/robomimic/scripts/train.py --config /path/to/robomimic/exps/paper/core/lift/ph/low_dim/bc.json
-python /path/to/robomimic/scripts/train.py --config /path/to/robomimic/exps/paper/core/lift/ph/low_dim/bc_rnn.json
+python /path/to/self_correct_robot/scripts/train.py --config /path/to/self_correct_robot/exps/paper/core/lift/ph/low_dim/bc.json
+python /path/to/self_correct_robot/scripts/train.py --config /path/to/self_correct_robot/exps/paper/core/lift/ph/low_dim/bc_rnn.json
 ```
 
 <div class="admonition info">
@@ -216,13 +216,13 @@ Each group of experiments below has a shell script (for example `core.sh`) and a
 Below, we show a simple example of how to reproduce one of the results from the study - the BC-RNN result on the Lift (Proficient-Human) low-dim dataset:
 
 ```sh
-# default behavior for download script - just download lift proficient-human low-dim dataset to robomimic/../datasets
+# default behavior for download script - just download lift proficient-human low-dim dataset to self_correct_robot/../datasets
 $ python download_datasets.py
 
-# generate json configs for running all experiments at robomimic/exps/paper
+# generate json configs for running all experiments at self_correct_robot/exps/paper
 $ python generate_paper_configs.py --output_dir /tmp/experiment_results
 
-# the training command can be found in robomimic/exps/paper/core.sh
+# the training command can be found in self_correct_robot/exps/paper/core.sh
 # Training results can be viewed at /tmp/experiment_results (--output_dir when generating paper configs).
 $ python train.py --config ../exps/paper/core/lift/ph/low_dim/bc.json
 ```

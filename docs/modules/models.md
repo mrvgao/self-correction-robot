@@ -11,28 +11,28 @@
 To support automated shape resolution when dealing with multiple modalities, all basic modules such as MLP and ConvNets defined in `robomimic.models.base_nets` are a subclass of `robomimic.models.base_nets.Module`, which requires implementing the abstract method `output_shape(self, input_shape=None)`. The function resolves the output shape (excluding the batch dimension) of the module either based on an external `input_shape` or internal instance variables. To implement new base modules, simply inherit `robomimic.models.Module` or `robomimic.models.ConvBase` (if adding a ConvNet) and implement the abstract functions. Below is a sample implementation of a ResNet-18 base module.
 
 ```python
-from robomimic.models.base_nets import ConvBase
+from self_correct_robot.models.base_nets import ConvBase
+
 
 class ResNet18Conv(ConvBase):
+    ...
 
-  ...
-
-  def output_shape(self, input_shape):
-      """
-      Function to compute output shape from inputs to this module. 
-
-      Args:
-          input_shape (iterable of int): shape of input. Does not include batch dimension.
-              Some modules may not need this argument, if their output does not depend 
-              on the size of the input, or if they assume fixed size input.
-
-      Returns:
-          out_shape ([int]): list of integers corresponding to output shape
-      """
-      assert(len(input_shape) == 3)
-      out_h = int(math.ceil(input_shape[1] / 32.))
-      out_w = int(math.ceil(input_shape[2] / 32.))
-      return [512, out_h, out_w]
+    def output_shape(self, input_shape):
+        """
+        Function to compute output shape from inputs to this module. 
+  
+        Args:
+            input_shape (iterable of int): shape of input. Does not include batch dimension.
+                Some modules may not need this argument, if their output does not depend 
+                on the size of the input, or if they assume fixed size input.
+  
+        Returns:
+            out_shape ([int]): list of integers corresponding to output shape
+        """
+        assert (len(input_shape) == 3)
+        out_h = int(math.ceil(input_shape[1] / 32.))
+        out_w = int(math.ceil(input_shape[2] / 32.))
+        return [512, out_h, out_w]
 ```
 
 ## EncoderCore
@@ -49,20 +49,20 @@ Below, we provide descriptions of specific EncoderCore-based classes used to enc
 
 
 ### VisualCore
-We provide a `VisualCore` module for constructing custom vision architectures. A `VisualCore` consists of a backbone network that featurizes image input --- typically a `ConvBase` module --- and a pooling module that reduces the feature tensor into a fixed-sized vector representation.  Below is a `VisualCore` built from a `ResNet18Conv` backbone and a `SpatialSoftmax` ([paper](https://rll.berkeley.edu/dsae/dsae.pdf)) pooling module. 
+We provide a `VisualCore` module for constructing custom vision architectures. A `VisualCore` consists of a backbone network that featurizes image input --- typically a `ConvBase` module --- and a pooling module that reduces the feature tensor into a fixed-sized vector representation.  Below is a `VisualCore` built from a `ResNet18Conv` backbone and a `SpatialSoftmax` ([paper](https://rll.berkeley.edu/dsae/dsae.pdf)) pooling module.
 
 ```python
-from robomimic.models.obs_core import VisualCore
-from robomimic.models.base_nets import ResNet18Conv, SpatialSoftmax
+from self_correct_robot.models.obs_core import VisualCore
+from self_correct_robot.models.base_nets import ResNet18Conv, SpatialSoftmax
 
 vis_net = VisualCore(
-  input_shape=(3, 224, 224),
-  core_class="ResNet18Conv",  # use ResNet18 as the visualcore backbone
-  core_kwargs={"pretrained": False, "input_coord_conv": False},  # kwargs for the ResNet18Conv class
-  pool_class="SpatialSoftmax",  # use spatial softmax to regularize the model output
-  pool_kwargs={"num_kp": 32},  # kwargs for the SpatialSoftmax --- use 32 keypoints
-  flatten=True,  # flatten the output of the spatial softmax layer
-  feature_dimension=64,  # project the flattened feature into a 64-dim vector through a linear layer 
+    input_shape=(3, 224, 224),
+    core_class="ResNet18Conv",  # use ResNet18 as the visualcore backbone
+    core_kwargs={"pretrained": False, "input_coord_conv": False},  # kwargs for the ResNet18Conv class
+    pool_class="SpatialSoftmax",  # use spatial softmax to regularize the model output
+    pool_kwargs={"num_kp": 32},  # kwargs for the SpatialSoftmax --- use 32 keypoints
+    flatten=True,  # flatten the output of the spatial softmax layer
+    feature_dimension=64,  # project the flattened feature into a 64-dim vector through a linear layer 
 )
 ```
 
@@ -73,21 +73,21 @@ New vision backbone and pooling classes can be added by subclassing `ConvBase`.
 We provide a `ScanCore` module for constructing custom range finder architectures. `ScanCore` consists of a 1D Convolution backbone network (`Conv1dBase`) that featurizes a high-dimensional 1D input, and a pooling module that reduces the feature tensor into a fixed-sized vector representation.  Below is an example of a `ScanCore` network with a `SpatialSoftmax` ([paper](https://rll.berkeley.edu/dsae/dsae.pdf)) pooling module.
 
 ```python
-from robomimic.models.obs_core import ScanCore
-from robomimic.models.base_nets import SpatialSoftmax
+from self_correct_robot.models.obs_core import ScanCore
+from self_correct_robot.models.base_nets import SpatialSoftmax
 
 vis_net = ScanCore(
-  input_shape=(1, 120),
-  conv_kwargs={
-      "out_channels": [32, 64, 64],
-      "kernel_size": [8, 4, 2],
-      "stride": [4, 2, 1],
-  },    # kwarg settings to pass to individual Conv1d layers
-  conv_activation="relu",   # use relu in between each Conv1d layer
-  pool_class="SpatialSoftmax",  # use spatial softmax to regularize the model output
-  pool_kwargs={"num_kp": 32},  # kwargs for the SpatialSoftmax --- use 32 keypoints
-  flatten=True,  # flatten the output of the spatial softmax layer
-  feature_dimension=64,  # project the flattened feature into a 64-dim vector through a linear layer 
+    input_shape=(1, 120),
+    conv_kwargs={
+        "out_channels": [32, 64, 64],
+        "kernel_size": [8, 4, 2],
+        "stride": [4, 2, 1],
+    },  # kwarg settings to pass to individual Conv1d layers
+    conv_activation="relu",  # use relu in between each Conv1d layer
+    pool_class="SpatialSoftmax",  # use spatial softmax to regularize the model output
+    pool_kwargs={"num_kp": 32},  # kwargs for the SpatialSoftmax --- use 32 keypoints
+    flatten=True,  # flatten the output of the spatial softmax layer
+    feature_dimension=64,  # project the flattened feature into a 64-dim vector through a linear layer 
 )
 ```
 
@@ -106,9 +106,9 @@ Randomizers are `Modules` that perturb network inputs during training, and optio
  `ObservationEncoder` and `ObservationDecoder` are basic building blocks for dealing with observation dictionary inputs and outputs. They are designed to take in multiple streams of observation modalities as input (e.g. a dictionary containing images and robot proprioception signals), and output a dictionary of predictions like actions and subgoals. Below is an example of how to manually create an `ObservationEncoder` instance by registering observation modalities with the `register_obs_key` function.
 
 ```python
-from robomimic.models.base_nets import MLP
-from robomimic.models.obs_core import VisualCore, CropRandomizer
-from robomimic.models.obs_nets import ObservationEncoder, ObservationDecoder
+from self_correct_robot.models.base_nets import MLP
+from self_correct_robot.models.obs_core import VisualCore, CropRandomizer
+from self_correct_robot.models.obs_nets import ObservationEncoder, ObservationDecoder
 
 obs_encoder = ObservationEncoder(feature_activation=torch.nn.ReLU)
 

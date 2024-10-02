@@ -1,0 +1,16 @@
+wandb: Currently logged in as: minchiuan. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.17.8
+wandb: Run data is saved locally in /home/ubuntu/self-correction-robot/wandb/run-20240903_162745-gnc2u08w
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run all_task_model_resnet_lr_1e-05_bs_2048_epochs_1000_seed_999
+wandb: ⭐️ View project at https://wandb.ai/minchiuan/value-model-for-all-single-tasks
+wandb: 🚀 View run at https://wandb.ai/minchiuan/value-model-for-all-single-tasks/runs/gnc2u08w
+Using device: cuda:0
+STDOUT will be forked to /home/ubuntu/expdata/robocasa/im/bc_xfmr/07-17-original/20240903162749/logs/log.txt
+
+============= Initialized Observation Utils with Obs Spec =============
+
+using obs modality: low_dim with keys: ['robot0_base_quat', 'robot0_base_to_eef_pos', 'robot0_base_pos', 'robot0_base_to_eef_quat', 'robot0_gripper_qpos']
+using obs modality: rgb with keys: ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
+using obs modality: depth with keys: []
+using obs modality: scan with keys: []

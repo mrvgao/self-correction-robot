@@ -1,0 +1,202 @@
+{
+    "os": "Linux-6.2.0-37-generic-x86_64-with-glibc2.35",
+    "python": "3.10.14",
+    "heartbeatAt": "2024-09-06T17:59:15.896743",
+    "startedAt": "2024-09-06T17:59:15.712733",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--model=attn",
+        "--seed=999",
+        "--tag=cos_loss"
+    ],
+    "state": "running",
+    "program": "/home/ubuntu/self-correction-robot/robomimic/tasl_exp/reward_model.py",
+    "codePathLocal": "robomimic/tasl_exp/reward_model.py",
+    "codePath": "robomimic/tasl_exp/reward_model.py",
+    "git": {
+        "remote": "https://github.com/mrvgao/self-correction-robot.git",
+        "commit": "72321ef5c4c04b7346a22b9587e2f86e68dfe6e3"
+    },
+    "email": null,
+    "root": "/home/ubuntu/self-correction-robot",
+    "host": "132-145-197-147",
+    "username": "ubuntu",
+    "executable": "/home/ubuntu/anaconda3/envs/robocasa/bin/python",
+    "cpu_count": 30,
+    "cpu_count_logical": 30,
+    "cpu_freq": {
+        "current": 2450.0,
+        "min": 0.0,
+        "max": 0.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2450.0,
+            "min": 0.0,
+            "max": 0.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 496.0301856994629,
+            "used": 67.59811782836914
+        }
+    },
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA A100-SXM4-40GB",
+            "memory_total": 42949672960
+        }
+    ],
+    "memory": {
+        "total": 216.25241088867188
+    }
+}

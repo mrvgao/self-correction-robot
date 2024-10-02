@@ -33,7 +33,7 @@ We provide two ways for downloading MOMART datasets:
 
 ```sh
 # Use --help flag to view download and <ARG> options
-python <ROBOMIMIC_DIR>/robomimic/scripts/download_momart_datasets.py <ARGS> 
+python <ROBOMIMIC_DIR>/self_correct_robot/scripts/download_momart_datasets.py <ARGS> 
 ```
 
 ### Method 2: Using Direct Download Links
