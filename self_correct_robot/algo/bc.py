@@ -688,7 +688,6 @@ class BC_Transformer(BC):
         assert self.algo_config.transformer.enabled
 
         self.nets = nn.ModuleDict()
-        import pdb; pdb.set_trace()
         self.nets["policy"] = PolicyNets.TransformerActorNetwork(
             obs_shapes=self.obs_shapes,
             goal_shapes=self.goal_shapes,
@@ -828,6 +827,7 @@ class BC_Transformer_GMM(BC_Transformer):
             min_std=self.algo_config.gmm.min_std,
             std_activation=self.algo_config.gmm.std_activation,
             low_noise_eval=self.algo_config.gmm.low_noise_eval,
+            progress_dim_size=self.algo_config.progress_emb_size,
             encoder_kwargs=ObsUtils.obs_encoder_kwargs_from_config(self.obs_config.encoder),
             **BaseNets.transformer_args_from_config(self.algo_config.transformer),
         )
