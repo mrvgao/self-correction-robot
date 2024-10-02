@@ -6,7 +6,7 @@
     "cuda_mark": "cuda:7",
     "bias": 0,
     "experiment": {
-        "name": "TASL-mg-3k",
+        "name": "TASL-mg-3k-progress-infuse-0",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
@@ -15,7 +15,7 @@
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "iclr-2025"
+            "wandb_proj_name": "cvpr-2025"
         },
         "mse": {},
         "save": {
@@ -293,7 +293,7 @@
             "num_heads": 8
         },
         "language_conditioned": false,
-        "progress_emb_size": 64
+        "progress_emb_size": 0
     },
     "observation": {
         "modalities": {
