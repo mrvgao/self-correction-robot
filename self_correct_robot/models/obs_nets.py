@@ -1078,7 +1078,7 @@ class MIMO_Transformer(Module):
         Returns:
             embeddings (torch.Tensor): input embeddings to pass to transformer backbone.
         """
-        progresses = inputs['obs']['progresses']
+        progresses = inputs['progresses']
         embeddings = self.nets["embed_encoder"](inputs)
         progress_embeddings = self.get_progress_embedding(progresses, embeddings)
         time_embeddings = self.embed_timesteps(embeddings)
