@@ -995,7 +995,6 @@ class MIMO_Transformer(Module):
             num_layers=transformer_num_layers,
             num_heads=transformer_num_heads,
             context_length=transformer_context_length,
-            causal=transformer_causal,
             attn_dropout=transformer_attn_dropout,
             block_output_dropout=transformer_block_output_dropout,
             activation=transformer_activation,
