@@ -18,14 +18,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributions as D
 
-from robomimic.utils.python_utils import extract_class_init_kwargs_from_dict
-import robomimic.utils.tensor_utils as TensorUtils
-import robomimic.utils.obs_utils as ObsUtils
-from robomimic.models.base_nets import Module, Sequential, MLP, RNN_Base, ResNet18Conv, SpatialSoftmax, \
+from self_correct_robot.utils.python_utils import extract_class_init_kwargs_from_dict
+import self_correct_robot.utils.tensor_utils as TensorUtils
+import self_correct_robot.utils.obs_utils as ObsUtils
+from self_correct_robot.models.base_nets import Module, Sequential, MLP, RNN_Base, ResNet18Conv, SpatialSoftmax, \
     FeatureAggregator
-from robomimic.models.obs_core import VisualCore, Randomizer, VisualCoreLanguageConditioned
-from robomimic.models.transformers import PositionalEncoding, GPT_Backbone
-from robomimic.macros import LANG_EMB_KEY
+from self_correct_robot.models.obs_core import VisualCore, Randomizer, VisualCoreLanguageConditioned
+from self_correct_robot.models.transformers import PositionalEncoding, GPT_Backbone
+from self_correct_robot.macros import LANG_EMB_KEY
 
 def obs_encoder_factory(
         obs_shapes,
@@ -913,6 +913,7 @@ class MIMO_Transformer(Module):
         transformer_activation="gelu",
         transformer_nn_parameter_for_timesteps=False,
         encoder_kwargs=None,
+        progress_dim_size=None,  # scalar(p) -> MLP -> progress_dim_size -> obs encoding_size
     ):
         """
         Args:
@@ -974,6 +975,15 @@ class MIMO_Transformer(Module):
         else:
             self.nets["embed_timestep"] = nn.Embedding(max_timestep, transformer_embed_dim)
 
+        self.progress_dim_size = progress_dim_size
+
+        if progress_dim_size > 0:
+            self.nets['progress_mlp'] = MLP(
+                input_dim=1, output_dim=transformer_embed_dim,
+                layer_dims=[progress_dim_size],
+                output_activation=True
+            )
+
         # layer norm for embeddings
         self.nets["embed_ln"] = nn.LayerNorm(transformer_embed_dim)
 
@@ -1009,6 +1019,16 @@ class MIMO_Transformer(Module):
         of a list since outputs are dictionaries.
         """
         return { k : list(self.output_shapes[k]) for k in self.output_shapes }
+
+    def get_progress_embedding(self, inputs, original_embeddings):
+        import pdb; pdb.set_trace()
+        if self.progress_dim_size == 0:
+            return torch.zeros(original_embeddings.shape, device=original_embeddings.device)
+        else:
+            progress = inputs['progress']
+            progress_embeddings = self.nets['progress_mlp'](progress)
+            progress_embeddings = progress_embeddings.unsqueeze(1).repeat(1, original_embeddings.shape[1], 1)
+            return progress_embeddings
 
     def embed_timesteps(self, embeddings):
         """
@@ -1061,8 +1081,10 @@ class MIMO_Transformer(Module):
             embeddings (torch.Tensor): input embeddings to pass to transformer backbone.
         """
         embeddings = self.nets["embed_encoder"](inputs)
+        # progress_embeddings = self.get_progress_embedding(inputs, embeddings)
         time_embeddings = self.embed_timesteps(embeddings)
         embeddings = embeddings + time_embeddings
+        # embeddings = embeddings + progress_embeddings
         embeddings = self.nets["embed_ln"](embeddings)
         embeddings = self.nets["embed_drop"](embeddings)
 
@@ -1083,6 +1105,8 @@ class MIMO_Transformer(Module):
                 to @self.output_shapes. Leading dimensions will be batch and time [B, T, ...]
                 for each tensor.
         """
+        import pdb; pdb.set_trace()
+
         for obs_group in self.input_obs_group_shapes:
             for k in self.input_obs_group_shapes[obs_group]:
                 # first two dimensions should be [B, T] for inputs
