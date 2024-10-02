@@ -1024,9 +1024,13 @@ class MIMO_Transformer(Module):
         if self.progress_dim_size == 0:
             return torch.zeros(original_embeddings.shape, device=original_embeddings.device)
         else:
-            progress = progress.unsqueeze(-1).to(original_embeddings.device)
+            batch_size, timesteps, _ = progress.size()
+            # Reshape the input to (batch_size * timesteps, input_dim)
+            progress = progress.view(batch_size * timesteps, -1)
+            progress = progress.to(original_embeddings.device)
+
             progress_embeddings = self.nets['progress_mlp'](progress)
-            progress_embeddings = progress_embeddings.unsqueeze(1).repeat(1, original_embeddings.shape[1], 1)
+            progress_embeddings = progress_embeddings.view(batch_size, timesteps, -1)
             return progress_embeddings
 
     def embed_timesteps(self, embeddings):
