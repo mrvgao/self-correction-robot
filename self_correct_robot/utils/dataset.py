@@ -557,11 +557,11 @@ class SequenceDataset(torch.utils.data.Dataset):
         demo_length_offset = 0 if self.pad_seq_length else (self.seq_length - 1)
         end_index_in_demo = demo_length - demo_length_offset
 
-        import pdb; pdb.set_trace()
-
         progress = index_in_demo / demo_length
         progresses = [(index_in_demo + i) / demo_length for i in range(self.seq_length)]
         # value = index_in_demo + 2 - demo_length
+
+        import pdb; pdb.set_trace()
 
         meta = self.get_dataset_sequence_from_demo(
             demo_id,
