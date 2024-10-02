@@ -1029,6 +1029,7 @@ class MIMO_Transformer(Module):
             # Reshape the input to (batch_size * timesteps, input_dim)
             progress = progress.view(batch_size * timesteps, -1)
             progress = progress.to(original_embeddings.device)
+            progress = progress.to(original_embeddings.dtype)  # Ensure the tensor is in float32
 
             progress_embeddings = self.nets['progress_mlp'](progress)
             progress_embeddings = progress_embeddings.view(batch_size, timesteps, -1)
