@@ -558,6 +558,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         end_index_in_demo = demo_length - demo_length_offset
 
         progress = index_in_demo / demo_length
+        progresses = [(index_in_demo + i / demo_length) for i in range(self.seq_length)]
         # value = index_in_demo + 2 - demo_length
 
         meta = self.get_dataset_sequence_from_demo(
@@ -581,6 +582,8 @@ class SequenceDataset(torch.utils.data.Dataset):
             seq_length=self.seq_length,
             prefix="obs"
         )
+
+        meta["obs"]["progresses"] = progresses
 
         if self.load_next_obs:
             meta["next_obs"] = self.get_obs_sequence_from_demo(
