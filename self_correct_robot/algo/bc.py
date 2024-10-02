@@ -895,7 +895,7 @@ class BC_Transformer_GMM(BC_Transformer):
         predictions = OrderedDict(
             log_probs=log_probs,
         )
-        return predictions, predict_value
+        return predictions
 
     def _compute_losses(self, predictions, batch):
         """
