@@ -977,12 +977,10 @@ class MIMO_Transformer(Module):
 
         self.progress_dim_size = progress_dim_size
 
-        import pdb; pdb.set_trace()
         if progress_dim_size > 0:
             self.nets['progress_mlp'] = MLP(
                 input_dim=1, output_dim=transformer_embed_dim,
                 layer_dims=[progress_dim_size],
-                output_activation=True
             )
 
         # layer norm for embeddings
