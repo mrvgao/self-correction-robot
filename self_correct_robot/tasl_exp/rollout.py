@@ -94,6 +94,7 @@ def run_rollout_ahead(initial_state, policy, env, config):
 def run_rollout(
         policy,
         env,
+        initial_obs,
         horizon,
         use_goals=False,
         render=False,
@@ -136,8 +137,9 @@ def run_rollout(
 
     batched = isinstance(env, SubprocVectorEnv)
 
-    ob_dict = env.reset()
     # old_state = env.get_state()
+
+    ob_dict = initial_obs
 
     # with open('new_old_state.pkl', 'wb') as f:
     #     pickle.dump(old_state, f)
@@ -452,10 +454,11 @@ def rollout_with_stats(
             else:
                 env_name = env.name
 
-            import pdb; pdb.set_trace()
+            initial_obs = env.reset()
+
             if video_dir is not None:
                 # video is written per env
-                video_str = "_epoch_{}.mp4".format(epoch) if epoch is not None else ".mp4"
+                video_str = "{}_epoch_{}.mp4".format(env._ep_lang_str, epoch) if epoch is not None else ".mp4"
                 video_path = os.path.join(video_dir, "{}{}".format(env_name, video_str))
                 video_writer = imageio.get_writer(video_path, fps=20)
 
@@ -497,6 +500,7 @@ def rollout_with_stats(
                     rollout_info = run_rollout(
                         policy=policy,
                         env=env,
+                        initial_obs=initial_obs,
                         horizon=horizon,
                         render=render,
                         use_goals=use_goals,
