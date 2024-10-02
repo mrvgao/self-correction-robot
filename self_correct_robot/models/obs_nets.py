@@ -1023,7 +1023,7 @@ class MIMO_Transformer(Module):
         if self.progress_dim_size == 0:
             return torch.zeros(original_embeddings.shape, device=original_embeddings.device)
         else:
-            progress = inputs['progress']
+            progress = inputs['progresses']
             progress_embeddings = self.nets['progress_mlp'](progress)
             progress_embeddings = progress_embeddings.unsqueeze(1).repeat(1, original_embeddings.shape[1], 1)
             return progress_embeddings

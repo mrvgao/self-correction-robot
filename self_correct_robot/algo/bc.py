@@ -130,7 +130,6 @@ class BC(PolicyAlgo):
             info (dict): dictionary of relevant inputs, outputs, and losses
                 that might be relevant for logging
         """
-        import pdb; pdb.set_trace()
         with TorchUtils.maybe_no_grad(no_grad=validate):
             batch['obs']['progresses'] = batch["progress"]
             info = super(BC, self).train_on_batch(batch, epoch, validate=validate)
