@@ -1108,7 +1108,7 @@ class MIMO_Transformer(Module):
                 for each tensor.
         """
 
-        # progresses = inputs['obs']['progresses']
+        progresses = inputs['obs']['progresses']
 
         for obs_group in self.input_obs_group_shapes:
             for k in self.input_obs_group_shapes[obs_group]:
@@ -1130,8 +1130,8 @@ class MIMO_Transformer(Module):
             # pass encoded sequences through transformer
             transformer_encoder_outputs = self.nets["transformer"].forward(transformer_embeddings)
 
-        # progress_embeddings = self.get_progress_embedding(progresses, transformer_encoder_outputs)
-        # transformer_encoder_outputs = transformer_encoder_outputs + progress_embeddings
+        progress_embeddings = self.get_progress_embedding(progresses, transformer_encoder_outputs)
+        transformer_encoder_outputs = transformer_encoder_outputs + progress_embeddings
 
         transformer_outputs = transformer_encoder_outputs
         # apply decoder to each timestep of sequence to get a dictionary of outputs
