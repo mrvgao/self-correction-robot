@@ -7,7 +7,6 @@
     "bias": 0,
     "experiment": {
         "name": "TASL-human-50-infuse-progress-0",
-        "ckpt_path": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-50-demos/20240928140103/models/model_epoch_975.pth",
         "validate": false,
         "tau": 30,
         "only_rollout": false,
@@ -212,7 +211,7 @@
                 "filter_key": "50_demos"
             }
         ],
-        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-50-demos",
+        "output_dir": "/data3/mgao/robocasa/im/bc_xfmr/cvpr-2025-50-0",
         "num_data_workers": 5,
         "hdf5_cache_mode": null,
         "hdf5_use_swmr": true,
