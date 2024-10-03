@@ -3,10 +3,10 @@
     "value_model_path": "/data2/mgao/self-correction-robot/value_models/progress-monitor-train-with-3k/model_epoch_10.pth",
     "progress_threshold": 0.95,
     "progress_weight": 0.3,
-    "cuda_mark": "cuda:7",
+    "cuda_mark": "cuda:3",
     "bias": 0,
     "experiment": {
-        "name": "TASL-human-50-fix-counter-to-stove-env",
+        "name": "TASL-human-50-infuse-progress-16",
         "ckpt_path": "/data3/mgao/robocasa/im/bc_xfmr/log-probs-50-demos/20240928140103/models/model_epoch_975.pth",
         "validate": false,
         "tau": 30,
@@ -16,7 +16,7 @@
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "iclr-2025"
+            "wandb_proj_name": "cvpr-2025"
         },
         "mse": {},
         "save": {
@@ -315,7 +315,7 @@
             "num_heads": 8
         },
         "language_conditioned": false,
-        "progress_emb_size": 0
+        "progress_emb_size": 16
     },
     "observation": {
         "modalities": {
