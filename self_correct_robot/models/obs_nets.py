@@ -1130,8 +1130,8 @@ class MIMO_Transformer(Module):
             # pass encoded sequences through transformer
             transformer_encoder_outputs = self.nets["transformer"].forward(transformer_embeddings)
 
-        progress_embeddings = self.get_progress_embedding(progresses, transformer_encoder_outputs)
-        transformer_encoder_outputs = transformer_encoder_outputs + progress_embeddings
+        # progress_embeddings = self.get_progress_embedding(progresses, transformer_encoder_outputs)
+        # transformer_encoder_outputs = transformer_encoder_outputs + progress_embeddings
 
         transformer_outputs = transformer_encoder_outputs
         # apply decoder to each timestep of sequence to get a dictionary of outputs
