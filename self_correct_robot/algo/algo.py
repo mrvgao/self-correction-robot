@@ -192,6 +192,7 @@ class Algo(object):
             # only make optimizers for networks that have been created - @optim_params may have more
             # settings for unused networks
             if k in self.nets:
+                import pdb; pdb.set_trace()
                 if isinstance(self.nets[k], nn.ModuleList):
                     self.optimizers[k] = [
                         TorchUtils.optimizer_from_optim_params(

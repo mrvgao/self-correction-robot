@@ -228,7 +228,6 @@ def backprop_for_loss(net, optim, loss, max_grad_norm=None, retain_graph=False):
 
     # compute grad norms
     grad_norms = 0.
-    import pdb; pdb.set_trace()
     for p in net.parameters():
         # only clip gradients for parameters for which requires_grad is True
         if p.grad is not None:
