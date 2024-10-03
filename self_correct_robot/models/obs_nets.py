@@ -1108,7 +1108,7 @@ class MIMO_Transformer(Module):
                 for each tensor.
         """
 
-        progresses = inputs['obs']['progresses']
+        # progresses = inputs['obs']['progresses']
 
         for obs_group in self.input_obs_group_shapes:
             for k in self.input_obs_group_shapes[obs_group]:
