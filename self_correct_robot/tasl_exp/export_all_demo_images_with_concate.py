@@ -255,6 +255,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
     parser.add_argument('--task_id', type=int, required=True, help='specify the task id to expoert')
 
+    task_id = parser.parse_args().task_id
+
     task_path_mapping = TASK_PATH_MAPPING.items()
 
     # for key, value in TASK_PATH_MAPPING.items():
