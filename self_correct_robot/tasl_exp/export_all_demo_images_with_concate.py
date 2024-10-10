@@ -257,7 +257,7 @@ if __name__ == '__main__':
 
     task_id = parser.parse_args().task_id
 
-    task_path_mapping = TASK_PATH_MAPPING.items()
+    task_path_mapping = list(TASK_PATH_MAPPING.items())
 
     # for key, value in TASK_PATH_MAPPING.items():
     #     print('PROCESSING.... ', key)
