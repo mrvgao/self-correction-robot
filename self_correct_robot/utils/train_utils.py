@@ -62,15 +62,18 @@ def get_exp_dir(config, auto_remove_exp_dir=False):
 
     # tensorboard directory
     log_dir = os.path.join(base_output_dir, time_str, "logs")
-    os.makedirs(log_dir)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
     # video directory
     video_dir = os.path.join(base_output_dir, time_str, "videos")
-    os.makedirs(video_dir)
+    if not os.path.exists(video_dir):
+        os.makedirs(video_dir)
 
     # vis directory
     vis_dir = os.path.join(base_output_dir, time_str, "vis")
-    os.makedirs(vis_dir)
+    if not os.path.exists(vis_dir):
+        os.makedirs(vis_dir)
     
     return log_dir, output_dir, video_dir, vis_dir
 
