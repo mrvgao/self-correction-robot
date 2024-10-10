@@ -260,7 +260,7 @@ if __name__ == '__main__':
     for key, value in TASK_PATH_MAPPING.items():
         print('PROCESSING.... ', key)
         print('FROM PATH.... ', value)
-        generate_concated_images_from_demo_path(task_name=key)
+        generate_concated_images_from_demo_path(task_name=key, data_path=value)
 
     print('DONE!!!!!')
 
