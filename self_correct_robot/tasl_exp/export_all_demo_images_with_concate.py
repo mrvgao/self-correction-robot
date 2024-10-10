@@ -123,7 +123,7 @@ def extract_and_export_image(demo_dataset, task_name):
         demo_index_offset = 0 if exporting_dataset.pad_frame_stack else (exporting_dataset.n_frame_stack - 1)
         index_in_demo = i - demo_start_index + demo_index_offset
 
-        complete_rate = index_in_demo / demo_length
+        complete_rate = round(index_in_demo / demo_length, 4)
 
         task_description = exporting_dataset._demo_id_to_demo_lang_str[demo_id]
         task_description = '_'.join(task_description.split())
