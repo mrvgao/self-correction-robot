@@ -95,8 +95,8 @@ def extract_and_export_image(demo_dataset, task_name):
         if not os.path.exists(d):
             os.makedirs(d)
 
-    def write_image_with_name(image, dir_name, step, complete_rate):
-        image_path = os.path.join(dir_name, f'{step}_{task_name}_{complete_rate}.png')
+    def write_image_with_name(image, dir_name, step, complete_rate, task_description):
+        image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
 
         image = np.array(image) * 255
         image = image.astype(np.uint8)
@@ -128,9 +128,9 @@ def extract_and_export_image(demo_dataset, task_name):
         task_description = exporting_dataset._demo_id_to_demo_lang_str[demo_id]
         task_description = '_'.join(task_description.split())
 
-        write_image_with_name(left_image, dir_name_left, i, complete_rate)
-        write_image_with_name(hand_image, dir_name_hand, i, complete_rate)
-        write_image_with_name(right_image, dir_name_right, i, complete_rate)
+        write_image_with_name(left_image, dir_name_left, i, complete_rate, task_description)
+        write_image_with_name(hand_image, dir_name_hand, i, complete_rate, task_description)
+        write_image_with_name(right_image, dir_name_right, i, complete_rate, task_description)
         write_task_emb_with_name(task_emb, dir_name_task_emb, task_description)
 
         # get three images
@@ -249,7 +249,7 @@ def generate_concated_images_from_demo_path(task_name):
 
 
 if __name__ == '__main__':
-    for key, value in TASK_MAPPING_50_DEMO.items():
+    for key, value in TASK_PATH_MAPPING.items():
         print('processing.... ', key)
         generate_concated_images_from_demo_path(task_name=key)
 

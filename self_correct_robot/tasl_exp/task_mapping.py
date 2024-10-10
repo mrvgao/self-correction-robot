@@ -1,6 +1,4 @@
 TASK_PATH_MAPPING = {
-    "TurnOnMicrowave": "/data3/mgao/robocasa/v0.1/single_stage/kitchen_microwave/TurnOnMicrowave/mg/2024-05-04-22-40-00/demo_gentex_im128_randcams.hdf5",
-    "TurnOffMicrowave": "/data3/mgao/robocasa/v0.1/single_stage/kitchen_microwave/TurnOffMicrowave/mg/2024-05-04-22-39-23/demo_gentex_im128_randcams.hdf5",
     "OpenDrawer": "/data3/mgao/robocasa/v0.1/single_stage/kitchen_drawer/OpenDrawer/mg/2024-05-04-22-38-42/demo_gentex_im128_randcams.hdf5",
     "CloseDrawer": "/data3/mgao/robocasa/v0.1/single_stage/kitchen_drawer/CloseDrawer/mg/2024-05-09-09-32-19/demo_gentex_im128_randcams.hdf5",
     "PnPCabToCounter": "/data3/mgao/robocasa/v0.1/single_stage/kitchen_pnp/PnPCabToCounter/mg/2024-07-12-04-33-29/demo_gentex_im128_randcams.hdf5",
