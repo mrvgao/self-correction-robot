@@ -267,16 +267,15 @@ def process_task(key, value):
 
 
 if __name__ == '__main__':
-    num_workers = os.cpu_count()
+    # num_workers = os.cpu_count()
+    parser = argparse.ArgumentParser(description='sepcify a task')
 
-    with ProcessPoolExecutor(max_workers=num_workers) as executor:
-        # Use a list comprehension to submit each task to the executor
-        futures = [executor.submit(process_task, key, value) for key, value in TASK_PATH_MAPPING.items()]
 
-        # Use tqdm to show progress as tasks are completed
-        for future in tqdm(futures, total=len(futures)):
-            future.result()  # Wait for each future to complete
+    parser.add_argument('--task_id', type=int, required=True, help='specify the task_id, from 0 to 21')
 
-    for _ in range(10):
-        print('DONE ALL!!')
+    key_valus = list(TASK_PATH_MAPPING.items())
+
+    task_id = parser.parse_args().task_id
+
+    process_task(key_valus[task_id][0], key_valus[task_id][1])
 
