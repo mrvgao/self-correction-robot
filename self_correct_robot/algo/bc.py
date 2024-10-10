@@ -935,10 +935,3 @@ class BC_Transformer_GMM(BC_Transformer):
         # log['threshold_value'] = info['threshold_value'].item()
         if "policy_grad_norms" in info:
             log["Policy_Grad_Norms"] = info["policy_grad_norms"]
-
-        PARAMTERS_OF_VALUE_EMB = 'Parameters_hist_of_value_embedding'
-
-        for key in info:
-            if key.startswith(PARAMTERS_OF_VALUE_EMB):
-                log[key] = info[key]
-        return log
