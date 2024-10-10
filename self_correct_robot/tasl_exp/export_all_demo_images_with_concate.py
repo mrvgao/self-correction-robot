@@ -98,9 +98,9 @@ def extract_and_export_image(demo_dataset, task_name):
     def write_image_with_name(image, dir_name, step, complete_rate, task_description):
         image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
 
-        image = np.array(image) * 255
+        image = np.array(image)
         image = image.astype(np.uint8)
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         cv2.imwrite(image_path, image)
 
     def write_task_emb_with_name(task_emb, dir_name, task_desp):
