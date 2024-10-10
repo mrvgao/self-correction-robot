@@ -73,10 +73,9 @@ def combine_images_horizen(images):
     return combined_image
 
 
-def extract_and_export_image(demo_dataset, task_name):
+def extract_and_export_image(demo_dataset):
 
-    max_check_length = 50  # Maximum length to check for overlap
-
+    import pdb; pdb.set_trace()
     exporting_dataset = demo_dataset
 
 
@@ -109,6 +108,8 @@ def extract_and_export_image(demo_dataset, task_name):
         np.save(task_emb_path, task_emb)
 
     eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
+
+    print('PROCESSING....', task_name)
 
     for i in tqdm(range(len(exporting_dataset))):
         if random.random() > 0.1: continue
@@ -149,8 +150,11 @@ def generate_concated_images_from_demo_path(task_name, file_path):
     # config_path_compsoite = "/home/minquangao/pretrained_models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
 
-    ext_cfg['train']['data'][0]['path'] = file_path
+    # ext_cfg['train']['data'][0]['path'] = file_path
     # print('loading from path ', TASK_PATH_MAPPING[task_name])
+    for path in TASK_PATH_MAPPING.values():
+        ext_cfg['train']['data'].append({'path': path})
+
     config = config_factory(ext_cfg["algo_name"])
     with config.values_unlocked():
         config.update(ext_cfg)
@@ -248,7 +252,7 @@ def generate_concated_images_from_demo_path(task_name, file_path):
     # TODO: combine trainset and validset
     demo_dataset = trainset
 
-    extract_and_export_image(demo_dataset, task_name=task_name)
+    extract_and_export_image(demo_dataset)
 
 
 if __name__ == '__main__':
