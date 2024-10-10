@@ -98,9 +98,6 @@ def extract_and_export_image(demo_dataset, task_name):
     def write_image_with_name(image, dir_name, step, complete_rate):
         image_path = os.path.join(dir_name, f'{step}_{task_name}_{complete_rate}.png')
 
-        if not os.path.exists(task_dir): os.mkdir(task_dir)
-
-        # whole_image = combine_images_horizen([image1, image2, image3])
         image = np.array(image) * 255
         image = image.astype(np.uint8)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
