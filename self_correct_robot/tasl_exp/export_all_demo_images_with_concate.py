@@ -84,10 +84,10 @@ def extract_and_export_image(demo_dataset, task_name):
 
     task_name = '_'.join(task_name.split())
 
-    dir_name_left = f'~/robocasa-statics/export-images-from-demo-3k/{task_name}/left_images/'
-    dir_name_right = f'~/robocasa-statics/export-images-from-demo-3k/{task_name}/right_images/'
-    dir_name_hand = f'~/robocasa-statics/export-images-from-demo-3k/{task_name}/hand_images/'
-    dir_name_task_emb = f'~/robocasa-statics/export-images-from-demo-3k/{task_name}/task_emb/'
+    dir_name_left = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/left_images/'
+    dir_name_right = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/right_images/'
+    dir_name_hand = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/hand_images/'
+    dir_name_task_emb = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/task_emb/'
 
     dirs_need_to_create = [dir_name_left, dir_name_right, dir_name_hand, dir_name_task_emb]
 
