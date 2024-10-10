@@ -94,7 +94,7 @@ def extract_task_name(file_path):
     if date_index - single_stage_index < 3:
         raise ValueError("Expected two segments between 'single_stage' and the date, but found less.")
 
-    task_name = path_parts[date_index - 1]
+    task_name = path_parts[date_index - 2]
 
     return task_name
 
