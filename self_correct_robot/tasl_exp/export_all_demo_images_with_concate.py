@@ -92,6 +92,7 @@ def write_task_emb_with_name(task_emb, dir_name, task_desp):
     np.save(task_emb_path, task_emb)
 
 def process_data(exporting_dataset, i, eye_names, dir_name_left, dir_name_hand, dir_name_right, dir_name_task_emb):
+    print(i)
     left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
     hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
     right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
