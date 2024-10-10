@@ -265,6 +265,8 @@ def process_task(key, value):
 
 
 if __name__ == '__main__':
+    multiprocessing.set_start_method('spawn')
+
     num_workers = os.cpu_count()
 
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
