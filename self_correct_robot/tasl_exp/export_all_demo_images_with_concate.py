@@ -73,6 +73,20 @@ def combine_images_horizen(images):
 
     return combined_image
 
+
+def write_image_with_name(image, dir_name, step, complete_rate, task_description):
+    image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
+
+    image = np.array(image)
+    image = image.astype(np.uint8)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    cv2.imwrite(image_path, image)
+
+def write_task_emb_with_name(task_emb, dir_name, task_desp):
+    task_emb_path = os.path.join(dir_name, f'{task_desp}.npy')
+    np.save(task_emb_path, task_emb)
+
+
 def process_data(exporting_dataset, i, eye_names, dir_name_left, dir_name_hand, dir_name_right, dir_name_task_emb):
     left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
     hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
@@ -122,17 +136,6 @@ def extract_and_export_image(demo_dataset, task_name):
         if not os.path.exists(d):
             os.makedirs(d)
 
-    def write_image_with_name(image, dir_name, step, complete_rate, task_description):
-        image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
-
-        image = np.array(image)
-        image = image.astype(np.uint8)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        cv2.imwrite(image_path, image)
-
-    def write_task_emb_with_name(task_emb, dir_name, task_desp):
-        task_emb_path = os.path.join(dir_name, f'{task_desp}.npy')
-        np.save(task_emb_path, task_emb)
 
     eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
 
