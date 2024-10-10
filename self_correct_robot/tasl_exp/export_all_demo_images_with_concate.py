@@ -1,5 +1,4 @@
 import json
-import argparse
 import numpy as np
 import os
 import sys
@@ -27,9 +26,6 @@ from self_correct_robot.tasl_exp.task_mapping import TASK_MAPPING_50_DEMO,TASK_P
 import time
 from multiprocessing import Pool
 from functools import partial
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-import logging
-
 
 # Global function to extract gripper_db from a single dataset entry
 def get_gripper_db(exporting_dataset, i):
@@ -76,43 +72,6 @@ def combine_images_horizen(images):
     return combined_image
 
 
-def write_image_with_name(image, dir_name, step, complete_rate, task_description):
-    image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
-
-    image = np.array(image)
-    image = image.astype(np.uint8)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    cv2.imwrite(image_path, image)
-
-def write_task_emb_with_name(task_emb, dir_name, task_desp):
-    task_emb_path = os.path.join(dir_name, f'{task_desp}.npy')
-    np.save(task_emb_path, task_emb)
-
-def process_data(exporting_dataset, i, eye_names, dir_name_left, dir_name_hand, dir_name_right, dir_name_task_emb):
-    left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
-    hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
-    right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
-    task_emb = exporting_dataset[i]['obs']['lang_emb'][0]
-
-    demo_id = exporting_dataset._index_to_demo_id[i]
-    demo_start_index = exporting_dataset._demo_id_to_start_indices[demo_id]
-    demo_length = exporting_dataset._demo_id_to_demo_length[demo_id]
-
-    # start at offset index if not padding for frame stacking
-    demo_index_offset = 0 if exporting_dataset.pad_frame_stack else (exporting_dataset.n_frame_stack - 1)
-    index_in_demo = i - demo_start_index + demo_index_offset
-
-    complete_rate = round(index_in_demo / demo_length, 4)
-
-    task_description = exporting_dataset._demo_id_to_demo_lang_str[demo_id]
-    task_description = '_'.join(task_description.split())
-
-    write_image_with_name(left_image, dir_name_left, i, complete_rate, task_description)
-    write_image_with_name(hand_image, dir_name_hand, i, complete_rate, task_description)
-    write_image_with_name(right_image, dir_name_right, i, complete_rate, task_description)
-    write_task_emb_with_name(task_emb, dir_name_task_emb, task_description)
-
-
 def extract_and_export_image(demo_dataset, task_name):
 
     max_check_length = 50  # Maximum length to check for overlap
@@ -136,27 +95,58 @@ def extract_and_export_image(demo_dataset, task_name):
         if not os.path.exists(d):
             os.makedirs(d)
 
+    def write_image_with_name(image, dir_name, step, complete_rate, task_description):
+        image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
+
+        image = np.array(image)
+        image = image.astype(np.uint8)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        cv2.imwrite(image_path, image)
+
+    def write_task_emb_with_name(task_emb, dir_name, task_desp):
+        task_emb_path = os.path.join(dir_name, f'{task_desp}.npy')
+        np.save(task_emb_path, task_emb)
 
     eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
 
-    num_workers = 16
+    for i in tqdm(range(len(exporting_dataset))):
+        left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
+        hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
+        right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
+        task_emb = exporting_dataset[i]['obs']['lang_emb'][0]
 
-    # Use partial to pass additional arguments
-    partial_process_data = partial(process_data, exporting_dataset, eye_names=eye_names,
-                                   dir_name_left=dir_name_left, dir_name_hand=dir_name_hand,
-                                   dir_name_right=dir_name_right, dir_name_task_emb=dir_name_task_emb)
+        demo_id = exporting_dataset._index_to_demo_id[i]
+        demo_start_index = exporting_dataset._demo_id_to_start_indices[demo_id]
+        demo_length = exporting_dataset._demo_id_to_demo_length[demo_id]
 
-    for i in range(len(exporting_dataset)):
-        partial_process_data(i)
-    # with ProcessPoolExecutor(max_workers=num_workers) as executor:
-    #     list(tqdm(executor.map(partial_process_data, range(len(exporting_dataset))), total=len(exporting_dataset)))
+        # start at offset index if not padding for frame stacking
+        demo_index_offset = 0 if exporting_dataset.pad_frame_stack else (exporting_dataset.n_frame_stack - 1)
+        index_in_demo = i - demo_start_index + demo_index_offset
 
-def generate_concated_images_from_demo_path(task_name, data_path):
+        complete_rate = round(index_in_demo / demo_length, 4)
+
+        task_description = exporting_dataset._demo_id_to_demo_lang_str[demo_id]
+        task_description = '_'.join(task_description.split())
+
+        write_image_with_name(left_image, dir_name_left, i, complete_rate, task_description)
+        write_image_with_name(hand_image, dir_name_hand, i, complete_rate, task_description)
+        write_image_with_name(right_image, dir_name_right, i, complete_rate, task_description)
+        write_task_emb_with_name(task_emb, dir_name_task_emb, task_description)
+
+        # get three images
+        # get task embedding
+        # save three images into three folders, left_image, hand_image, right_image
+        # each_file_name_will be '{task}_{i}_{complete_rate}.png'
+        # save the task embedding into a folder, and the file named '{task}_{i}_{complete_rate}.npy'
+
+
+
+def generate_concated_images_from_demo_path(task_name):
     config_path_compsoite = "/home/minquangao/completion-infuse-robot/robomimic/scripts/run_configs/seed_123_ds_human-50.json"
     # config_path_compsoite = "/home/minquangao/pretrained_models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
 
-    ext_cfg['train']['data'][0]['path'] = data_path
+    ext_cfg['train']['data'][0]['path'] = TASK_MAPPING_50_DEMO[task_name]
     # print('loading from path ', TASK_PATH_MAPPING[task_name])
     config = config_factory(ext_cfg["algo_name"])
     with config.values_unlocked():
@@ -258,23 +248,9 @@ def generate_concated_images_from_demo_path(task_name, data_path):
     extract_and_export_image(demo_dataset, task_name=task_name)
 
 
-def process_task(key, value):
-    print('PROCESSING.... ', key)
-    print('FROM PATH.... ', value)
-    generate_concated_images_from_demo_path(task_name=key, data_path=value)
-    for _ in range(10):
-        print('DONE ', key)
-
-
 if __name__ == '__main__':
-    # num_workers = os.cpu_count()
-    parser = argparse.ArgumentParser(description='sepcify a task')
-
-    parser.add_argument('--task_id', type=int, required=True, help='specify the task_id, from 0 to 21')
-
-    key_valus = list(TASK_MAPPING_50_DEMO.items())
-
-    task_id = parser.parse_args().task_id
-
-    process_task(key_valus[task_id][0], key_valus[task_id][1])
+    for key, value in TASK_PATH_MAPPING.items():
+        print('PROCESSING.... ', key)
+        print('FROM PATH.... ', value)
+        generate_concated_images_from_demo_path(task_name=key)
 
