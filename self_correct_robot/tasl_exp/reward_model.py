@@ -185,7 +185,7 @@ class RoboCustomDataset(Dataset):
 
         # Extract the three necessary features, you can customize these keys
         # Apply the resnet_transformer to each feature
-        import pdb; pdb.set_trace()
+        print(left_image.shape, hand_image.shape, right_image.shape)
         feature_left = self.transformer(left_image)
         feature_hand = self.transformer(hand_image)
         feature_right = self.transformer(right_image)
