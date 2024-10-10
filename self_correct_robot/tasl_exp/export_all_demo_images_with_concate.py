@@ -279,7 +279,7 @@ def generate_concated_images_from_demo_path(task_name, data_path):
 
 
 if __name__ == '__main__':
-    for key, value in TASK_PATH_MAPPING.items():
+    for key, value in TASK_MAPPING_50_DEMO.items():
         print('PROCESSING.... ', key)
         print('FROM PATH.... ', value)
         generate_concated_images_from_demo_path(task_name=key, data_path=value)
