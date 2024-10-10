@@ -89,7 +89,6 @@ def write_task_emb_with_name(task_emb, dir_name, task_desp):
     np.save(task_emb_path, task_emb)
 
 def process_data(exporting_dataset, i, eye_names, dir_name_left, dir_name_hand, dir_name_right, dir_name_task_emb):
-    print('index ', i)
     left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
     hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
     right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
@@ -147,8 +146,10 @@ def extract_and_export_image(demo_dataset, task_name):
                                    dir_name_left=dir_name_left, dir_name_hand=dir_name_hand,
                                    dir_name_right=dir_name_right, dir_name_task_emb=dir_name_task_emb)
 
-    with ProcessPoolExecutor(max_workers=num_workers) as executor:
-        list(tqdm(executor.map(partial_process_data, range(len(exporting_dataset))), total=len(exporting_dataset)))
+    for i in range(len(exporting_dataset)):
+        partial_process_data(i)
+    # with ProcessPoolExecutor(max_workers=num_workers) as executor:
+    #     list(tqdm(executor.map(partial_process_data, range(len(exporting_dataset))), total=len(exporting_dataset)))
 
 def generate_concated_images_from_demo_path(task_name, data_path):
     config_path_compsoite = "/home/minquangao/completion-infuse-robot/robomimic/scripts/run_configs/seed_123_ds_human-50.json"
