@@ -26,7 +26,7 @@ from self_correct_robot.tasl_exp.task_mapping import TASK_MAPPING_50_DEMO,TASK_P
 import time
 from multiprocessing import Pool
 from functools import partial
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
 def write_image_with_name(image, dir_name, step, complete_rate, task_description):
     image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
@@ -88,9 +88,9 @@ def extract_and_export_image(demo_dataset, task_name):
                                    dir_name_task_emb=dir_name_task_emb)
 
     # Set the number of workers (processes) based on available CPU cores
-    num_workers = 4
+    num_workers = 32
 
-    with ProcessPoolExecutor(max_workers=num_workers) as executor:
+    with ThreadPoolExecutor(max_workers=num_workers) as executor:
         # Use tqdm to show progress while processing the dataset in parallel
         list(tqdm(executor.map(partial_process_item, range(len(demo_dataset))), total=len(demo_dataset)))
 
