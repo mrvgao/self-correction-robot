@@ -110,7 +110,6 @@ def extract_and_export_image(demo_dataset, task_name):
     eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
 
     for i in tqdm(range(len(exporting_dataset))):
-        import pdb; pdb.set_trace()
         left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
         hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
         right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
