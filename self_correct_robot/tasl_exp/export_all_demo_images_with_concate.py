@@ -88,7 +88,7 @@ def extract_and_export_image(demo_dataset, task_name):
                                    dir_name_task_emb=dir_name_task_emb)
 
     # Set the number of workers (processes) based on available CPU cores
-    num_workers = os.cpu_count()
+    num_workers = 4
 
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
         # Use tqdm to show progress while processing the dataset in parallel
