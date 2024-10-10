@@ -152,12 +152,6 @@ def extract_and_export_image(demo_dataset, task_name):
 
     eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
 
-    partial_process_data = partial(process_data, exporting_dataset, eye_names=eye_names,
-                                   dir_name_left=dir_name_left, dir_name_hand=dir_name_hand,
-                                   dir_name_right=dir_name_right, dir_name_task_emb=dir_name_task_emb)
-
-    # num_workers =  os.cpu_count()
-
     num_processes = os.cpu_count() // 2
     dataset_chunks = split_dataset(len(exporting_dataset), num_processes)
 
