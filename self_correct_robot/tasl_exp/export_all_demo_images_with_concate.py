@@ -260,6 +260,8 @@ def process_task(key, value):
     print('PROCESSING.... ', key)
     print('FROM PATH.... ', value)
     generate_concated_images_from_demo_path(task_name=key, data_path=value)
+    for _ in range(10):
+        print('DONE ', key)
 
 
 if __name__ == '__main__':
@@ -273,5 +275,6 @@ if __name__ == '__main__':
         for future in tqdm(futures, total=len(futures)):
             future.result()  # Wait for each future to complete
 
-    print('DONE!!')
+    for _ in range(10):
+        print('DONE ALL!!')
 
