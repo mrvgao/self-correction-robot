@@ -26,6 +26,7 @@ from self_correct_robot.tasl_exp.task_mapping import TASK_MAPPING_50_DEMO,TASK_P
 import time
 from multiprocessing import Pool
 from functools import partial
+from concurrent.futures import ProcessPoolExecutor
 
 def write_image_with_name(image, dir_name, step, complete_rate, task_description):
     image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
