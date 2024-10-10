@@ -29,9 +29,6 @@ from multiprocessing import Pool
 from functools import partial
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import logging
-import multiprocessing
-
-
 
 
 # Global function to extract gripper_db from a single dataset entry
@@ -271,7 +268,6 @@ def process_task(key, value):
 if __name__ == '__main__':
     # num_workers = os.cpu_count()
     parser = argparse.ArgumentParser(description='sepcify a task')
-
 
     parser.add_argument('--task_id', type=int, required=True, help='specify the task_id, from 0 to 21')
 
