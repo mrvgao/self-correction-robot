@@ -262,3 +262,5 @@ if __name__ == '__main__':
         print('FROM PATH.... ', value)
         generate_concated_images_from_demo_path(task_name=key)
 
+    print('DONE!!!!!')
+
