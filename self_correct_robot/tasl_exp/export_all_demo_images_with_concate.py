@@ -26,6 +26,8 @@ from self_correct_robot.tasl_exp.task_mapping import TASK_MAPPING_50_DEMO,TASK_P
 import time
 from multiprocessing import Pool
 from functools import partial
+from concurrent.futures import ProcessPoolExecutor
+
 
 # Global function to extract gripper_db from a single dataset entry
 def get_gripper_db(exporting_dataset, i):
@@ -109,7 +111,7 @@ def extract_and_export_image(demo_dataset, task_name):
 
     eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
 
-    for i in tqdm(range(len(exporting_dataset))):
+    def process_data(i):
         left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
         hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
         right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
@@ -133,12 +135,10 @@ def extract_and_export_image(demo_dataset, task_name):
         write_image_with_name(right_image, dir_name_right, i, complete_rate, task_description)
         write_task_emb_with_name(task_emb, dir_name_task_emb, task_description)
 
-        # get three images
-        # get task embedding
-        # save three images into three folders, left_image, hand_image, right_image
-        # each_file_name_will be '{task}_{i}_{complete_rate}.png'
-        # save the task embedding into a folder, and the file named '{task}_{i}_{complete_rate}.npy'
+    num_workers =  os.cpu_count()
 
+    with ProcessPoolExecutor(max_workers=num_workers) as executor:
+        list(tqdm(executor.map(process_data, range(len(exporting_dataset))), total=len(exporting_dataset)))
 
 
 def generate_concated_images_from_demo_path(task_name):
