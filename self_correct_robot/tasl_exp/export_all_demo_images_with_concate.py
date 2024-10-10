@@ -86,7 +86,7 @@ def write_task_emb_with_name(task_emb, dir_name, task_desp):
     task_emb_path = os.path.join(dir_name, f'{task_desp}.npy')
     np.save(task_emb_path, task_emb)
 
-def process_single_data(exporting_dataset, i, eye_names, dir_name_left, dir_name_hand, dir_name_right, dir_name_task_emb):
+def process_data(exporting_dataset, i, eye_names, dir_name_left, dir_name_hand, dir_name_right, dir_name_task_emb):
     left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
     hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
     right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
@@ -109,21 +109,6 @@ def process_single_data(exporting_dataset, i, eye_names, dir_name_left, dir_name
     write_image_with_name(hand_image, dir_name_hand, i, complete_rate, task_description)
     write_image_with_name(right_image, dir_name_right, i, complete_rate, task_description)
     write_task_emb_with_name(task_emb, dir_name_task_emb, task_description)
-
-def process_data_chunk(chunk, exporting_dataset, eye_names, dir_name_left, dir_name_hand, dir_name_right, dir_name_task_emb):
-    # Use ThreadPoolExecutor within each process
-    partial_process_single_data = partial(process_single_data, exporting_dataset,
-                                          eye_names=eye_names,
-                                          dir_name_left=dir_name_left,
-                                          dir_name_hand=dir_name_hand,
-                                          dir_name_right=dir_name_right,
-                                          dir_name_task_emb=dir_name_task_emb)
-    with ThreadPoolExecutor(max_workers=os.cpu_count() // 2) as thread_executor:
-        list(thread_executor.map(partial_process_single_data, chunk))
-
-def split_dataset(n, num_chunks):
-    k, m = divmod(n, num_chunks)
-    return [range(i * k + min(i, m), (i + 1) * k + min(i + 1, m)) for i in range(num_chunks)]
 
 
 def extract_and_export_image(demo_dataset, task_name):
@@ -152,18 +137,15 @@ def extract_and_export_image(demo_dataset, task_name):
 
     eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
 
-    num_processes = os.cpu_count() // 2
-    dataset_chunks = split_dataset(len(exporting_dataset), num_processes)
+    num_workers = os.cpu_count()
 
-    with ProcessPoolExecutor(max_workers=num_processes) as process_executor:
-        partial_process_data_chunk = partial(process_data_chunk,
-                                             exporting_dataset=exporting_dataset,
-                                             eye_names=eye_names,
-                                             dir_name_left=dir_name_left,
-                                             dir_name_hand=dir_name_hand,
-                                             dir_name_right=dir_name_right,
-                                             dir_name_task_emb=dir_name_task_emb)
-        list(tqdm(process_executor.map(partial_process_data_chunk, dataset_chunks), total=num_processes))
+    # Use partial to pass additional arguments
+    partial_process_data = partial(process_data, exporting_dataset, eye_names=eye_names,
+                                   dir_name_left=dir_name_left, dir_name_hand=dir_name_hand,
+                                   dir_name_right=dir_name_right, dir_name_task_emb=dir_name_task_emb)
+
+    with ProcessPoolExecutor(max_workers=num_workers) as executor:
+        list(tqdm(executor.map(partial_process_data, range(len(exporting_dataset))), total=len(exporting_dataset)))
 
 def generate_concated_images_from_demo_path(task_name, data_path):
     config_path_compsoite = "/home/minquangao/completion-infuse-robot/robomimic/scripts/run_configs/seed_123_ds_human-50.json"
@@ -272,11 +254,22 @@ def generate_concated_images_from_demo_path(task_name, data_path):
     extract_and_export_image(demo_dataset, task_name=task_name)
 
 
-if __name__ == '__main__':
-    for key, value in TASK_MAPPING_50_DEMO.items():
-        print('PROCESSING.... ', key)
-        print('FROM PATH.... ', value)
-        generate_concated_images_from_demo_path(task_name=key, data_path=value)
+def process_task(key, value):
+    print('PROCESSING.... ', key)
+    print('FROM PATH.... ', value)
+    generate_concated_images_from_demo_path(task_name=key, data_path=value)
 
-    print('DONE!!!!!')
+
+if __name__ == '__main__':
+    num_workers = os.cpu_count()
+
+    with ProcessPoolExecutor(max_workers=num_workers) as executor:
+        # Use a list comprehension to submit each task to the executor
+        futures = [executor.submit(process_task, key, value) for key, value in TASK_MAPPING_50_DEMO.items()]
+
+        # Use tqdm to show progress as tasks are completed
+        for future in tqdm(futures, total=len(futures)):
+            future.result()  # Wait for each future to complete
+
+    print('DONE!!')
 
