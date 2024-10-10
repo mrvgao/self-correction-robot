@@ -100,7 +100,7 @@ def extract_and_export_image(demo_dataset, task_name):
 
         image = np.array(image) * 255
         image = image.astype(np.uint8)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         cv2.imwrite(image_path, image)
 
     def write_task_emb_with_name(task_emb, dir_name, task_desp):
@@ -250,6 +250,7 @@ def generate_concated_images_from_demo_path(task_name):
 
 if __name__ == '__main__':
     for key, value in TASK_PATH_MAPPING.items():
-        print('processing.... ', key)
+        print('PROCESSING.... ', key)
+        print('FROM PATH.... ', value)
         generate_concated_images_from_demo_path(task_name=key)
 
