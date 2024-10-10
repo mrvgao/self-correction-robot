@@ -114,11 +114,25 @@ def extract_and_export_image(demo_dataset, task_name):
 
     for i in tqdm(range(len(exporting_dataset))):
         import pdb; pdb.set_trace()
-        left_image = exporting_dataset[i]['obs'][eye_names[0]]
-        hand_image = exporting_dataset[i]['obs'][eye_names[1]]
-        right_image = exporting_dataset[i]['obs'][eye_names[2]]
-        task_emb = exporting_dataset[i]['task_emb']
-        complete_rate = exporting_dataset[i]['progress']
+        left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
+        hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
+        right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
+        task_emb = exporting_dataset[i]['obs']['lang_emb'][0]
+
+        demo_id = exporting_dataset._index_to_demo_id[index]
+        demo_start_index = exporting_dataset._demo_id_to_start_indices[demo_id]
+        demo_length = exporting_dataset._demo_id_to_demo_length[demo_id]
+
+        # start at offset index if not padding for frame stacking
+        demo_index_offset = 0 if exporting_dataset.pad_frame_stack else (exporting_dataset.n_frame_stack - 1)
+        index_in_demo = index - demo_start_index + demo_index_offset
+
+        complete_rate = index_in_demo / demo_length
+
+        write_image_with_name(left_image, dir_name_left, i, complete_rate)
+        write_image_with_name(hand_image, dir_name_hand, i, complete_rate)
+        write_image_with_name(right_image, dir_name_right, i, complete_rate)
+        write_task_emb_with_name(task_emb, dir_name_task_emb, i, complete_rate)
 
         # get three images
         # get task embedding
