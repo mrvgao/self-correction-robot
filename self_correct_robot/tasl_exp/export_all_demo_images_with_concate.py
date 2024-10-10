@@ -127,6 +127,7 @@ def extract_and_export_image(demo_dataset, task_name):
         complete_rate = index_in_demo / demo_length
 
         task_description = exporting_dataset._demo_id_to_demo_lang_str[demo_id]
+        task_description = '_'.join(task_description.split())
 
         write_image_with_name(left_image, dir_name_left, i, complete_rate)
         write_image_with_name(hand_image, dir_name_hand, i, complete_rate)
