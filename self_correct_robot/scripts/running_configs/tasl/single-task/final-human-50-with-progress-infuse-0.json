@@ -82,7 +82,7 @@
             {
                 "path": "/data3/mgao/robocasa/datasets/v0.1/single_stage/kitchen_pnp/PnPCounterToCab/2024-04-24/demo_gentex_im128_randcams.hdf5",
                 "horizon": 500,
-                "do_eval": true,
+                "do_eval": false,
                 "filter_key": "50_demos"
             },
             {
