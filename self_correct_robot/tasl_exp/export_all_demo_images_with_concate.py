@@ -171,7 +171,7 @@ def generate_concated_images_from_demo_path(task_name=None, file_path=None):
             ext_cfg['train']['data'].append({'path': path})
 
     config = config_factory(ext_cfg["algo_name"])
-    import pdb; pdb.set_trace()
+
     with config.values_unlocked():
         config.update(ext_cfg)
     device = TorchUtils.get_torch_device(try_to_use_cuda=config.train.cuda, cuda_mark=config.cuda_mark)
