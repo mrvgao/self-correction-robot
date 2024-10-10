@@ -274,7 +274,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--task_id', type=int, required=True, help='specify the task_id, from 0 to 21')
 
-    key_valus = list(TASK_PATH_MAPPING.items())
+    key_valus = list(TASK_MAPPING_50_DEMO.items())
 
     task_id = parser.parse_args().task_id
 
