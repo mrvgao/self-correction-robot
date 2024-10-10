@@ -119,7 +119,7 @@ def extract_and_export_image(demo_dataset, task_name):
         right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
         task_emb = exporting_dataset[i]['obs']['lang_emb'][0]
 
-        demo_id = exporting_dataset._index_to_demo_id[index]
+        demo_id = exporting_dataset._index_to_demo_id[i]
         demo_start_index = exporting_dataset._demo_id_to_start_indices[demo_id]
         demo_length = exporting_dataset._demo_id_to_demo_length[demo_id]
 
