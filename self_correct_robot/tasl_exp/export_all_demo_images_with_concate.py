@@ -94,7 +94,8 @@ def extract_and_export_image(all_demo_dataset):
     # dir_name = f'/home/ubuntu/robocasa-statics/export-multi-tasks/{_tmp_task_name}'
 
     for demo_dataset in all_demo_dataset.datasets:
-        task_name = extract_task_name(demo_dataset.hdf5_path)
+        exporting_dataset = demo_dataset
+        task_name = extract_task_name(exporting_dataset.hdf5_path)
         task_name = '_'.join(task_name.split())
 
         dir_name_left = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/left_images/'
