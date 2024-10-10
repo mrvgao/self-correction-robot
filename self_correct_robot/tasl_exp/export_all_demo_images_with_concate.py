@@ -141,12 +141,12 @@ def extract_and_export_image(demo_dataset, task_name):
 
 
 
-def generate_concated_images_from_demo_path(task_name):
+def generate_concated_images_from_demo_path(task_name, file_path):
     config_path_compsoite = "/home/minquangao/completion-infuse-robot/robomimic/scripts/run_configs/seed_123_ds_human-50.json"
     # config_path_compsoite = "/home/minquangao/pretrained_models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
 
-    ext_cfg['train']['data'][0]['path'] = TASK_MAPPING_50_DEMO[task_name]
+    ext_cfg['train']['data'][0]['path'] = file_path
     # print('loading from path ', TASK_PATH_MAPPING[task_name])
     config = config_factory(ext_cfg["algo_name"])
     with config.values_unlocked():
@@ -249,8 +249,16 @@ def generate_concated_images_from_demo_path(task_name):
 
 
 if __name__ == '__main__':
-    for key, value in TASK_PATH_MAPPING.items():
-        print('PROCESSING.... ', key)
-        print('FROM PATH.... ', value)
-        generate_concated_images_from_demo_path(task_name=key)
+    import argparse
+
+
+    parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
+    parser.add_argument('--task_id', type=int, required=True, help='specify the task id to expoert')
+
+    task_path_mapping = TASK_PATH_MAPPING.items()
+
+    # for key, value in TASK_PATH_MAPPING.items():
+    #     print('PROCESSING.... ', key)
+    #     print('FROM PATH.... ', value)
+    generate_concated_images_from_demo_path(task_name=task_path_mapping[task_id][0], file_path=task_path_mapping[task_id][1])
 
