@@ -103,7 +103,7 @@ def extract_and_export_image(demo_dataset, task_name):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         cv2.imwrite(image_path, image)
 
-    def write_task_emb_with_name(task_emb, dir_name, step, complete_rate):
+    def write_task_emb_with_name(task_emb, dir_name, task_desp):
         task_emb_path = os.path.join(dir_name, f'{task_desp}.npy')
         np.save(task_emb_path, task_emb)
 
@@ -126,10 +126,12 @@ def extract_and_export_image(demo_dataset, task_name):
 
         complete_rate = index_in_demo / demo_length
 
+        task_description = exporting_dataset._demo_id_to_demo_lang_str[demo_id]
+
         write_image_with_name(left_image, dir_name_left, i, complete_rate)
         write_image_with_name(hand_image, dir_name_hand, i, complete_rate)
         write_image_with_name(right_image, dir_name_right, i, complete_rate)
-        write_task_emb_with_name(task_emb, dir_name_task_emb, i, complete_rate)
+        write_task_emb_with_name(task_emb, dir_name_task_emb, task_description)
 
         # get three images
         # get task embedding
