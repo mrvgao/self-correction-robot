@@ -72,15 +72,28 @@ def combine_images_horizen(images):
 
     return combined_image
 
+
 def extract_task_name(file_path):
     # Split the path into parts
     path_parts = file_path.split(os.sep)
 
-    # Find the index of "single_stage" to locate the part you want
+    # Find the index of "single_stage" to locate the relevant parts
     single_stage_index = path_parts.index("single_stage")
 
-    # Extract the task name part (the one after "single_stage")
-    task_name = path_parts[single_stage_index + 1]
+    # Find the date-like string (e.g., 2024-04-24) after "single_stage"
+    date_pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
+    for i in range(single_stage_index + 1, len(path_parts)):
+        if date_pattern.match(path_parts[i]):
+            date_index = i
+            break
+    else:
+        raise ValueError("No valid date pattern found after 'single_stage' in the path")
+
+    # The task name is the second segment between "single_stage" and the date
+    if date_index - single_stage_index < 3:
+        raise ValueError("Expected two segments between 'single_stage' and the date, but found less.")
+
+    task_name = path_parts[date_index - 1]
 
     return task_name
 
