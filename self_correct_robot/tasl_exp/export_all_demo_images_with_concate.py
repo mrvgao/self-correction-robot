@@ -72,88 +72,103 @@ def combine_images_horizen(images):
 
     return combined_image
 
+def extract_task_name(file_path):
+    # Split the path into parts
+    path_parts = file_path.split(os.sep)
 
-def extract_and_export_image(demo_dataset):
+    # Find the index of "single_stage" to locate the part you want
+    single_stage_index = path_parts.index("single_stage")
 
-    import pdb; pdb.set_trace()
-    exporting_dataset = demo_dataset
+    # Extract the task name part (the one after "single_stage")
+    task_name = path_parts[single_stage_index + 1]
+
+    return task_name
+
+def extract_and_export_image(all_demo_dataset):
+
+    # import pdb; pdb.set_trace()
+    # exporting_dataset = demo_dataset
 
 
     # dir_name = f'/home/ubuntu/robocasa-statics/export-images-from-demo/{_tmp_task_name}'
     # dir_name = f'/home/ubuntu/robocasa-statics/export-multi-tasks/{_tmp_task_name}'
 
-    task_name = '_'.join(task_name.split())
+    for demo_dataset in all_demo_dataset.datasets:
+        task_name = extract_task_name(demo_dataset.hdf5_path)
+        task_name = '_'.join(task_name.split())
 
-    dir_name_left = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/left_images/'
-    dir_name_right = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/right_images/'
-    dir_name_hand = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/hand_images/'
-    dir_name_task_emb = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/task_emb/'
+        dir_name_left = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/left_images/'
+        dir_name_right = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/right_images/'
+        dir_name_hand = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/hand_images/'
+        dir_name_task_emb = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/task_emb/'
 
-    dirs_need_to_create = [dir_name_left, dir_name_right, dir_name_hand, dir_name_task_emb]
+        dirs_need_to_create = [dir_name_left, dir_name_right, dir_name_hand, dir_name_task_emb]
 
-    for d in dirs_need_to_create:
-        if not os.path.exists(d):
-            os.makedirs(d)
+        for d in dirs_need_to_create:
+            if not os.path.exists(d):
+                os.makedirs(d)
 
-    def write_image_with_name(image, dir_name, step, complete_rate, task_description):
-        image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
+        def write_image_with_name(image, dir_name, step, complete_rate, task_description):
+            image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
 
-        image = np.array(image)
-        image = image.astype(np.uint8)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        cv2.imwrite(image_path, image)
+            image = np.array(image)
+            image = image.astype(np.uint8)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            cv2.imwrite(image_path, image)
 
-    def write_task_emb_with_name(task_emb, dir_name, task_desp):
-        task_emb_path = os.path.join(dir_name, f'{task_desp}.npy')
-        np.save(task_emb_path, task_emb)
+        def write_task_emb_with_name(task_emb, dir_name, task_desp):
+            task_emb_path = os.path.join(dir_name, f'{task_desp}.npy')
+            np.save(task_emb_path, task_emb)
 
-    eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
+        eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
 
-    print('PROCESSING....', task_name)
+        print('PROCESSING....', task_name)
 
-    for i in tqdm(range(len(exporting_dataset))):
-        if random.random() > 0.1: continue
+        for i in tqdm(range(len(exporting_dataset))):
+            if random.random() > 0.1: continue
 
-        left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
-        hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
-        right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
-        task_emb = exporting_dataset[i]['obs']['lang_emb'][0]
+            left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
+            hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
+            right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
+            task_emb = exporting_dataset[i]['obs']['lang_emb'][0]
 
-        demo_id = exporting_dataset._index_to_demo_id[i]
-        demo_start_index = exporting_dataset._demo_id_to_start_indices[demo_id]
-        demo_length = exporting_dataset._demo_id_to_demo_length[demo_id]
+            demo_id = exporting_dataset._index_to_demo_id[i]
+            demo_start_index = exporting_dataset._demo_id_to_start_indices[demo_id]
+            demo_length = exporting_dataset._demo_id_to_demo_length[demo_id]
 
-        # start at offset index if not padding for frame stacking
-        demo_index_offset = 0 if exporting_dataset.pad_frame_stack else (exporting_dataset.n_frame_stack - 1)
-        index_in_demo = i - demo_start_index + demo_index_offset
+            # start at offset index if not padding for frame stacking
+            demo_index_offset = 0 if exporting_dataset.pad_frame_stack else (exporting_dataset.n_frame_stack - 1)
+            index_in_demo = i - demo_start_index + demo_index_offset
 
-        complete_rate = round(index_in_demo / demo_length, 4)
+            complete_rate = round(index_in_demo / demo_length, 4)
 
-        task_description = exporting_dataset._demo_id_to_demo_lang_str[demo_id]
-        task_description = '_'.join(task_description.split())
+            task_description = exporting_dataset._demo_id_to_demo_lang_str[demo_id]
+            task_description = '_'.join(task_description.split())
 
-        write_image_with_name(left_image, dir_name_left, i, complete_rate, task_description)
-        write_image_with_name(hand_image, dir_name_hand, i, complete_rate, task_description)
-        write_image_with_name(right_image, dir_name_right, i, complete_rate, task_description)
-        write_task_emb_with_name(task_emb, dir_name_task_emb, task_description)
+            write_image_with_name(left_image, dir_name_left, i, complete_rate, task_description)
+            write_image_with_name(hand_image, dir_name_hand, i, complete_rate, task_description)
+            write_image_with_name(right_image, dir_name_right, i, complete_rate, task_description)
+            write_task_emb_with_name(task_emb, dir_name_task_emb, task_description)
 
-        # get three images
-        # get task embedding
-        # save three images into three folders, left_image, hand_image, right_image
-        # each_file_name_will be '{task}_{i}_{complete_rate}.png'
-        # save the task embedding into a folder, and the file named '{task}_{i}_{complete_rate}.npy'
+            # get three images
+            # get task embedding
+            # save three images into three folders, left_image, hand_image, right_image
+            # each_file_name_will be '{task}_{i}_{complete_rate}.png'
+            # save the task embedding into a folder, and the file named '{task}_{i}_{complete_rate}.npy'
 
 
 
-def generate_concated_images_from_demo_path(task_name, file_path):
+def generate_concated_images_from_demo_path(task_name=None, file_path=None):
     config_path_compsoite = "/home/minquangao/completion-infuse-robot/robomimic/scripts/run_configs/seed_123_ds_human-50.json"
     # config_path_compsoite = "/home/minquangao/pretrained_models/configs/seed_123_ds_human-50.json"
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
 
-    # ext_cfg['train']['data'][0]['path'] = file_path
-    # print('loading from path ', TASK_PATH_MAPPING[task_name])
-    for path in TASK_MAPPING_50_DEMO.values():
-        ext_cfg['train']['data'].append({'path': path})
+    if task_name and file_path:
+        ext_cfg['train']['data'].append({'path':file_path})
+        # print('loading from path ', TASK_PATH_MAPPING[task_name])
+    else:
+        for path in TASK_PATH_MAPPING.values():
+            ext_cfg['train']['data'].append({'path': path})
 
     config = config_factory(ext_cfg["algo_name"])
     import pdb; pdb.set_trace()
@@ -267,8 +282,8 @@ if __name__ == '__main__':
 
     # task_path_mapping = list(TASK_PATH_MAPPING.items())
 
-    for key, value in TASK_PATH_MAPPING.items():
-        print('PROCESSING.... ', key)
-        print('FROM PATH.... ', value)
-        generate_concated_images_from_demo_path(task_name=key, file_path=value)
+    # for key, value in TASK_PATH_MAPPING.items():
+    #     print('PROCESSING.... ', key)
+    #     print('FROM PATH.... ', value)
+        generate_concated_images_from_demo_path()
 
