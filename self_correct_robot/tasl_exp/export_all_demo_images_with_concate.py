@@ -263,7 +263,7 @@ if __name__ == '__main__':
     # task_path_mapping = list(TASK_PATH_MAPPING.items())
 
     for key, value in TASK_PATH_MAPPING.items():
-    #     print('PROCESSING.... ', key)
-    #     print('FROM PATH.... ', value)
+        print('PROCESSING.... ', key)
+        print('FROM PATH.... ', value)
         generate_concated_images_from_demo_path(task_name=key, file_path=value)
 
