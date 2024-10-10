@@ -142,7 +142,7 @@ def extract_and_export_image(demo_dataset, task_name):
 
     eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
 
-    num_workers = os.cpu_count()
+    num_workers = 16
 
     # Use partial to pass additional arguments
     partial_process_data = partial(process_data, exporting_dataset, eye_names=eye_names,
