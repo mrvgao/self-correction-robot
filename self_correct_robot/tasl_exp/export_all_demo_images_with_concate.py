@@ -27,63 +27,43 @@ import time
 from multiprocessing import Pool
 from functools import partial
 
-# Global function to extract gripper_db from a single dataset entry
-def get_gripper_db(exporting_dataset, i):
-    print('running', i)
-    return exporting_dataset[i]['obs']['robot0_gripper_qpos']
+def write_image_with_name(image, dir_name, step, complete_rate, task_description):
+    image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
+    image = np.array(image)
+    image = image.astype(np.uint8)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    cv2.imwrite(image_path, image)
 
+def write_task_emb_with_name(task_emb, dir_name, task_desp):
+    task_emb_path = os.path.join(dir_name, f'{task_desp}.npy')
+    np.save(task_emb_path, task_emb)
 
-# Step 1: Precompute all the gripper_db values for the entire dataset using parallel processing
-def prefetch_gripper_db(exporting_dataset):
-    # Use partial to fix the first argument (exporting_dataset) for the function get_gripper_db
-    get_gripper_db_partial = partial(get_gripper_db, exporting_dataset)
+def process_single_item(i, exporting_dataset, eye_names, dir_name_left, dir_name_hand, dir_name_right, dir_name_task_emb):
+    left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
+    hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
+    right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
+    task_emb = exporting_dataset[i]['obs']['lang_emb'][0]
 
-    with Pool() as pool:
-        # Use parallel map with the partial function that includes exporting_dataset
-        gripper_db_mapping = list(
-            tqdm(pool.imap(get_gripper_db_partial, range(len(exporting_dataset))), total=len(exporting_dataset)))
-    return gripper_db_mapping
+    demo_id = exporting_dataset._index_to_demo_id[i]
+    demo_start_index = exporting_dataset._demo_id_to_start_indices[demo_id]
+    demo_length = exporting_dataset._demo_id_to_demo_length[demo_id]
 
+    # start at offset index if not padding for frame stacking
+    demo_index_offset = 0 if exporting_dataset.pad_frame_stack else (exporting_dataset.n_frame_stack - 1)
+    index_in_demo = i - demo_start_index + demo_index_offset
 
-def find_overlap_length(list1, list2, max_length):
-    """
-    Find the maximum overlap length between the end of list1 and the beginning of list2.
-    """
-    for overlap_length in range(1, max_length+1):
-        if np.array_equal(list1[-overlap_length:], list2[:overlap_length]):
-            return overlap_length
-    return 0
+    complete_rate = round(index_in_demo / demo_length, 4)
 
+    task_description = exporting_dataset._demo_id_to_demo_lang_str[demo_id]
+    task_description = '_'.join(task_description.split())
 
-def combine_images_horizen(images):
-    pil_images = [Image.fromarray((image).astype(np.uint8)) for image in images]
-
-    # Combine images horizontally
-    total_width = sum(image.width for image in pil_images)
-    max_height = max(image.height for image in pil_images)
-
-    combined_image = Image.new('RGB', (total_width, max_height))
-
-    current_width = 0
-    for image in pil_images:
-        combined_image.paste(image, (current_width, 0))
-        current_width += image.width
-
-    return combined_image
-
+    write_image_with_name(left_image, dir_name_left, i, complete_rate, task_description)
+    write_image_with_name(hand_image, dir_name_hand, i, complete_rate, task_description)
+    write_image_with_name(right_image, dir_name_right, i, complete_rate, task_description)
+    write_task_emb_with_name(task_emb, dir_name_task_emb, task_description)
 
 def extract_and_export_image(demo_dataset, task_name):
-
-    max_check_length = 50  # Maximum length to check for overlap
-
-    exporting_dataset = demo_dataset
-
-
-    # dir_name = f'/home/ubuntu/robocasa-statics/export-images-from-demo/{_tmp_task_name}'
-    # dir_name = f'/home/ubuntu/robocasa-statics/export-multi-tasks/{_tmp_task_name}'
-
     task_name = '_'.join(task_name.split())
-
     dir_name_left = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/left_images/'
     dir_name_right = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/right_images/'
     dir_name_hand = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/hand_images/'
@@ -95,51 +75,23 @@ def extract_and_export_image(demo_dataset, task_name):
         if not os.path.exists(d):
             os.makedirs(d)
 
-    def write_image_with_name(image, dir_name, step, complete_rate, task_description):
-        image_path = os.path.join(dir_name, f'{step}_{task_description}_{complete_rate}.png')
-
-        image = np.array(image)
-        image = image.astype(np.uint8)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        cv2.imwrite(image_path, image)
-
-    def write_task_emb_with_name(task_emb, dir_name, task_desp):
-        task_emb_path = os.path.join(dir_name, f'{task_desp}.npy')
-        np.save(task_emb_path, task_emb)
-
     eye_names = ['robot0_agentview_left_image', 'robot0_eye_in_hand_image', 'robot0_agentview_right_image']
 
-    for i in tqdm(range(len(exporting_dataset))):
-        left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
-        hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
-        right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
-        task_emb = exporting_dataset[i]['obs']['lang_emb'][0]
+    # Partial function to fix the arguments except for the index `i`
+    partial_process_item = partial(process_single_item,
+                                   exporting_dataset=demo_dataset,
+                                   eye_names=eye_names,
+                                   dir_name_left=dir_name_left,
+                                   dir_name_hand=dir_name_hand,
+                                   dir_name_right=dir_name_right,
+                                   dir_name_task_emb=dir_name_task_emb)
 
-        demo_id = exporting_dataset._index_to_demo_id[i]
-        demo_start_index = exporting_dataset._demo_id_to_start_indices[demo_id]
-        demo_length = exporting_dataset._demo_id_to_demo_length[demo_id]
+    # Set the number of workers (processes) based on available CPU cores
+    num_workers = os.cpu_count()
 
-        # start at offset index if not padding for frame stacking
-        demo_index_offset = 0 if exporting_dataset.pad_frame_stack else (exporting_dataset.n_frame_stack - 1)
-        index_in_demo = i - demo_start_index + demo_index_offset
-
-        complete_rate = round(index_in_demo / demo_length, 4)
-
-        task_description = exporting_dataset._demo_id_to_demo_lang_str[demo_id]
-        task_description = '_'.join(task_description.split())
-
-        write_image_with_name(left_image, dir_name_left, i, complete_rate, task_description)
-        write_image_with_name(hand_image, dir_name_hand, i, complete_rate, task_description)
-        write_image_with_name(right_image, dir_name_right, i, complete_rate, task_description)
-        write_task_emb_with_name(task_emb, dir_name_task_emb, task_description)
-
-        # get three images
-        # get task embedding
-        # save three images into three folders, left_image, hand_image, right_image
-        # each_file_name_will be '{task}_{i}_{complete_rate}.png'
-        # save the task embedding into a folder, and the file named '{task}_{i}_{complete_rate}.npy'
-
-
+    with ProcessPoolExecutor(max_workers=num_workers) as executor:
+        # Use tqdm to show progress while processing the dataset in parallel
+        list(tqdm(executor.map(partial_process_item, range(len(demo_dataset))), total=len(demo_dataset)))
 
 def generate_concated_images_from_demo_path(task_name, file_path):
     config_path_compsoite = "/home/minquangao/completion-infuse-robot/robomimic/scripts/run_configs/seed_123_ds_human-50.json"
