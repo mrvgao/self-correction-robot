@@ -249,18 +249,18 @@ def generate_concated_images_from_demo_path(task_name, file_path):
 
 
 if __name__ == '__main__':
-    import argparse
+    # import argparse
+    #
+    #
+    # parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
+    # parser.add_argument('--task_id', type=int, required=True, help='specify the task id to expoert')
+    #
+    # task_id = parser.parse_args().task_id
 
+    # task_path_mapping = list(TASK_PATH_MAPPING.items())
 
-    parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
-    parser.add_argument('--task_id', type=int, required=True, help='specify the task id to expoert')
-
-    task_id = parser.parse_args().task_id
-
-    task_path_mapping = list(TASK_PATH_MAPPING.items())
-
-    # for key, value in TASK_PATH_MAPPING.items():
+    for key, value in TASK_PATH_MAPPING.items():
     #     print('PROCESSING.... ', key)
     #     print('FROM PATH.... ', value)
-    generate_concated_images_from_demo_path(task_name=task_path_mapping[task_id][0], file_path=task_path_mapping[task_id][1])
+        generate_concated_images_from_demo_path(task_name=key, file_path=value)
 
