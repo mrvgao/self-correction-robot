@@ -182,7 +182,7 @@ def generate_concated_images_from_demo_path(task_name=None, file_path=None):
         ext_cfg['train']['data'].append({'path':file_path})
         # print('loading from path ', TASK_PATH_MAPPING[task_name])
     else:
-        for path in TASK_MAPPING_50_DEMO.values():
+        for path in TASK_PATH_MAPPING.values():
             ext_cfg['train']['data'].append({'path': path})
 
     config = config_factory(ext_cfg["algo_name"])
