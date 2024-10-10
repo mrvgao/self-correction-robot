@@ -57,7 +57,8 @@ def get_exp_dir(config, auto_remove_exp_dir=False):
     output_dir = None
     if config.experiment.save.enabled:
         output_dir = os.path.join(base_output_dir, time_str, "models")
-        os.makedirs(output_dir)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
     # tensorboard directory
     log_dir = os.path.join(base_output_dir, time_str, "logs")
