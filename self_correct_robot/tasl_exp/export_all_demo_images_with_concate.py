@@ -27,6 +27,8 @@ import time
 from multiprocessing import Pool
 from functools import partial
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+import logging
+
 
 
 # Global function to extract gripper_db from a single dataset entry
@@ -265,7 +267,7 @@ if __name__ == '__main__':
 
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
         # Use a list comprehension to submit each task to the executor
-        futures = [executor.submit(process_task, key, value) for key, value in TASK_MAPPING_50_DEMO.items()]
+        futures = [executor.submit(process_task, key, value) for key, value in TASK_PATH_MAPPING.items()]
 
         # Use tqdm to show progress as tasks are completed
         for future in tqdm(futures, total=len(futures)):
