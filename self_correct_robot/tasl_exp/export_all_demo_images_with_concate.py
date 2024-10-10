@@ -125,7 +125,7 @@ def extract_and_export_image(demo_dataset, task_name):
 
         # start at offset index if not padding for frame stacking
         demo_index_offset = 0 if exporting_dataset.pad_frame_stack else (exporting_dataset.n_frame_stack - 1)
-        index_in_demo = index - demo_start_index + demo_index_offset
+        index_in_demo = i - demo_start_index + demo_index_offset
 
         complete_rate = index_in_demo / demo_length
 
