@@ -107,7 +107,12 @@ def extract_and_export_image(all_demo_dataset):
     # dir_name = f'/home/ubuntu/robocasa-statics/export-images-from-demo/{_tmp_task_name}'
     # dir_name = f'/home/ubuntu/robocasa-statics/export-multi-tasks/{_tmp_task_name}'
 
-    for demo_dataset in all_demo_dataset.datasets:
+    if hasattr(all_demo_dataset, 'datasets'):
+        iter_datasets = all_demo_dataset.datasets
+    else:
+        iter_datasets = [all_demo_dataset]
+
+    for demo_dataset in iter_datasets:
         exporting_dataset = demo_dataset
         task_name = extract_task_name(exporting_dataset.hdf5_path)
         task_name = '_'.join(task_name.split())
