@@ -145,8 +145,6 @@ def extract_and_export_image(all_demo_dataset):
         print('PROCESSING....', task_name)
 
         for i in tqdm(range(len(exporting_dataset))):
-            if random.random() > 0.1: continue
-
             left_image = exporting_dataset[i]['obs'][eye_names[0]][0]
             hand_image = exporting_dataset[i]['obs'][eye_names[1]][0]
             right_image = exporting_dataset[i]['obs'][eye_names[2]][0]
