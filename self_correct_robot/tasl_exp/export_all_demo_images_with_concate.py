@@ -117,10 +117,10 @@ def extract_and_export_image(all_demo_dataset):
         task_name = extract_task_name(exporting_dataset.hdf5_path)
         task_name = '_'.join(task_name.split())
 
-        dir_name_left = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/left_images/'
-        dir_name_right = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/right_images/'
-        dir_name_hand = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/hand_images/'
-        dir_name_task_emb = f'/home/minquangao/robocasa-statics/export-images-from-demo-3k/{task_name}/task_emb/'
+        dir_name_left = f'/home/minquangao/robocasa-statics/export-images-from-demo-50/{task_name}/left_images/'
+        dir_name_right = f'/home/minquangao/robocasa-statics/export-images-from-demo-50/{task_name}/right_images/'
+        dir_name_hand = f'/home/minquangao/robocasa-statics/export-images-from-demo-50/{task_name}/hand_images/'
+        dir_name_task_emb = f'/home/minquangao/robocasa-statics/export-images-from-demo-50/{task_name}/task_emb/'
 
         dirs_need_to_create = [dir_name_left, dir_name_right, dir_name_hand, dir_name_task_emb]
 
@@ -184,11 +184,17 @@ def generate_concated_images_from_demo_path(task_name=None, file_path=None):
     ext_cfg = json.load(open(config_path_compsoite, 'r'))
 
     if task_name and file_path:
-        ext_cfg['train']['data'].append({'path':file_path})
+        ext_cfg['train']['data'].append({
+            'path':file_path,
+            'fiter_key': '50_demos'
+        })
         # print('loading from path ', TASK_PATH_MAPPING[task_name])
     else:
         for path in TASK_PATH_MAPPING.values():
-            ext_cfg['train']['data'].append({'path': path})
+            ext_cfg['train']['data'].append({
+                'path': path,
+                'fiter_key': '50_demos'
+            })
 
     config = config_factory(ext_cfg["algo_name"])
 
@@ -254,34 +260,6 @@ def generate_concated_images_from_demo_path(task_name=None, file_path=None):
         )
         shape_meta_list.append(shape_meta)
 
-    # if config.experiment.env is not None:
-    #     env_meta["env_name"] = config.experiment.env
-    #     print("=" * 30 + "\n" + "Replacing Env to {}\n".format(env_meta["env_name"]) + "=" * 30)
-
-    eval_env_meta_list = []
-    eval_shape_meta_list = []
-    eval_env_name_list = []
-    eval_env_horizon_list = []
-    # for (dataset_i, dataset_cfg) in enumerate(config.train.data):
-    #     do_eval = dataset_cfg.get("do_eval", True)
-    #     if do_eval is not True:
-    #         continue
-    #     eval_env_meta_list.append(env_meta_list[dataset_i])
-    #     eval_shape_meta_list.append(shape_meta_list[dataset_i])
-    #     eval_env_name_list.append(env_meta_list[dataset_i]["env_name"])
-    #     horizon = dataset_cfg.get("horizon", config.experiment.rollout.horizon)
-    #     eval_env_horizon_list.append(horizon)
-
-    # save the config as a json file
-    # with open(os.path.join(log_dir, '..', 'config.json'), 'w') as outfile:
-    #     json.dump(config, outfile, indent=4)
-
-    # if checkpoint is specified, load in model weights
-
-    # load training data
-    # lang_encoder = LangUtils.LangEncoder(
-    #     device=device,
-    # )
     trainset, validset = TrainUtils.load_data_for_training(
         config, obs_keys=shape_meta["all_obs_keys"], lang_encoder=None)
 
@@ -302,7 +280,7 @@ if __name__ == '__main__':
 
     # task_path_mapping = list(TASK_PATH_MAPPING.items())
 
-    for key, value in TASK_PATH_MAPPING.items():
+    for key, value in TASK_MAPPING_50_DEMO.items():
         print('PROCESSING.... ', key)
         print('FROM PATH.... ', value)
         generate_concated_images_from_demo_path(task_name=key, file_path=value)
