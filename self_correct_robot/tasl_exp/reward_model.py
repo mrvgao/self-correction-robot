@@ -21,6 +21,7 @@ import time
 import hashlib
 from self_correct_robot.utils.load_dataloader import load_dataloader
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 torch.backends.cudnn.benchmark = True
 
@@ -45,6 +46,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
+
 class CustomDataset(Dataset):
     def __init__(self, root_dir, transform=None):
         self.root_dir = root_dir
@@ -52,10 +54,9 @@ class CustomDataset(Dataset):
         self.lang_embedding = dict()
         self.data = []
 
-        for sub_task in os.listdir(root_dir):
-            if len(self.data) > 500: # For testing
-                break
-            sub_task_dir = os.path.join(root_dir, sub_task)
+        def load_on_task(task_path):
+            task_data = []
+            sub_task_dir = os.path.join(root_dir, task_path)
 
             for task_desc in os.listdir(os.path.join(sub_task_dir, 'task_emb')):
                 task_emb_path = os.path.join(sub_task_dir, 'task_emb', task_desc)
@@ -86,6 +87,8 @@ class CustomDataset(Dataset):
             num_images = min(len(image_paths[img_dir]) for img_dir in image_dirs)
 
             for i in tqdm(range(num_images), desc='Loading images'):
+                if i > 100: # Limit the number of images per task
+                    break
                 img_1_path, task_name, label = image_paths['left_images'][i]
                 img_2_path, task_name_1, label_1 = image_paths['hand_images'][i]
                 img_3_path, task_name_2, label_2 = image_paths['right_images'][i]
@@ -107,7 +110,16 @@ class CustomDataset(Dataset):
 
                 label = torch.tensor(label, dtype=torch.float32)
 
-                self.data.append((left_image, hand_image, right_image, task_emb, label))
+                # self.data.append((left_image, hand_image, right_image, task_emb, label))
+                task_data.append((left_image, hand_image, right_image, task_emb, label))
+
+            return task_data
+
+        with ThreadPoolExecutor(max_workers=22) as executor:
+            task_datas = executor.map(load_on_task, os.listdir(root_dir))
+
+            for task_data in task_datas:
+                self.data.extend(task_data)
 
     def __len__(self):
         return len(self.data)
