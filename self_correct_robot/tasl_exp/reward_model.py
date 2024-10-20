@@ -70,12 +70,11 @@ class CustomDataset(Dataset):
             image_paths = {img_dir: [] for img_dir in image_dirs}
 
             for img_dir in image_dirs:
+                print('load image for ', img_dir)
                 for img_name in os.listdir(os.path.join(sub_task_dir, img_dir)):
                     img_path = os.path.join(sub_task_dir, img_dir, img_name)
                     if not os.path.isfile(img_path):
                         continue
-
-                    import pdb; pdb.set_trace()
 
                     tokens = img_path.split('/')[-1].split('_')
                     label = float(tokens[-1].replace('.png', ''))
