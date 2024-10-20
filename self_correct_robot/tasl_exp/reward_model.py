@@ -350,7 +350,7 @@ if __name__ == "__main__":
     model = args.model
     lr = 1e-4
     # num_epochs = 1000
-    num_epochs = 100
+    num_epochs = 5
     cuda = 0
     # seed = 999
     batch_size = 128
