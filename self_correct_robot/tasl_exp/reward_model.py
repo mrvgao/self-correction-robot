@@ -87,8 +87,8 @@ class CustomDataset(Dataset):
             num_images = min(len(image_paths[img_dir]) for img_dir in image_dirs)
 
             for i in tqdm(range(num_images), desc='Loading images'):
-                if i > 100: # Limit the number of images per task
-                    break
+                # if i > 100: # Limit the number of images per task
+                #     break
                 img_1_path, task_name, label = image_paths['left_images'][i]
                 img_2_path, task_name_1, label_1 = image_paths['hand_images'][i]
                 img_3_path, task_name_2, label_2 = image_paths['right_images'][i]
