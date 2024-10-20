@@ -21,7 +21,7 @@ import time
 import hashlib
 from self_correct_robot.utils.load_dataloader import load_dataloader
 import json
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 torch.backends.cudnn.benchmark = True
 
@@ -122,11 +122,17 @@ class CustomDataset(Dataset):
 
             return task_data
 
-        with ThreadPoolExecutor(max_workers=22) as executor:
+        with ProcessPoolExecutor() as executor:
             task_datas = executor.map(load_on_task, os.listdir(root_dir))
 
             for task_data in task_datas:
                 self.data.extend(task_data)
+
+        # with ThreadPoolExecutor(max_workers=22) as executor:
+        #     task_datas = executor.map(load_on_task, os.listdir(root_dir))
+        #
+        #     for task_data in task_datas:
+        #         self.data.extend(task_data)
 
     def __len__(self):
         return len(self.data)
