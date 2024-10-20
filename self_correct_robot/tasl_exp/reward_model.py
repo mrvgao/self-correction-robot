@@ -159,10 +159,9 @@ def main(args):
     device = torch.device(f'cuda:{args.cuda}')
     print(f"Using device: {device}")
 
-    train_dataloader, val_dataloader, test_dataloader = create_dataloaders(
-        '/home/minquangao/robocasa-statics/export-images-from-demo-3k',
-                args.batch_size
-    )
+    train_dataset = CustomDataset('/home/minquangao/robocasa-statics/export-images-from-demo-3k', transform)
+
+    train_dataloader, val_dataloader, test_dataloader = create_dataloaders(train_dataset, args.batch_size)
 
     # Create the dataloader
     # Example training loop
