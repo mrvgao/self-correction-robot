@@ -104,17 +104,15 @@ class CustomDataset(Dataset):
         hand_image = Image.open(hand_image).convert('RGB')
         right_image = Image.open(right_image).convert('RGB')
 
-        if self.transform:
-            left_image = self.transform(left_image)
-            hand_image = self.transform(hand_image)
-            right_image = self.transform(right_image)
+        if self.transformer:
+            left_image = self.transformer(left_image)
+            hand_image = self.transformer(hand_image)
+            right_image = self.transformer(right_image)
 
         task_emb = self.lang_embedding[task_name]
         task_emb = torch.tensor(task_emb, dtype=torch.float32)
 
         label = torch.tensor(label, dtype=torch.float32)
-
-        import pdb; pdb.set_trace()
 
         return left_image, hand_image, right_image, task_emb, label
 
