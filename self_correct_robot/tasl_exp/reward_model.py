@@ -172,9 +172,9 @@ def create_dataloaders(my_dataset, batch_size, train_split=0.7, val_split=0.15, 
     train_dataset, val_dataset, test_dataset = random_split(my_dataset, [train_size, val_size, test_size])
 
     # Create DataLoader for each split
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True)
 
     return train_loader, val_loader, test_loader
 
