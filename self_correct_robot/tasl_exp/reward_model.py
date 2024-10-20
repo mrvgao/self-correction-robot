@@ -72,7 +72,7 @@ class CustomDataset(Dataset):
             for img_dir in image_dirs:
                 for img_name in os.listdir(os.path.join(sub_task_dir, img_dir)):
                     img_path = os.path.join(sub_task_dir, img_dir, img_name)
-                    if not os.path.isdir(img_path):
+                    if not os.path.isfile(img_path):
                         continue
 
                     import pdb; pdb.set_trace()
