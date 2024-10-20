@@ -61,6 +61,7 @@ class CustomDataset(Dataset):
                     print(f"Task embedding not found for {task_emb_path}, skipping.")
                     continue
                 else:
+                    print('load task embedding for ', task_desc)
                     task_desc_name = task_desc.split('.')[0]
                     self.lang_embedding[task_desc_name] = np.load(task_emb_path)
 
@@ -74,12 +75,12 @@ class CustomDataset(Dataset):
                     if not os.path.isdir(img_path):
                         continue
 
-                    for img_file in os.listdir(img_path):
-                        img_file_path = os.path.join(img_path, img_file)
-                        tokens = img_file.rsplit('_')
-                        label = float(tokens[-1].replace('.png', ''))
-                        task_name = '_'.join(tokens[1:-1])
-                        image_paths[img_dir].append((img_file_path, task_name, label))
+                    import pdb; pdb.set_trace()
+
+                    tokens = img_path.rsplit('_')
+                    label = float(tokens[-1].replace('.png', ''))
+                    task_name = '_'.join(tokens[1:-1])
+                    image_paths[img_dir].append((img_path, task_name, label))
 
             num_images = min(len(image_paths[img_dir]) for img_dir in image_dirs)
 
