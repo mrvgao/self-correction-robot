@@ -122,7 +122,7 @@ class CustomDataset(Dataset):
 
             return task_data
 
-        with ThreadPoolExecutor(max_workers=22) as executor:
+        with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
             task_datas = executor.map(load_on_task, os.listdir(root_dir))
 
             for task_data in task_datas:
