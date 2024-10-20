@@ -93,8 +93,8 @@ class CustomDataset(Dataset):
                 img_2_path, task_name_1, label_1 = image_paths['hand_images'][i]
                 img_3_path, task_name_2, label_2 = image_paths['right_images'][i]
 
-                assert task_name == task_name_1 == task_name_2
-                assert label == label_1 == label_2
+                assert task_name == task_name_1 == task_name_2, f"Task name mismatch: {task_name}, {task_name_1}, {task_name_2}"
+                assert label == label_1 == label_2, f"Label mismatch: {label}, {label_1}, {label_2}"
 
                 left_image = Image.open(img_1_path).convert('RGB')
                 hand_image = Image.open(img_2_path).convert('RGB')
