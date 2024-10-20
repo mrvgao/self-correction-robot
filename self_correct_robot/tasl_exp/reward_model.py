@@ -22,6 +22,7 @@ import hashlib
 from self_correct_robot.utils.load_dataloader import load_dataloader
 import json
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from functools import partial
 
 torch.backends.cudnn.benchmark = True
 
@@ -47,6 +48,76 @@ transform = transforms.Compose([
 ])
 
 
+def load_on_task(root_dir, _transformer, task_path):
+    task_data = []
+    sub_task_dir = os.path.join(root_dir, task_path)
+    lang_embedding = dict()
+
+    for task_desc in os.listdir(os.path.join(sub_task_dir, 'task_emb')):
+        task_emb_path = os.path.join(sub_task_dir, 'task_emb', task_desc)
+        if not os.path.isfile(task_emb_path):
+            print(f"Task embedding not found for {task_emb_path}, skipping.")
+            continue
+        else:
+            print('load task embedding for ', task_desc)
+            task_desc_name = task_desc.split('.')[0]
+            lang_embedding[task_desc_name] = np.load(task_emb_path)
+
+    image_dirs = ['left_images', 'hand_images', 'right_images']
+
+    image_paths = {img_dir: [] for img_dir in image_dirs}
+
+    for img_dir in image_dirs:
+        print('load image for ', img_dir)
+        for img_name in os.listdir(os.path.join(sub_task_dir, img_dir)):
+            img_path = os.path.join(sub_task_dir, img_dir, img_name)
+            if not os.path.isfile(img_path):
+                continue
+
+            tokens = img_path.split('/')[-1].split('_')
+            label = float(tokens[-1].replace('.png', ''))
+            task_name = '_'.join(tokens[1:-1])
+            image_paths[img_dir].append((img_path, task_name, label))
+
+    num_images = min(len(image_paths[img_dir]) for img_dir in image_dirs)
+
+    for i in tqdm(range(num_images), desc='Loading images'):
+        # if i > 100: # Limit the number of images per task
+        #     break
+        img_1_path, task_name, label = image_paths['left_images'][i]
+        img_2_path, task_name_1, label_1 = image_paths['hand_images'][i]
+        img_3_path, task_name_2, label_2 = image_paths['right_images'][i]
+
+        assert task_name == task_name_1 == task_name_2, f"Task name mismatch: {task_name}, {task_name_1}, {task_name_2}"
+        assert label == label_1 == label_2, f"Label mismatch: {label}, {label_1}, {label_2}"
+
+        left_image = Image.open(img_1_path).convert('RGB')
+        hand_image = Image.open(img_2_path).convert('RGB')
+        right_image = Image.open(img_3_path).convert('RGB')
+
+        if _transformer:
+            left_image = _transformer(left_image)
+            hand_image = _transformer(hand_image)
+            right_image = _transformer(right_image)
+
+        task_emb = lang_embedding[task_name]
+        task_emb = torch.tensor(task_emb, dtype=torch.float32)
+
+        label = torch.tensor(label, dtype=torch.float32)
+
+        # self.data.append((left_image, hand_image, right_image, task_emb, label))
+
+        persist_path = os.path.join('/data3/robocasa-statics/persisted-tensors', f'{task_path}_{i}.pth')
+
+        loaded_tuple = (left_image, hand_image, right_image, task_emb, label)
+
+        torch.save(loaded_tuple, persist_path)
+
+        # task_data.append((left_image, hand_image, right_image, task_emb, label))
+
+    return task_data
+
+
 class CustomDataset(Dataset):
     def __init__(self, root_dir, transform=None):
         self.root_dir = root_dir
@@ -54,76 +125,10 @@ class CustomDataset(Dataset):
         self.lang_embedding = dict()
         self.data = []
 
-        def load_on_task(task_path):
-            task_data = []
-            sub_task_dir = os.path.join(root_dir, task_path)
-
-            for task_desc in os.listdir(os.path.join(sub_task_dir, 'task_emb')):
-                task_emb_path = os.path.join(sub_task_dir, 'task_emb', task_desc)
-                if not os.path.isfile(task_emb_path):
-                    print(f"Task embedding not found for {task_emb_path}, skipping.")
-                    continue
-                else:
-                    print('load task embedding for ', task_desc)
-                    task_desc_name = task_desc.split('.')[0]
-                    self.lang_embedding[task_desc_name] = np.load(task_emb_path)
-
-            image_dirs = ['left_images', 'hand_images', 'right_images']
-
-            image_paths = {img_dir: [] for img_dir in image_dirs}
-
-            for img_dir in image_dirs:
-                print('load image for ', img_dir)
-                for img_name in os.listdir(os.path.join(sub_task_dir, img_dir)):
-                    img_path = os.path.join(sub_task_dir, img_dir, img_name)
-                    if not os.path.isfile(img_path):
-                        continue
-
-                    tokens = img_path.split('/')[-1].split('_')
-                    label = float(tokens[-1].replace('.png', ''))
-                    task_name = '_'.join(tokens[1:-1])
-                    image_paths[img_dir].append((img_path, task_name, label))
-
-            num_images = min(len(image_paths[img_dir]) for img_dir in image_dirs)
-
-            for i in tqdm(range(num_images), desc='Loading images'):
-                # if i > 100: # Limit the number of images per task
-                #     break
-                img_1_path, task_name, label = image_paths['left_images'][i]
-                img_2_path, task_name_1, label_1 = image_paths['hand_images'][i]
-                img_3_path, task_name_2, label_2 = image_paths['right_images'][i]
-
-                assert task_name == task_name_1 == task_name_2, f"Task name mismatch: {task_name}, {task_name_1}, {task_name_2}"
-                assert label == label_1 == label_2, f"Label mismatch: {label}, {label_1}, {label_2}"
-
-                left_image = Image.open(img_1_path).convert('RGB')
-                hand_image = Image.open(img_2_path).convert('RGB')
-                right_image = Image.open(img_3_path).convert('RGB')
-
-                if self.transformer:
-                    left_image = self.transformer(left_image)
-                    hand_image = self.transformer(hand_image)
-                    right_image = self.transformer(right_image)
-
-                task_emb = self.lang_embedding[task_name]
-                task_emb = torch.tensor(task_emb, dtype=torch.float32)
-
-                label = torch.tensor(label, dtype=torch.float32)
-
-                # self.data.append((left_image, hand_image, right_image, task_emb, label))
-
-                persist_path = os.path.join('/data3/robocasa-statics/persisted-tensors',f'{task_path}_{i}.pth')
-
-                loaded_tuple = (left_image, hand_image, right_image, task_emb, label)
-
-                torch.save(loaded_tuple, persist_path)
-
-                # task_data.append((left_image, hand_image, right_image, task_emb, label))
-
-            return task_data
+        partial_load_on_task = partial(load_on_task, root_dir, self.transformer)
 
         with ProcessPoolExecutor() as executor:
-            task_datas = executor.map(load_on_task, os.listdir(root_dir))
+            task_datas = executor.map(partial_load_on_task, os.listdir(root_dir))
 
             for task_data in task_datas:
                 self.data.extend(task_data)
