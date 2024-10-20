@@ -111,7 +111,14 @@ class CustomDataset(Dataset):
                 label = torch.tensor(label, dtype=torch.float32)
 
                 # self.data.append((left_image, hand_image, right_image, task_emb, label))
-                task_data.append((left_image, hand_image, right_image, task_emb, label))
+
+                persist_path = os.path.join('/home/minquangao/robocasa-statics/persisted-tensors',f'{task_path}_{i}.pth')
+
+                loaded_tuple = (left_image, hand_image, right_image, task_emb, label)
+
+                torch.save(loaded_tuple, persist_path)
+
+                # task_data.append((left_image, hand_image, right_image, task_emb, label))
 
             return task_data
 
