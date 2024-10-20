@@ -362,4 +362,8 @@ if __name__ == "__main__":
     mock_args = Args(name, model, lr, batch_size, num_epochs, cuda, args.seed, None, args.ckpt)
     run_name = f"{name}_{model}_lr_{lr}_bs_{batch_size}_epochs_{num_epochs}_seed_{args.seed}"
 
+    wandb.init(project="value-model-trained-by-3k", entity="minchiuan", name=run_name, config={
+        "system_metrics": True  # Enable system metrics logging
+    })
+
     main(mock_args)
