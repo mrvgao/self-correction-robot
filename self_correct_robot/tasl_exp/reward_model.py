@@ -93,28 +93,42 @@ class CustomDataset(Dataset):
                 assert task_name == task_name_1 == task_name_2
                 assert label == label_1 == label_2
 
-                self.data.append((img_1_path, img_2_path, img_3_path, task_name, label))
+                left_image = Image.open(img_1_path).convert('RGB')
+                hand_image = Image.open(img_2_path).convert('RGB')
+                right_image = Image.open(img_3_path).convert('RGB')
+
+                if self.transformer:
+                    left_image = self.transformer(left_image)
+                    hand_image = self.transformer(hand_image)
+                    right_image = self.transformer(right_image)
+
+                task_emb = self.lang_embedding[task_name]
+                task_emb = torch.tensor(task_emb, dtype=torch.float32)
+
+                label = torch.tensor(label, dtype=torch.float32)
+
+                self.data.append((left_image, hand_image, right_image, task_emb, label))
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
-        left_image, hand_image, right_image, task_name, label = self.data[idx]
+        left_image, hand_image, right_image, task_emb, label = self.data[idx]
 
         # Load images
-        left_image = Image.open(left_image).convert('RGB')
-        hand_image = Image.open(hand_image).convert('RGB')
-        right_image = Image.open(right_image).convert('RGB')
+        # left_image = Image.open(left_image).convert('RGB')
+        # hand_image = Image.open(hand_image).convert('RGB')
+        # right_image = Image.open(right_image).convert('RGB')
 
-        if self.transformer:
-            left_image = self.transformer(left_image)
-            hand_image = self.transformer(hand_image)
-            right_image = self.transformer(right_image)
+        # if self.transformer:
+        #     left_image = self.transformer(left_image)
+        #     hand_image = self.transformer(hand_image)
+        #     right_image = self.transformer(right_image)
 
-        task_emb = self.lang_embedding[task_name]
-        task_emb = torch.tensor(task_emb, dtype=torch.float32)
+        # task_emb = self.lang_embedding[task_name]
+        # task_emb = torch.tensor(task_emb, dtype=torch.float32)
 
-        label = torch.tensor(label, dtype=torch.float32)
+        # label = torch.tensor(label, dtype=torch.float32)
 
         return left_image, hand_image, right_image, task_emb, label
 
