@@ -112,7 +112,7 @@ class CustomDataset(Dataset):
 
                 # self.data.append((left_image, hand_image, right_image, task_emb, label))
 
-                persist_path = os.path.join('/home/minquangao/robocasa-statics/persisted-tensors',f'{task_path}_{i}.pth')
+                persist_path = os.path.join('/data3/robocasa-statics/persisted-tensors',f'{task_path}_{i}.pth')
 
                 loaded_tuple = (left_image, hand_image, right_image, task_emb, label)
 
@@ -192,7 +192,7 @@ def main(args):
     device = torch.device(f'cuda:{args.cuda}')
     print(f"Using device: {device}")
 
-    train_dataset = CustomDataset('/home/minquangao/robocasa-statics/export-images-from-demo-3k', transform)
+    train_dataset = CustomDataset('/data3/robocasa-statics/export-images-from-demo-3k', transform)
 
     train_dataloader, val_dataloader, test_dataloader = create_dataloaders(train_dataset, args.batch_size)
 
