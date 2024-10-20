@@ -77,7 +77,7 @@ class CustomDataset(Dataset):
 
                     import pdb; pdb.set_trace()
 
-                    tokens = img_path.rsplit('_')
+                    tokens = img_path.split('/')[-1].split('_')
                     label = float(tokens[-1].replace('.png', ''))
                     task_name = '_'.join(tokens[1:-1])
                     image_paths[img_dir].append((img_path, task_name, label))
