@@ -53,6 +53,8 @@ class CustomDataset(Dataset):
         self.data = []
 
         for sub_task in os.listdir(root_dir):
+            if len(self.data) > 100: # For testing
+                break
             sub_task_dir = os.path.join(root_dir, sub_task)
 
             for task_desc in os.listdir(os.path.join(sub_task_dir, 'task_emb')):
@@ -195,30 +197,24 @@ def main(args):
     best_val_loss = float('inf')
     early_stopping_counter = 0
 
-    test_dataloader_iter = iter(test_dataloader)
-    train_dataloader_iter = iter(train_dataloader)
-    val_dataloader_iter = iter(val_dataloader)
+    # test_dataloader_iter = iter(test_dataloader)
+    # train_dataloader_iter = iter(train_dataloader)
+    # val_dataloader_iter = iter(val_dataloader)
 
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
-        progress_bar = tqdm(range(len(train_dataloader)), desc=f"Epoch {epoch + 1}/{num_epochs} [Training]", leave=True)
         batch_loss = 0
 
-        for i in progress_bar:
-            try:
-                # Fetch the next batch using next()
-                img_1, img_2, img_3, task_embs, labels = next(train_dataloader_iter)
-            except StopIteration:
-                break
+        batch_step = 0
+
+        for img_1, img_2, img_3, task_embs, labels in tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Training]", leave=True):
 
             img_1 = img_1.to(device)
             img_2 = img_2.to(device)
             img_3 = img_3.to(device)
             task_embs, labels = task_embs.to(device), labels.to(device)
 
-            # if args.task_dir:
-            #     task_embs = None
             optimizer.zero_grad()
             # outputs = model(image1, image2)
             with autocast():
@@ -230,12 +226,12 @@ def main(args):
 
             running_loss += loss.item()
             batch_loss += loss.item()
-            if i % 5 == 0:  # Log every 10 batches
+            if batch_step % 5 == 0:  # Log every 10 batches
                 avg_loss = running_loss / 5
-                wandb.log({"epoch": epoch + 1, "batch": i + 1, "train_loss": avg_loss})
+                wandb.log({"epoch": epoch + 1, "batch": batch_step + 1, "train_loss": avg_loss})
                 running_loss = 0.0
 
-            progress_bar.set_postfix(loss=loss.item())
+            batch_step += 1
 
         print(f"Epoch [{epoch + 1}/{num_epochs}], Training Loss: {batch_loss / len(train_dataloader):.4f}")
 
@@ -245,17 +241,10 @@ def main(args):
             model.eval()
             val_loss = 0.0
             with torch.no_grad():
-                progress_bar = tqdm(range(len(val_dataloader)), desc=f"Epoch {epoch + 1}/{num_epochs} [Validation]", leave=True)
-
-                for _ in progress_bar:
-                    try:
-                        # Fetch the next batch using next()
-                        img_1, img_2, img_3, task_embs, labels = next(val_dataloader_iter)
-                    except StopIteration:
-                        break
-
+                for img_1, img_2, img_3, task_embs, labels in tqdm(val_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Validation]", leave=True):
                     img_1, img_2, img_3 = img_1.to(device), img_2.to(device), img_3.to(device)
                     task_embs, labels = task_embs.to(device), labels.to(device)
+
                     if args.task_dir:
                         task_embs = None
 
@@ -302,15 +291,7 @@ def main(args):
     model.eval()
     test_loss = 0.0
     with torch.no_grad():
-        progress_bar = tqdm(range(len(test_dataloader)), desc="Evaluating on Test Dataset", leave=True)
-        for _ in progress_bar:
-
-            try:
-                # Fetch the next batch using next()
-                img_1, img_2, img_3, task_embs, labels = next(test_dataloader_iter)
-            except StopIteration:
-                break
-
+        for img_1, img_2, img_3, task_embs, labels in tqdm(test_dataloader, desc="Evaluating on Test Dataset", leave=True):
             img_1, img_2, img_3 = img_1.to(device), img_2.to(device), img_3.to(device)
             task_embs, labels = task_embs.to(device), labels.to(device)
 
@@ -327,7 +308,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-
     device = torch.device('cuda')  # This will refer to the first available GPU in your restricted list
 
     parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
