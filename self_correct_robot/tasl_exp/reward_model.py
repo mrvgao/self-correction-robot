@@ -53,7 +53,7 @@ class CustomDataset(Dataset):
         self.data = []
 
         for sub_task in os.listdir(root_dir):
-            if len(self.data) > 100: # For testing
+            if len(self.data) > 500: # For testing
                 break
             sub_task_dir = os.path.join(root_dir, sub_task)
 
