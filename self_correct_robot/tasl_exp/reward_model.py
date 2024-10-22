@@ -12,7 +12,8 @@ from self_correct_robot.utils.lang_utils import LangEncoder
 import random
 import numpy as np
 from collections import namedtuple
-from self_correct_robot.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, ValueResNetWithAttnPerformance, ValueResNetModelWithTextWithAttnAndResidual
+from self_correct_robot.tasl_exp.reward_basic_models import ValueDetrModel, ValueViTModel, \
+    ValueResNetWithAttnPerformance, ValueResNetModelWithTextWithAttnAndResidual
 import argparse
 from torch.cuda.amp import autocast
 from torch.utils.data import Subset
@@ -48,6 +49,23 @@ transform = transforms.Compose([
 
 
 class CustomDataset(Dataset):
+    def __init__(self, root_dir):
+        self.all_files = []
+
+        for file in os.listdir(root_dir):
+            if file.endswith('.pth'):
+                self.all_files.append(os.path.join(root_dir, file))
+
+    def __len__(self):
+        return len(self.all_files)
+
+    def __getitem__(self, idx):
+        left_image, hand_image, right_image, task_emb, label = torch.load(self.all_files[idx])
+
+        return left_image, hand_image, right_image, task_emb, label
+
+
+class CustomDatasetSave(Dataset):
     def __init__(self, root_dir, transform=None):
         self.root_dir = root_dir
         self.transformer = transform
@@ -112,7 +130,7 @@ class CustomDataset(Dataset):
 
                 # self.data.append((left_image, hand_image, right_image, task_emb, label))
 
-                persist_path = os.path.join('/data3/robocasa-statics/persisted-tensors',f'{task_path}_{i}.pth')
+                persist_path = os.path.join('/data3/robocasa-statics/persisted-tensors', f'{task_path}_{i}.pth')
 
                 loaded_tuple = (left_image, hand_image, right_image, task_emb, label)
 
@@ -192,7 +210,7 @@ def main(args):
     device = torch.device(f'cuda:{args.cuda}')
     print(f"Using device: {device}")
 
-    train_dataset = CustomDataset('/data3/robocasa-statics/export-images-from-demo-3k', transform)
+    train_dataset = CustomDataset('/data3/robocasa-statics/persisted-tensors')
 
     train_dataloader, val_dataloader, test_dataloader = create_dataloaders(train_dataset, args.batch_size)
 
@@ -241,7 +259,9 @@ def main(args):
 
         batch_step = 0
 
-        for img_1, img_2, img_3, task_embs, labels in tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Training]", leave=True):
+        for img_1, img_2, img_3, task_embs, labels in tqdm(train_dataloader,
+                                                           desc=f"Epoch {epoch + 1}/{num_epochs} [Training]",
+                                                           leave=True):
 
             img_1 = img_1.to(device)
             img_2 = img_2.to(device)
@@ -274,7 +294,9 @@ def main(args):
             model.eval()
             val_loss = 0.0
             with torch.no_grad():
-                for img_1, img_2, img_3, task_embs, labels in tqdm(val_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Validation]", leave=True):
+                for img_1, img_2, img_3, task_embs, labels in tqdm(val_dataloader,
+                                                                   desc=f"Epoch {epoch + 1}/{num_epochs} [Validation]",
+                                                                   leave=True):
                     img_1, img_2, img_3 = img_1.to(device), img_2.to(device), img_3.to(device)
                     task_embs, labels = task_embs.to(device), labels.to(device)
 
@@ -324,7 +346,8 @@ def main(args):
     model.eval()
     test_loss = 0.0
     with torch.no_grad():
-        for img_1, img_2, img_3, task_embs, labels in tqdm(test_dataloader, desc="Evaluating on Test Dataset", leave=True):
+        for img_1, img_2, img_3, task_embs, labels in tqdm(test_dataloader, desc="Evaluating on Test Dataset",
+                                                           leave=True):
             img_1, img_2, img_3 = img_1.to(device), img_2.to(device), img_3.to(device)
             task_embs, labels = task_embs.to(device), labels.to(device)
 
@@ -345,7 +368,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Train a Value Predication Model Via Vision Transformer model.')
     parser.add_argument('--tag', type=str, required=True, help='Add a tag to make logger easier')
-    parser.add_argument('--model', type=str, required=False, choices=['attn', 'resnet'], help='Name for the selection model')
+    parser.add_argument('--model', type=str, required=False, choices=['attn', 'resnet'],
+                        help='Name for the selection model')
     parser.add_argument('--seed', type=int, required=True, help='training random seed')
     parser.add_argument('--ckpt', type=str, default=None, required=False, help='specify a pretraind model path')
     args = parser.parse_args()
@@ -364,8 +388,8 @@ if __name__ == "__main__":
 
     Args = namedtuple(
         'Args',
-        ['name', 'model', 'lr',  'batch_size', 'num_epochs',
-                    'cuda', 'seed', 'task_dir', 'ckpt']
+        ['name', 'model', 'lr', 'batch_size', 'num_epochs',
+         'cuda', 'seed', 'task_dir', 'ckpt']
     )
     # #
     # # for i, task_dir in enumerate(sub_tasks):
