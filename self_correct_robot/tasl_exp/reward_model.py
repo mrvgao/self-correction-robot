@@ -379,12 +379,12 @@ if __name__ == "__main__":
 
     name = f'{args.tag}_{str(signature)}_all-tasks-in-one-predicate-progress'
     model = args.model
-    lr = 1e-4
+    lr = 1e-5
     # num_epochs = 1000
     num_epochs = 5
     cuda = 0
     # seed = 999
-    batch_size = 16
+    batch_size = 8
 
     Args = namedtuple(
         'Args',
