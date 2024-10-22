@@ -384,7 +384,7 @@ if __name__ == "__main__":
     num_epochs = 5
     cuda = 0
     # seed = 999
-    batch_size = 128
+    batch_size = 16
 
     Args = namedtuple(
         'Args',
